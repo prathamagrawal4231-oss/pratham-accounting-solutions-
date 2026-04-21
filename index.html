@@ -1,7 +1,8 @@
 <body>
   <h1>Pratham’s Accounting Solution</h1>
-  <p>Add transactions like in Tally. GST is optional extra.</p>
+  <p>Add transactions like in Tally.</p>
 
+  <!-- Input form -->
   <input id="desc" placeholder="Particular (e.g. Salary)" style="width: 200px;">
   <input id="amt" type="number" placeholder="₹ Amount" style="width: 100px;">
   <input id="gst" type="number" placeholder="₹ GST (optional)" style="width: 100px;">
@@ -26,6 +27,7 @@
         <th>Type</th>
         <th>₹ Amount</th>
         <th>₹ GST</th>
+        <th>Net Total ₹</th>
       </tr>
     </thead>
     <tbody>
@@ -34,19 +36,21 @@
   </table>
 
   <script>
-    let entries = [];   // All transactions
-    let total = 0;      // Net balance (₹ Amount only)
-    let totalGst = 0;   // Total of GST column (separate)
+    let entries = [];           // All transactions
+    let total = 0;              // Net balance
+    let totalGst = 0;           // Total GST collected/paid
 
-    // Load saved data from browser
+    // Load entries from browser storage if exists
     if (window.localStorage) {
       const saved = localStorage.getItem("pratham-ledger");
       if (saved) {
         try {
           entries = JSON.parse(saved);
-          total = entries.reduce((sum, e) => sum + e.amt, 0);
+          // Recalculate balance and GST
+          total = entries.reduce((sum, e) => sum + e.net, 0);
           totalGst = entries.reduce((sum, e) => sum + e.gst, 0);
-          entries.forEach(e => addRowToTable(e.date, e.desc, e.type, e.amt, e.gst));
+          // Rebuild the table from saved data
+          entries.forEach(e => addRowToTable(e.date, e.desc, e.type, e.amt, e.gst, e.net));
         } catch (e) {
           console.log("Could not load saved data.");
         }
@@ -65,38 +69,42 @@
         return;
       }
 
+      // Net amount including GST (for ledger view)
+      let net = type === "income" ? amt + gst : amt - gst;
+
       let date = new Date().toLocaleDateString("en-IN");
       let row = {
         date: date,
         desc: desc,
         type: type,
         amt: amt,
-        gst: gst
+        gst: gst,
+        net: net
       };
 
       entries.push(row);
-
-      // Only ₹ Amount affects balance (GST is extra info)
-      total += amt;
+      total += net;
       totalGst += gst;
 
+      // Update balance div
       document.getElementById("balance").innerText =
-        `Balance: ₹${total.toFixed(2)} | GST (Total): ₹${totalGst.toFixed(2)}`;
+        `Balance: ₹${total.toFixed(2)} | GST Total: ₹${totalGst.toFixed(2)}`;
 
-      addRowToTable(date, desc, type, amt, gst);
+      // Add to table visually
+      addRowToTable(date, desc, type, amt, gst, net);
 
       // Clear inputs
       document.getElementById("desc").value = "";
       document.getElementById("amt").value = "";
       document.getElementById("gst").value = "";
 
-      // Save to browser storage
+      // Save to browser (persists even if you close page)
       if (window.localStorage) {
         localStorage.setItem("pratham-ledger", JSON.stringify(entries));
       }
     }
 
-    function addRowToTable(date, desc, type, amt, gst) {
+    function addRowToTable(date, desc, type, amt, gst, net) {
       let el = document.getElementById("ledger").querySelector("tbody");
       let row = el.insertRow();
 
@@ -110,29 +118,23 @@
       } else {
         row.insertCell(4).innerText = "";
       }
+
+      row.insertCell(5).innerText = `₹${net.toFixed(2)}`;
     }
 
     function showBalance() {
       let income = entries
         .filter(e => e.type === "income")
-        .reduce((sum, e) => sum + e.amt, 0);
+        .reduce((sum, e) => sum + e.net, 0);
       let expense = entries
         .filter(e => e.type === "expense")
-        .reduce((sum, e) => sum + e.amt, 0);
-
-      let gstIn = entries
-        .filter(e => e.type === "income")
-        .reduce((sum, e) => sum + e.gst, 0);
-      let gstOut = entries
-        .filter(e => e.type === "expense")
-        .reduce((sum, e) => sum + e.gst, 0);
+        .reduce((sum, e) => sum + e.net, 0);
 
       alert(
-        "Income (₹): ₹" + income.toFixed(2) +
-        "\nExpense (₹): ₹" + expense.toFixed(2) +
-        "\nNet Balance (₹): ₹" + (income - expense).toFixed(2) +
-        "\nGST Input (₹): ₹" + gstIn.toFixed(2) +
-        "\nGST Output (₹): ₹" + gstOut.toFixed(2)
+        "Income (Net): ₹" + income.toFixed(2) +
+        "\nExpense (Net): ₹" + expense.toFixed(2) +
+        "\nNet Balance: ₹" + (income - expense).toFixed(2) +
+        "\nGST (Total): ₹" + totalGst.toFixed(2)
       );
     }
 
@@ -141,7 +143,7 @@
         entries = [];
         total = 0;
         totalGst = 0;
-        document.getElementById("balance").innerText = "Balance: ₹0 | GST (Total): ₹0";
+        document.getElementById("balance").innerText = "Balance: ₹0 | GST Total: ₹0";
         document.getElementById("ledger").querySelector("tbody").innerHTML = "";
         if (window.localStorage) {
           localStorage.removeItem("pratham-ledger");
