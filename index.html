@@ -589,5 +589,121 @@
       --destructive: 0 84.2% 60.2%;
       --border: 214.3 31.8% 91.4%;
       --input: 214.3
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pratham’s Accounting Pro</title>
+  <style>
+    :root {
+      --bg: 0 0% 100%; --card: 0 0% 100%; --text: 222.2 84% 4.9%;
+      --primary: 221.2 83.2% 53.3%; --primary-fg: 210 40% 98%;
+      --secondary: 210 40% 96%; --accent: 210 40% 96%;
+      --destructive: 0 84.2% 60.2%; --border: 214.3 31.8% 91.4%;
+      --input: 214.3 31.8% 91.4%; --ring: 215 20.2% 65.1%;
+      --radius: 0.8rem;
+    }
+    body,
+    body * {
+      margin: 0; padding: 0; box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+      color: hsl(var(--text));
+      background: linear-gradient(180deg, hsl(var(--bg)), hsl(var(--bg)));
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .cont {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .hdr {
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .hdr h1 {
+      font-size: clamp(28px, 4vw, 42px);
+      margin: 0 0 4px;
+    }
+    .hdr p {
+      margin: 0; color: #6b7280;
+    }
+    .card-section {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      border-radius: 10px;
+      padding: 20px;
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      position: relative;
+      cursor: default;
+    }
+    .card:nth-child(1) { grid-column: span 2; }
+    .card:nth-child(2) { grid-column: span 2; }
+    .card:nth-child(3) { grid-column: span 2; }
+    .card-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+    .card-value {
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    .card-value::before {
+      content: "₹";
+      font-size: 0.8em;
+      opacity: 0.8;
+      margin-right: 2px;
+    }
+    .card-sub {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+    .card-income { color: #059669; }
+    .card-expense { color: #dc2626; }
+    .card-gray { color: #6b7280; }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 16px;
+      background: hsl(var(--card));
+      border-radius: 10px;
+      border: 1px solid hsl(var(--border));
+    }
+    .toolbar .field {
+      flex: 1 1 200px;
+    }
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #6b7280;
+      margin-bottom: 6px;
+    }
+    .field input,
+    .field select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid hsl(var(--border));
+      background: white;
+      font-size: 13.5px;
+    }
+    .field select {
+      -webki
 
 
