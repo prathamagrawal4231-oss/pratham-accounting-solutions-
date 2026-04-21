@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Tally – Code</title>
+  <style>
+    body {
+      font-family: Arial;
+      margin: 20px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    input, select, button {
+      padding: 10px;
+      margin: 5px;
+    }
+    #balance {
+      font-size: 24px;
+      color: blue;
+    }
+  </style>
+</head>
+<body>
+  <h1>My Tally – Code</h1>
+  <p>Add transactions like Tally.</p>
+  <input id="desc" placeholder="Description (e.g. Salary)">
+  <input id="amt" type="number" placeholder="Amount (₹)">
+  <select id="type">
+    <option value="income">Income</option>
+    <option value="expense">Expense</option>
+  </select>
+  <button onclick="addTrans()">Add Transaction</button>
+  <button onclick="showBalance()">Show Balance</button>
+  <div id="balance">Balance: ₹0</div>
+  <h3>Ledger</h3>
+  <table id="ledger">
+    <tr><th>Date</th><th>Description</th><th>Type</th><th>₹</th></tr>
+  </table>
+  <script>
+    let entries = [];
+    let total = 0;
+
+    function addTrans() {
+      let desc = document.getElementById("desc").value;
+      let amt = parseFloat(document.getElementById("amt").value);
+      let type = document.getElementById("type").value;
+
+      if (!desc || isNaN(amt)) {
+        alert("Please enter description and amount.");
+        return;
+      }
+
+      let date = new Date().toLocaleDateString("en-IN");
+      let row = document.getElementById("ledger").insertRow();
+      row.insertCell(0).innerText = date;
+      row.insertCell(1).innerText = desc;
+      row.insertCell(2).innerText = type;
+      row.insertCell(3).innerText = "₹" + amt.toFixed(2);
+
+      entries.push({ desc, amt, type });
+      total += amt;
+      document.getElementById("balance").innerText = "Balance: ₹" + total.toFixed(2);
+
+      // Clear inputs
+      document.getElementById("desc").value = "";
+      document.getElementById("amt").value = "";
+    }
+
+    function showBalance() {
+      let income = entries.filter(e => e.type === "income").reduce((sum, e) => sum + e.amt, 0);
+      let expense = entries.filter(e => e.type === "expense").reduce((sum, e) => sum + e.amt, 0);
+
+      alert(
+        "Income: ₹" + income.toFixed(2) +
+        "\nExpense: ₹" + expense.toFixed(2) +
+        "\nNet: ₹" + (income - expense).toFixed(2)
+      );
+    }
+  </script>
+</body>
+</html>
