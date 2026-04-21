@@ -415,3 +415,206 @@
   </script>
 </body>
 </html>
+<!-- Journal mode toggle -->
+<div style="margin-top:16px;">
+  <label>
+    <input type="checkbox" id="useJournal"> Use Journal Entry
+  </label>
+</div>
+
+<!-- Journal entry area (hidden by default) -->
+<div id="journalArea" style="margin-top:20px; display:none;">
+  <h4>Journal Lines</h4>
+  <div id="journalLines"></div>
+  <button type="button" id="addJournalLine" class="btn-secondary" style="margin-top:8px;">
+    + Add Line
+  </button>
+</div>
+// --- Journal entry state ---
+const journalArea   = document.getElementById("journalArea");
+const useJournalBox = document.getElementById("useJournal");
+const journalLines  = document.getElementById("journalLines");
+const addJournalLineBtn = document.getElementById("addJournalLine");
+
+let journal = {
+  // [{ type: 'debit' | 'credit', account: '...', amount: 0 }]
+  lines: [],
+  valid: true
+};
+
+// Show/hide journal area when checkbox changes
+useJournalBox.addEventListener("change", () => {
+  if (useJournalBox.checked) {
+    journalArea.style.display = "block";
+    // Hide original "desc/amt" inputs visually (or keep them disabled)
+    document.getElementById("desc").disabled = true;
+    document.getElementById("amt").disabled = true;
+    document.getElementById("type").disabled = true;
+    document.getElementById("gst").disabled = true;
+
+    // If no lines yet, add one default line
+    if (journal.lines.length === 0) {
+      addJournalLine();
+    }
+  } else {
+    journalArea.style.display = "none";
+    document.getElementById("desc").disabled = false;
+    document.getElementById("amt").disabled = false;
+    document.getElementById("type").disabled = false;
+    document.getElementById("gst").disabled = false;
+    journal.lines = [];
+    journal.valid = true;
+    journalLines.innerHTML = "";
+  }
+});
+
+function addJournalLine() {
+  const lineId = Date.now();
+  const line = {
+    id: lineId,
+    type: "debit",
+    account: "",
+    gst: 0,
+    net: 0
+  };
+  journal.lines.push(line);
+
+  const lineEl = document.createElement("div");
+  lineEl.style.marginTop = "10px";
+  lineEl.style.padding = "10px";
+  lineEl.style.border = "1px solid #d1d5db";
+  lineEl.style.borderRadius = "8px";
+  lineEl.style.display = "flex";
+  lineEl.style.alignItems = "center";
+  lineEl.style.gap = "8px";
+
+  lineEl.innerHTML = `
+    <select data-id="${lineId}" data-field="type" class="journal-type">
+      <option value="debit">Debit</option>
+      <option value="credit">Credit</option>
+    </select>
+    <input placeholder="Account / Description" 
+           data-id="${lineId}" data-field="account"
+           class="journal-account"
+           style="flex:1; padding:8px; border-radius:6px; border:1px solid #d1d5db;">
+    <input type="number" placeholder="₹ Amount"
+           data-id="${lineId}" data-field="amount"
+           class="journal-amount"
+           style="width:100px; padding:8px; border-radius:6px; border:1px solid #d1d5db;">
+    <button type="button" data-id="${lineId}" class="btn-danger" style="padding:5px 10px; font-size:12px;">
+      ×
+    </button>
+  `;
+
+  const sel = lineEl.querySelector("select[data-field='type']");
+  sel.value = "debit";
+
+  // Events on this line
+  lineEl.querySelectorAll("input,select").forEach(input => {
+    input.addEventListener("input", () => {
+      const id = Number(input.dataset.id);
+      const field = input.dataset.field;
+      const line = journal.lines.find(l => l.id === id);
+      if (!line) return;
+
+      if (field === "type") {
+        line.type = input.value;
+      } else if (field === "account") {
+        line.account = input.value;
+      } else if (field === "amount") {
+        const raw = input.value;
+        line.amount = raw === "" ? 0 : parseFloat(raw);
+        if (isNaN(line.amount)) line.amount = 0;
+      }
+
+      updateJournalValidity();
+      renderJournalSummary();
+    });
+  });
+
+  lineEl.querySelector("button").addEventListener("click", () => {
+    journalLines.removeChild(lineEl);
+    journal.lines = journal.lines.filter(l => l.id !== lineId);
+    updateJournalValidity();
+    renderJournalSummary();
+  });
+
+  journalLines.appendChild(lineEl);
+}
+
+function updateJournalValidity() {
+  const debits = journal.lines
+    .filter(l => l.type === "debit")
+    .reduce((sum, l) => sum + (l.amount || 0), 0);
+  const credits = journal.lines
+    .filter(l => l.type === "credit")
+    .reduce((sum, l) => sum + (l.amount || 0), 0);
+
+  journal.valid = Math.abs(debits - credits) < 0.015; // 0.01 tolerance
+}
+
+function renderJournalSummary() {
+  const debits   = journal.lines
+                     .filter(l => l.type === "debit")
+                     .reduce((sum, l) => sum + (l.amount || 0), 0);
+  const credits  = journal.lines
+                     .filter(l => l.type === "credit")
+                     .reduce((sum, l) => sum + (l.amount || 0), 0);
+  const diff = debits - credits;
+  const sign = diff > 0 ? "Dr" : diff < 0 ? "Cr" : "Balanced";
+  const bal = Math.abs(diff).toFixed(2);
+}
+function renderTable() {
+  ledgerBody.innerHTML = "";
+
+  if (entries.length === 0) {
+    ledgerBody.innerHTML = '<tr><td colspan="6" class="empty">No transactions yet.</td></tr>';
+    return;
+  }
+
+  entries.forEach(e => {
+    const row = document.createElement("tr");
+
+    const net = e.net || 0;
+
+    if (e.journal) {
+      // First row: summary
+      const summary = document.createElement("tr");
+      summary.innerHTML = `
+        <td>${e.date}</td>
+        <td><i>JOURNAL</i>: ${e.desc || "Multiple accounts"}</td>
+        <td class="${e.type === "income" ? "type-income" : "type-expense"}">Journal</td>
+        <td>₹${e.amt.toFixed(2)}</td>
+        <td>₹0.00</td>
+        <td>₹${net.toFixed(2)}</td>
+      `;
+      ledgerBody.appendChild(summary);
+
+      // Detail lines
+      e.lines.forEach(li => {
+        const detail = document.createElement("tr");
+        detail.style.fontSize = "13px";
+        detail.style.backgroundColor = "#f9fafb";
+        detail.innerHTML = `
+          <td></td>
+          <td>${li.type === "debit" ? "Dr" : "Cr"} – ${li.account || "Unknown"}</td>
+          <td>${li.type === "debit" ? "Debit" : "Credit"}</td>
+          <td>₹${+li.amount.toFixed(2)}</td>
+          <td></td>
+          <td></td>
+        `;
+        ledgerBody.appendChild(detail);
+      });
+    } else {
+      row.innerHTML = `
+        <td>${e.date}</td>
+        <td>${e.desc}</td>
+        <td class="${e.type === "income" ? "type-income" : "type-expense"}">${e.type}</td>
+        <td>₹${e.amt.toFixed(2)}</td>
+        <td>₹${e.gst.toFixed(2)}</td>
+        <td>₹${e.net.toFixed(2)}</td>
+      `;
+      ledgerBody.appendChild(row);
+    }
+  });
+}
