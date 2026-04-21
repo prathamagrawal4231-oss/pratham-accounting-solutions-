@@ -153,3 +153,421 @@
     }
   </script>
 </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pratham’s Accounting Solution</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: linear-gradient(180deg, #eff6ff 0%, var(--bg) 35%, #fff 100%);
+      color: var(--text);
+    }
+
+    .app {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr auto auto auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .field label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--muted);
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font: inherit;
+    }
+
+    input, select {
+      background: #fff;
+    }
+
+    input:focus, select:focus, button:focus {
+      outline: 3px solid rgba(37, 99, 235, 0.18);
+      border-color: var(--primary);
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 600;
+      background: #f8fafc;
+      transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      border-color: #cbd5e1;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .btn-danger {
+      background: #fff1f2;
+      color: var(--danger);
+      border-color: #fecdd3;
+    }
+
+    .btn-secondary {
+      background: #eff6ff;
+      color: var(--primary);
+      border-color: #bfdbfe;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .card-title {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .card-value {
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .balance-box {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: white;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 820px;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #334155;
+      font-size: 14px;
+    }
+
+    tbody tr:hover {
+      background: #f8fafc;
+    }
+
+    .type-income { color: var(--success); font-weight: 700; }
+    .type-expense { color: var(--danger); font-weight: 700; }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .empty {
+      padding: 18px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 1100px) {
+      .form-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .summary {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .app { padding: 14px; }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      button { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="hero">
+      <h1>Pratham’s Accounting Solution</h1>
+      <p class="subtitle">Add transactions like in Tally. Track income, expenses, GST, and balance in one place.</p>
+    </section>
+
+    <section class="panel">
+      <div class="form-grid">
+        <div class="field">
+          <label for="desc">Particular</label>
+          <input id="desc" placeholder="e.g. Salary" />
+        </div>
+
+        <div class="field">
+          <label for="amt">Amount</label>
+          <input id="amt" type="number" placeholder="₹ Amount" min="0" step="0.01" />
+        </div>
+
+        <div class="field">
+          <label for="gst">GST</label>
+          <input id="gst" type="number" placeholder="₹ GST" min="0" step="0.01" />
+        </div>
+
+        <div class="field">
+          <label for="type">Type</label>
+          <select id="type">
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+        </div>
+
+        <button class="btn-primary" onclick="addTrans()">Add Transaction</button>
+        <button class="btn-secondary" onclick="showBalance()">Show Balance</button>
+        <button class="btn-danger" onclick="clearAll()">Clear All</button>
+      </div>
+    </section>
+
+    <section class="summary">
+      <div class="card">
+        <div class="card-title">Balance</div>
+        <div id="balance" class="card-value balance-box">₹0.00</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Total GST</div>
+        <div id="gstTotal" class="card-value" style="color: #f59e0b;">₹0.00</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Entries</div>
+        <div id="entryCount" class="card-value" style="color: #0f172a;">0</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h3 style="margin-top:0;">Ledger</h3>
+      <div class="table-wrap" role="region" aria-label="Ledger table" tabindex="0">
+        <table id="ledger">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Particular</th>
+              <th>Type</th>
+              <th>₹ Amount</th>
+              <th>₹ GST</th>
+              <th>Net Total ₹</th>
+            </tr>
+          </thead>
+          <tbody id="ledgerBody">
+            <tr>
+              <td colspan="6" class="empty">No transactions yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    let entries = [];
+    let total = 0;
+    let totalGst = 0;
+
+    const ledgerBody = document.getElementById("ledgerBody");
+    const balanceEl = document.getElementById("balance");
+    const gstTotalEl = document.getElementById("gstTotal");
+    const entryCountEl = document.getElementById("entryCount");
+
+    function saveData() {
+      localStorage.setItem("pratham-ledger", JSON.stringify(entries));
+    }
+
+    function renderSummary() {
+      balanceEl.innerText = `₹${total.toFixed(2)}`;
+      gstTotalEl.innerText = `₹${totalGst.toFixed(2)}`;
+      entryCountEl.innerText = entries.length;
+    }
+
+    function renderTable() {
+      ledgerBody.innerHTML = "";
+
+      if (entries.length === 0) {
+        ledgerBody.innerHTML = '<tr><td colspan="6" class="empty">No transactions yet.</td></tr>';
+        return;
+      }
+
+      entries.forEach(e => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${e.date}</td>
+          <td>${e.desc}</td>
+          <td class="${e.type === "income" ? "type-income" : "type-expense"}">${e.type}</td>
+          <td>₹${e.amt.toFixed(2)}</td>
+          <td>₹${e.gst.toFixed(2)}</td>
+          <td>₹${e.net.toFixed(2)}</td>
+        `;
+        ledgerBody.appendChild(row);
+      });
+    }
+
+    function addTrans() {
+      const desc = document.getElementById("desc").value.trim();
+      const amt = parseFloat(document.getElementById("amt").value);
+      const gstRaw = document.getElementById("gst").value;
+      const type = document.getElementById("type").value;
+      const gst = gstRaw === "" ? 0 : Math.abs(parseFloat(gstRaw));
+
+      if (!desc || Number.isNaN(amt)) {
+        alert("Please enter a particular and a valid amount.");
+        return;
+      }
+
+      const net = type === "income" ? amt + gst : amt - gst;
+      const row = {
+        date: new Date().toLocaleDateString("en-IN"),
+        desc,
+        type,
+        amt,
+        gst,
+        net
+      };
+
+      entries.push(row);
+      total += net;
+      totalGst += gst;
+
+      saveData();
+      renderTable();
+      renderSummary();
+
+      document.getElementById("desc").value = "";
+      document.getElementById("amt").value = "";
+      document.getElementById("gst").value = "";
+      document.getElementById("desc").focus();
+    }
+
+    function showBalance() {
+      const income = entries.filter(e => e.type === "income").reduce((s, e) => s + e.net, 0);
+      const expense = entries.filter(e => e.type === "expense").reduce((s, e) => s + e.net, 0);
+      alert(
+        `Income (Net): ₹${income.toFixed(2)}\\n` +
+        `Expense (Net): ₹${expense.toFixed(2)}\\n` +
+        `Net Balance: ₹${(income - expense).toFixed(2)}\\n` +
+        `GST Total: ₹${totalGst.toFixed(2)}`
+      );
+    }
+
+    function clearAll() {
+      if (!confirm("Are you sure you want to clear all data?")) return;
+      entries = [];
+      total = 0;
+      totalGst = 0;
+      localStorage.removeItem("pratham-ledger");
+      renderTable();
+      renderSummary();
+    }
+
+    const saved = localStorage.getItem("pratham-ledger");
+    if (saved) {
+      try {
+        entries = JSON.parse(saved);
+        total = entries.reduce((sum, e) => sum + e.net, 0);
+        totalGst = entries.reduce((sum, e) => sum + e.gst, 0);
+      } catch (e) {
+        entries = [];
+      }
+    }
+
+    renderTable();
+    renderSummary();
+  </script>
+</body>
+</html>
+
