@@ -1,79 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pratham Accounting Pro</title>
-
+<title>Accounting Pro</title>
 <style>
 body { margin:0; font-family:Arial; display:flex; height:100vh; }
-
-.sidebar {
-  width:220px;
-  background:#0f172a;
-  color:white;
-  padding:20px;
-}
-
-.sidebar h2 { margin-bottom:20px; }
-
-.sidebar button {
-  width:100%;
-  margin:5px 0;
-  padding:10px;
-  border:none;
-  background:#1e293b;
-  color:white;
-  cursor:pointer;
-}
-
-.main {
-  flex:1;
-  padding:20px;
-  background:#f1f5f9;
-}
-
-input, select {
-  padding:8px;
-  margin:5px;
-}
-
-button.action {
-  padding:8px 12px;
-  margin:5px;
-}
-
-table {
-  width:100%;
-  border-collapse: collapse;
-  margin-top:20px;
-}
-
-th, td {
-  border:1px solid #ccc;
-  padding:10px;
-}
+.sidebar { width:200px; background:#111; color:white; padding:15px; }
+.main { flex:1; padding:20px; }
+button { padding:8px; margin:5px; }
+input, select { padding:6px; margin:5px; }
 </style>
 </head>
 
 <body>
 
 <div class="sidebar">
-  <h2>Accounts</h2>
-  <div id="accountList"></div>
-  <button onclick="addAccount()">+ Add Account</button>
+<h3>Accounts</h3>
+<div id="accounts"></div>
+<button id="addAcc">+ Add Account</button>
 </div>
 
 <div class="main">
 
 <h2>Journal Entry</h2>
 
-<div id="journalLines"></div>
-<button onclick="addLine()">+ Add Line</button>
-<button class="action" onclick="saveEntry()">Save Entry</button>
+<div id="lines"></div>
+
+<button id="addLineBtn">+ Add Line</button>
+<button id="saveBtn">Save</button>
 
 <h2>Ledger</h2>
-<table>
+<table border="1" width="100%">
 <thead>
 <tr>
 <th>Date</th>
@@ -89,117 +45,111 @@ th, td {
 
 <script>
 
-// ===== DATA =====
-let accounts = ["Cash", "Bank", "Sales"];
+let accounts = ["Cash","Bank","Sales"];
 let entries = [];
 
-// ===== ELEMENTS =====
-const accountList = document.getElementById("accountList");
-const journalLines = document.getElementById("journalLines");
+const accDiv = document.getElementById("accounts");
+const linesDiv = document.getElementById("lines");
 const ledger = document.getElementById("ledger");
 
-// ===== LOAD ACCOUNTS =====
-function renderAccounts() {
-  accountList.innerHTML = "";
-  accounts.forEach(acc => {
-    const div = document.createElement("div");
-    div.innerText = acc;
-    accountList.appendChild(div);
+// render accounts
+function renderAccounts(){
+  accDiv.innerHTML="";
+  accounts.forEach(a=>{
+    let d=document.createElement("div");
+    d.innerText=a;
+    accDiv.appendChild(d);
   });
 }
 
-// ===== ADD ACCOUNT =====
-function addAccount() {
-  const name = prompt("Enter account name:");
-  if (!name) return;
-  accounts.push(name);
-  renderAccounts();
-}
+// add account
+document.getElementById("addAcc").onclick = () => {
+  let name = prompt("Account name");
+  if(name){
+    accounts.push(name);
+    renderAccounts();
+  }
+};
 
-// ===== ADD JOURNAL LINE =====
-function addLine() {
+// add line
+document.getElementById("addLineBtn").onclick = () => {
+  let div=document.createElement("div");
 
-  const div = document.createElement("div");
-
-  let options = accounts.map(a => `<option>${a}</option>`).join("");
+  let opts = accounts.map(a=>`<option>${a}</option>`).join("");
 
   div.innerHTML = `
-    <select class="account">${options}</select>
+    <select class="acc">${opts}</select>
     <select class="type">
       <option value="debit">Dr</option>
       <option value="credit">Cr</option>
     </select>
-    <input type="number" class="amt" placeholder="Amount">
-    <button onclick="this.parentElement.remove()">X</button>
+    <input type="number" class="amt">
+    <button class="del">X</button>
   `;
 
-  journalLines.appendChild(div);
-}
+  div.querySelector(".del").onclick = () => div.remove();
 
-// ===== SAVE ENTRY =====
-function saveEntry() {
+  linesDiv.appendChild(div);
+};
 
-  let lines = [];
-  let dr = 0;
-  let cr = 0;
+// save entry
+document.getElementById("saveBtn").onclick = () => {
 
-  document.querySelectorAll("#journalLines div").forEach(div => {
-    const acc = div.querySelector(".account").value;
-    const type = div.querySelector(".type").value;
-    const amt = parseFloat(div.querySelector(".amt").value || 0);
+  let dr=0, cr=0;
+  let lines=[];
 
-    if (amt <= 0) return;
+  document.querySelectorAll("#lines div").forEach(div=>{
+    let acc = div.querySelector(".acc").value;
+    let type = div.querySelector(".type").value;
+    let amt = parseFloat(div.querySelector(".amt").value||0);
 
-    lines.push({ acc, type, amt });
+    if(amt<=0) return;
 
-    if (type === "debit") dr += amt;
-    else cr += amt;
+    lines.push({acc,type,amt});
+
+    if(type==="debit") dr+=amt;
+    else cr+=amt;
   });
 
-  if (lines.length < 2) {
-    alert("Minimum 2 lines required");
+  if(lines.length<2){
+    alert("Add 2 lines");
     return;
   }
 
-  if (Math.abs(dr - cr) > 0.01) {
-    alert("Entry not balanced!");
+  if(Math.abs(dr-cr)>0.01){
+    alert("Not balanced");
     return;
   }
 
   entries.push({
-    date: new Date().toLocaleDateString(),
+    date:new Date().toLocaleDateString(),
     lines
   });
 
-  journalLines.innerHTML = "";
+  linesDiv.innerHTML="";
   renderLedger();
-}
+};
 
-// ===== LEDGER =====
-function renderLedger() {
+// ledger
+function renderLedger(){
+  ledger.innerHTML="";
 
-  ledger.innerHTML = "";
+  entries.forEach(e=>{
+    e.lines.forEach(l=>{
+      let tr=document.createElement("tr");
 
-  entries.forEach(e => {
-
-    e.lines.forEach(l => {
-
-      const row = document.createElement("tr");
-
-      row.innerHTML = `
+      tr.innerHTML=`
         <td>${e.date}</td>
         <td>${l.acc}</td>
-        <td>${l.type === "debit" ? l.amt : ""}</td>
-        <td>${l.type === "credit" ? l.amt : ""}</td>
+        <td>${l.type==="debit"?l.amt:""}</td>
+        <td>${l.type==="credit"?l.amt:""}</td>
       `;
 
-      ledger.appendChild(row);
+      ledger.appendChild(tr);
     });
-
   });
 }
 
-// INIT
 renderAccounts();
 
 </script>
