@@ -1,1 +1,435 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Accounting Pro - Journal System</title>
 
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI}
+
+body{display:flex;height:100vh;background:#e6edf5}
+
+/* Sidebar */
+.sidebar{
+  width:240px;
+  background:#0b1f3a;
+  color:white;
+  padding:20px;
+}
+
+.sidebar h2{margin-bottom:20px;color:#93c5fd}
+
+.sidebar button{
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  background:#132c52;
+  color:white;
+  border:none;
+  text-align:left;
+  cursor:pointer;
+}
+
+.sidebar button:hover{background:#1d4ed8}
+
+/* Main */
+.main{
+  flex:1;
+  padding:30px;
+  background:#f8fafc;
+  overflow:auto;
+}
+
+.box{
+  background:white;
+  padding:20px;
+  border-radius:6px;
+  border:1px solid #cbd5e1;
+  margin-bottom:20px;
+}
+
+input,select{
+  padding:8px;
+  margin:5px;
+  border:1px solid #cbd5e1;
+}
+
+button{
+  padding:8px 12px;
+  margin:5px;
+  border:none;
+  background:#2563eb;
+  color:white;
+  cursor:pointer;
+}
+
+table{
+  width:100%;
+  margin-top:15px;
+  border-collapse:collapse;
+}
+
+th{
+  background:#e2e8f0;
+}
+
+th,td{
+  padding:10px;
+  border-bottom:1px solid #cbd5e1;
+}
+
+/* Journal lines */
+#lines div{
+  display:flex;
+  gap:8px;
+  margin:8px 0;
+}
+
+/* Auth */
+.auth{
+  position:fixed;
+  width:100%;
+  height:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#f1f5f9;
+}
+</style>
+</head>
+
+<body>
+
+<!-- AUTH -->
+<div id="auth" class="auth">
+<div class="box">
+<h2 id="authTitle">Login</h2>
+<input id="email" placeholder="Email"><br>
+<input id="password" type="password" placeholder="Password"><br>
+<button onclick="submitAuth()">Continue</button>
+<p onclick="toggleMode()" style="cursor:pointer;color:blue">Switch</p>
+</div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;width:100%;display:flex">
+
+<div class="sidebar">
+<h2>Gateway</h2>
+<button onclick="show('dash')">Dashboard</button>
+<button onclick="show('accounts')">Accounts</button>
+<button onclick="show('journal')">Journal Entry</button>
+<button onclick="show('trial')">Trial Balance</button>
+<button onclick="show('pl')">Profit & Loss</button>
+<button onclick="show('bs')">Balance Sheet</button>
+<button onclick="exportData()">Export</button>
+<button onclick="logout()">Logout</button>
+</div>
+
+<div class="main">
+
+<div id="dashPage" class="box"></div>
+
+<div id="accountsPage" class="box" style="display:none">
+<h2>Create Account</h2>
+<input id="accName" placeholder="Account Name">
+<select id="accType">
+<option>Asset</option>
+<option>Liability</option>
+<option>Income</option>
+<option>Expense</option>
+</select>
+<button onclick="addAccount()">Add</button>
+<div id="accList"></div>
+</div>
+
+<div id="journalPage" class="box" style="display:none">
+<h2>Journal Entry</h2>
+
+<div id="lines"></div>
+
+<button onclick="addLine()">+ Add Line</button>
+<button onclick="saveEntry()">Save Entry</button>
+
+<table>
+<tr><th>Date</th><th>Account</th><th>Dr</th><th>Cr</th></tr>
+<tbody id="ledger"></tbody>
+</table>
+</div>
+
+<div id="trialPage" class="box" style="display:none"></div>
+<div id="plPage" class="box" style="display:none"></div>
+<div id="bsPage" class="box" style="display:none"></div>
+
+</div>
+</div>
+
+<script>
+
+// AUTH
+let mode="login";
+
+function toggleMode(){
+  mode = mode==="login" ? "signup" : "login";
+  document.getElementById("authTitle").innerText = mode.toUpperCase();
+}
+
+function submitAuth(){
+
+  let email = document.getElementById("email").value.trim();
+  let pass  = document.getElementById("password").value.trim();
+
+  if(!email || !pass){
+    alert("Fill all fields");
+    return;
+  }
+
+  let users = JSON.parse(localStorage.getItem("users") || "{}");
+
+  if(mode==="signup"){
+
+    if(users[email]){
+      alert("User exists");
+      return;
+    }
+
+    users[email] = pass;
+    localStorage.setItem("users", JSON.stringify(users));
+
+    alert("Signup successful");
+    toggleMode();
+
+  } else {
+
+    if(users[email] !== pass){
+      alert("Invalid login");
+      return;
+    }
+
+    localStorage.setItem("logged", email);
+    loadUser();
+  }
+}
+
+function logout(){
+  localStorage.removeItem("logged");
+  location.reload();
+}
+
+// USER DATA
+let user,accounts=[],entries=[];
+
+function loadUser(){
+  user = localStorage.getItem("logged");
+
+  accounts = JSON.parse(localStorage.getItem("acc_"+user) || "[]");
+  entries  = JSON.parse(localStorage.getItem("ent_"+user) || "[]");
+
+  document.getElementById("auth").style.display="none";
+  document.getElementById("app").style.display="flex";
+
+  renderAccounts();
+  renderLedger();
+  renderDash();
+}
+
+if(localStorage.getItem("logged")) loadUser();
+
+// NAV
+function show(p){
+  dashPage.style.display=p==="dash"?"block":"none";
+  accountsPage.style.display=p==="accounts"?"block":"none";
+  journalPage.style.display=p==="journal"?"block":"none";
+  trialPage.style.display=p==="trial"?"block":"none";
+  plPage.style.display=p==="pl"?"block":"none";
+  bsPage.style.display=p==="bs"?"block":"none";
+
+  if(p==="trial") renderTrial();
+  if(p==="pl") renderPL();
+  if(p==="bs") renderBS();
+}
+
+// ACCOUNTS
+function addAccount(){
+  let name = accName.value.trim();
+  let type = accType.value;
+
+  if(!name){alert("Enter name");return;}
+
+  accounts.push({name,type});
+  localStorage.setItem("acc_"+user, JSON.stringify(accounts));
+
+  accName.value="";
+  renderAccounts();
+}
+
+function renderAccounts(){
+  accList.innerHTML = accounts.map(a=>`${a.name} (${a.type})`).join("<br>");
+}
+
+// JOURNAL
+function addLine(){
+  let opts = accounts.map(a=>`<option>${a.name}</option>`).join("");
+
+  let div = document.createElement("div");
+
+  div.innerHTML = `
+    <select class="acc">${opts}</select>
+    <input type="number" class="dr" placeholder="Debit">
+    <input type="number" class="cr" placeholder="Credit">
+    <button onclick="this.parentElement.remove()">X</button>
+  `;
+
+  lines.appendChild(div);
+}
+
+function saveEntry(){
+
+  let totalDr=0,totalCr=0,list=[];
+
+  document.querySelectorAll("#lines div").forEach(d=>{
+    let acc=d.querySelector(".acc").value;
+    let dr=parseFloat(d.querySelector(".dr").value||0);
+    let cr=parseFloat(d.querySelector(".cr").value||0);
+
+    if(dr>0){list.push({acc,type:"debit",amt:dr});totalDr+=dr;}
+    if(cr>0){list.push({acc,type:"credit",amt:cr});totalCr+=cr;}
+  });
+
+  if(totalDr===0 && totalCr===0){alert("Enter values");return;}
+
+  if(Math.abs(totalDr-totalCr)>0.01){
+    alert("Not balanced");
+    return;
+  }
+
+  entries.push({
+    date:new Date().toLocaleDateString(),
+    lines:list
+  });
+
+  localStorage.setItem("ent_"+user, JSON.stringify(entries));
+
+  lines.innerHTML="";
+  renderLedger();
+  renderDash();
+}
+
+// LEDGER
+function renderLedger(){
+  ledger.innerHTML="";
+
+  entries.forEach(e=>{
+    e.lines.forEach(l=>{
+      let tr=document.createElement("tr");
+      tr.innerHTML=`
+      <td>${e.date}</td>
+      <td>${l.acc}</td>
+      <td>${l.type==="debit"?l.amt:""}</td>
+      <td>${l.type==="credit"?l.amt:""}</td>`;
+      ledger.appendChild(tr);
+    });
+  });
+}
+
+// DASH
+function renderDash(){
+  let inc=0,exp=0;
+
+  entries.forEach(e=>{
+    e.lines.forEach(l=>{
+      let acc=accounts.find(a=>a.name===l.acc);
+      if(!acc)return;
+      if(acc.type==="Income") inc+=l.amt;
+      if(acc.type==="Expense") exp+=l.amt;
+    });
+  });
+
+  dashPage.innerHTML=`
+  <h2>Dashboard</h2>
+  <p>Income: ₹${inc}</p>
+  <p>Expense: ₹${exp}</p>
+  <p>Profit: ₹${inc-exp}</p>`;
+}
+
+// TRIAL
+function renderTrial(){
+  let b={};
+  accounts.forEach(a=>b[a.name]={dr:0,cr:0});
+
+  entries.forEach(e=>{
+    e.lines.forEach(l=>{
+      if(l.type==="debit") b[l.acc].dr+=l.amt;
+      else b[l.acc].cr+=l.amt;
+    });
+  });
+
+  let html="<h2>Trial Balance</h2><table><tr><th>Account</th><th>Dr</th><th>Cr</th></tr>";
+  for(let a in b){
+    html+=`<tr><td>${a}</td><td>${b[a].dr}</td><td>${b[a].cr}</td></tr>`;
+  }
+  html+="</table>";
+
+  trialPage.innerHTML=html;
+}
+
+// P&L
+function renderPL(){
+  let inc=0,exp=0;
+
+  entries.forEach(e=>{
+    e.lines.forEach(l=>{
+      let acc=accounts.find(a=>a.name===l.acc);
+      if(!acc)return;
+      if(acc.type==="Income") inc+=l.amt;
+      if(acc.type==="Expense") exp+=l.amt;
+    });
+  });
+
+  plPage.innerHTML=`
+  <h2>P&L</h2>
+  Income ₹${inc}<br>
+  Expense ₹${exp}<br>
+  Profit ₹${inc-exp}`;
+}
+
+// BS
+function renderBS(){
+  let asset=0,liab=0;
+
+  entries.forEach(e=>{
+    e.lines.forEach(l=>{
+      let acc=accounts.find(a=>a.name===l.acc);
+      if(!acc)return;
+
+      if(acc.type==="Asset"){
+        if(l.type==="debit") asset+=l.amt;
+        else asset-=l.amt;
+      }
+
+      if(acc.type==="Liability"){
+        if(l.type==="credit") liab+=l.amt;
+        else liab-=l.amt;
+      }
+    });
+  });
+
+  bsPage.innerHTML=`
+  <h2>Balance Sheet</h2>
+  Assets ₹${asset}<br>
+  Liabilities ₹${liab}`;
+}
+
+// EXPORT
+function exportData(){
+  let data={accounts,entries};
+  let blob=new Blob([JSON.stringify(data)],{type:"application/json"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="backup.json";
+  a.click();
+}
+
+</script>
+
+</body>
+</html>
