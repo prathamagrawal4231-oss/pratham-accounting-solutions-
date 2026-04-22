@@ -1,71 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Accounting SaaS</title>
+<title>Accounting Cloud App</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
+body{margin:0;font-family:Arial;display:flex;height:100vh;background:#0f172a;color:#fff}
 
-body{display:flex;height:100vh;background:#0f172a}
-
-/* Sidebar */
-.sidebar{
-  width:250px;
-  background:#020617;
-  color:white;
-  padding:20px;
-}
-
-.sidebar button{
-  width:100%;
-  margin:5px 0;
-  padding:10px;
-  background:#0f172a;
-  border:none;
-  color:white;
-  cursor:pointer;
-}
-
-/* Main */
-.main{
-  flex:1;
-  padding:20px;
-  background:#f1f5f9;
-}
-
-.box{
-  background:white;
-  padding:20px;
-  border-radius:10px;
-  margin-bottom:20px;
-}
-
-input,select{
-  padding:8px;
-  margin:5px;
-}
-
-/* Journal */
-.journal-row{
-  display:grid;
-  grid-template-columns:1fr 100px 1fr 100px;
-  gap:10px;
-  margin:5px 0;
-}
-
-/* Auth */
 .auth{
-  position:fixed;
-  width:100%;
-  height:100%;
-  display:flex;
-  justify-content:center;
-  align-items:center;
+  position:fixed;width:100%;height:100%;
+  display:flex;justify-content:center;align-items:center;
   background:#0f172a;
 }
+
+.box{background:#1e293b;padding:20px;border-radius:10px}
+
+input,select{padding:8px;margin:5px;width:200px}
+
+button{padding:8px 12px;margin:5px;cursor:pointer}
+
+.sidebar{
+  width:220px;background:#020617;padding:15px
+}
+
+.main{flex:1;background:#f1f5f9;color:#000;padding:20px;overflow:auto}
+
+.row{display:grid;grid-template-columns:1fr 80px 1fr 80px;gap:10px;margin:5px 0}
+
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #ccc;padding:8px}
+th{background:#1e293b;color:#fff}
 </style>
 
-<!-- FIREBASE -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -76,65 +42,50 @@ input,select{
 
 <!-- LOGIN -->
 <div id="auth" class="auth">
-<div class="box">
-<h2 id="authTitle">Login</h2>
-<input id="email" placeholder="Email"><br>
-<input id="password" type="password" placeholder="Password"><br>
-<button onclick="submitAuth()">Continue</button>
-<p onclick="toggleMode()" style="cursor:pointer;color:blue">Switch</p>
-</div>
-</div>
-
-<!-- COMPANY -->
-<div id="companySelect" class="auth" style="display:none">
-<div class="box">
-<h2>Select Company</h2>
-<input id="newCompany" placeholder="New Company">
-<button onclick="createCompany()">Create</button>
-<div id="companyList"></div>
-</div>
+  <div class="box">
+    <h2 id="title">Login</h2>
+    <input id="email" placeholder="Email"><br>
+    <input id="pass" type="password" placeholder="Password"><br>
+    <button onclick="login()">Continue</button>
+  </div>
 </div>
 
 <!-- APP -->
 <div id="app" style="display:none;width:100%;display:flex">
 
 <div class="sidebar">
-<h2 id="companyName"></h2>
-<button onclick="switchCompany()">Switch Company</button>
-<button onclick="show('dash')">Dashboard</button>
-<button onclick="show('accounts')">Accounts</button>
-<button onclick="show('journal')">Journal</button>
+<h3>Menu</h3>
+<button onclick="showJournal()">Journal</button>
 <button onclick="logout()">Logout</button>
 </div>
 
 <div class="main">
 
-<div id="dashPage" class="box"></div>
+<h2>Journal Entry</h2>
 
-<div id="accountsPage" class="box" style="display:none">
-<input id="accName" placeholder="Account Name">
-<select id="accType">
-<option>Asset</option>
-<option>Liability</option>
-<option>Income</option>
-<option>Expense</option>
-</select>
-<button onclick="addAccount()">Add</button>
-<div id="accList"></div>
-</div>
+<div id="rows"></div>
 
-<div id="journalPage" class="box" style="display:none">
-<div id="lines"></div>
-<button onclick="addLine()">+ Add Line</button>
-<button onclick="saveEntry()">Save</button>
-</div>
+<button onclick="addRow()">Add Row</button>
+<button onclick="save()">Save</button>
+
+<table>
+<tr><th>Account</th><th>Dr</th><th>Account</th><th>Cr</th></tr>
+<tbody id="table"></tbody>
+</table>
 
 </div>
 </div>
 
 <script>
 
-// CONFIG
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyB38hscdHXDbQ3Bw6ZGLIgk8ci323KFAg4",
   authDomain: "pratham-accounting-solution.firebaseapp.com",
@@ -145,153 +96,94 @@ const firebaseConfig = {
   measurementId: "G-W2Y5J3JZ1X"
 };
 
-// AUTH
-let mode="login";
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
-function toggleMode(){
-  mode=mode==="login"?"signup":"login";
-  authTitle.innerText=mode.toUpperCase();
-}
+let userId="";
 
-function submitAuth(){
+function login(){
   let email=document.getElementById("email").value;
-  let pass=document.getElementById("password").value;
+  let pass=document.getElementById("pass").value;
 
-  if(mode==="signup"){
-    authF.createUserWithEmailAndPassword(email,pass)
-      .then(()=>alert("Signup success"))
-      .catch(e=>alert(e.message));
-  }else{
-    authF.signInWithEmailAndPassword(email,pass)
-      .then(()=>loadCompanies())
-      .catch(e=>alert(e.message));
-  }
+  auth.signInWithEmailAndPassword(email,pass)
+  .then(u=>{
+    userId=u.user.uid;
+    document.getElementById("auth").style.display="none";
+    document.getElementById("app").style.display="flex";
+    load();
+  })
+  .catch(()=>{
+    auth.createUserWithEmailAndPassword(email,pass)
+    .then(u=>{
+      userId=u.user.uid;
+      document.getElementById("auth").style.display="none";
+      document.getElementById("app").style.display="flex";
+      load();
+    });
+  });
 }
 
 function logout(){
-  authF.signOut();
+  auth.signOut();
   location.reload();
 }
 
-// COMPANY
-let user,company;
-
-function loadCompanies(){
-  user=authF.currentUser.uid;
-  auth.style.display="none";
-  companySelect.style.display="flex";
-
-  db.collection("companies")
-    .where("user","==",user)
-    .get()
-    .then(snap=>{
-      companyList.innerHTML="";
-      snap.forEach(doc=>{
-        let c=doc.data().name;
-        companyList.innerHTML+=`
-        <div>${c}
-        <button onclick="openCompany('${c}')">Open</button></div>`;
-      });
-    });
-}
-
-function createCompany(){
-  let name=newCompany.value;
-
-  db.collection("companies").add({
-    user:user,
-    name:name
-  }).then(loadCompanies);
-}
-
-function openCompany(c){
-  company=c;
-  companySelect.style.display="none";
-  app.style.display="flex";
-  companyName.innerText=c;
-  loadData();
-}
-
-function switchCompany(){
-  app.style.display="none";
-  loadCompanies();
-}
-
-// DATA
-let accounts=[];
-
-function loadData(){
-  db.collection("accounts")
-    .where("user","==",user)
-    .where("company","==",company)
-    .onSnapshot(snap=>{
-      accounts=[];
-      accList.innerHTML="";
-      snap.forEach(doc=>{
-        let d=doc.data();
-        accounts.push(d);
-        accList.innerHTML+=`${d.name} (${d.type})<br>`;
-      });
-    });
-}
-
-// ACCOUNTS
-function addAccount(){
-  db.collection("accounts").add({
-    user:user,
-    company:company,
-    name:accName.value,
-    type:accType.value
-  });
-}
-
-// JOURNAL
-function addLine(){
-  let opts=accounts.map(a=>`<option>${a.name}</option>`).join("");
-
+/* JOURNAL */
+function addRow(){
   let div=document.createElement("div");
-  div.className="journal-row";
+  div.className="row";
   div.innerHTML=`
-  <select class="acc">${opts}</select>
-  <input class="dr" placeholder="Dr">
-  <select class="acc2">${opts}</select>
-  <input class="cr" placeholder="Cr">`;
-
-  lines.appendChild(div);
+    <input placeholder="Dr Account" class="a1">
+    <input type="number" class="dr">
+    <input placeholder="Cr Account" class="a2">
+    <input type="number" class="cr">
+  `;
+  rows.appendChild(div);
 }
 
-function saveEntry(){
-  let list=[];
-  let dr=0,cr=0;
+function save(){
+  let lines=[];
+  document.querySelectorAll(".row").forEach(r=>{
+    let a1=r.querySelector(".a1").value;
+    let dr=+r.querySelector(".dr").value||0;
+    let a2=r.querySelector(".a2").value;
+    let cr=+r.querySelector(".cr").value||0;
 
-  document.querySelectorAll(".journal-row").forEach(d=>{
-    let a1=d.querySelector(".acc").value;
-    let d1=parseFloat(d.querySelector(".dr").value||0);
-
-    let a2=d.querySelector(".acc2").value;
-    let c1=parseFloat(d.querySelector(".cr").value||0);
-
-    if(d1>0){list.push({acc:a1,type:"debit",amt:d1});dr+=d1;}
-    if(c1>0){list.push({acc:a2,type:"credit",amt:c1});cr+=c1;}
+    if(dr)lines.push({acc:a1,type:"dr",amt:dr});
+    if(cr)lines.push({acc:a2,type:"cr",amt:cr});
   });
-
-  if(Math.abs(dr-cr)>0.01){alert("Not balanced");return;}
 
   db.collection("entries").add({
-    user:user,
-    company:company,
-    date:new Date(),
-    lines:list
+    user:userId,
+    lines:lines,
+    date:new Date()
   });
 
-  lines.innerHTML="";
+  rows.innerHTML="";
+  load();
 }
 
-// NAV
-function show(p){
-  dashPage.style.display=p==="dash"?"block":"none";
-  accountsPage.style.display=p==="accounts"?"block":"none";
-  journalPage.style.display=p==="journal"?"block":"none";
+/* LOAD */
+function load(){
+  table.innerHTML="";
+
+  db.collection("entries")
+  .where("user","==",userId)
+  .get()
+  .then(snap=>{
+    snap.forEach(doc=>{
+      doc.data().lines.forEach(l=>{
+        table.innerHTML+=`
+        <tr>
+          <td>${l.type==="dr"?l.acc:""}</td>
+          <td>${l.type==="dr"?l.amt:""}</td>
+          <td>${l.type==="cr"?l.acc:""}</td>
+          <td>${l.type==="cr"?l.amt:""}</td>
+        </tr>`;
+      });
+    });
+  });
 }
 
 </script>
