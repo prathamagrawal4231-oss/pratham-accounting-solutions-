@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Tally Cloud Pro</title>
+<title>Tally SaaS OS</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
@@ -9,8 +9,7 @@
 body{
   display:flex;
   height:100vh;
-  background:#0f172a;
-  color:white;
+  background:#0b1220;
 }
 
 /* AUTH */
@@ -21,7 +20,8 @@ body{
   display:flex;
   justify-content:center;
   align-items:center;
-  background:#0f172a;
+  background:#0b1220;
+  color:white;
 }
 
 .box{
@@ -30,15 +30,11 @@ body{
   border-radius:10px;
 }
 
-/* COMPANY */
-#companySelect{
-  display:none;
-}
-
-/* APP */
+/* SIDEBAR */
 .sidebar{
-  width:250px;
+  width:260px;
   background:#020617;
+  color:white;
   padding:15px;
 }
 
@@ -50,27 +46,22 @@ body{
   color:white;
   border:none;
   border-radius:6px;
-  cursor:pointer;
 }
 
+/* MAIN */
 .main{
   flex:1;
   background:#f1f5f9;
-  color:black;
   padding:20px;
   overflow:auto;
 }
 
-.box2{
+/* BOX */
+.card{
   background:white;
   padding:15px;
   border-radius:10px;
   margin-bottom:15px;
-}
-
-input,select{
-  padding:8px;
-  margin:5px;
 }
 
 /* JOURNAL */
@@ -81,15 +72,13 @@ input,select{
   margin:6px 0;
 }
 
-/* TABLE */
 table{
   width:100%;
   border-collapse:collapse;
-  margin-top:10px;
 }
 
 th,td{
-  border:1px solid #ccc;
+  border:1px solid #ddd;
   padding:8px;
 }
 
@@ -105,7 +94,8 @@ th{
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* ================= FIREBASE CONFIG ================= */
+
+/* FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyB38hscdHXDbQ3Bw6ZGLIgk8ci323KFAg4",
   authDomain: "pratham-accounting-solution.firebaseapp.com",
@@ -119,22 +109,21 @@ firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.firestore();
-/* =================================================== */
 
 let user="",company="";
 
 /* LOGIN */
-function submitAuth(){
-  let email=document.getElementById("email").value;
-  let pass=document.getElementById("password").value;
+function login(){
+  let e=email.value;
+  let p=password.value;
 
-  auth.signInWithEmailAndPassword(email,pass)
+  auth.signInWithEmailAndPassword(e,p)
   .then(u=>{
     user=u.user.uid;
     loadCompanies();
   })
   .catch(()=>{
-    auth.createUserWithEmailAndPassword(email,pass)
+    auth.createUserWithEmailAndPassword(e,p)
     .then(u=>{
       user=u.user.uid;
       loadCompanies();
@@ -142,13 +131,7 @@ function submitAuth(){
   });
 }
 
-/* LOGOUT */
-function logout(){
-  auth.signOut();
-  location.reload();
-}
-
-/* LOAD COMPANIES */
+/* COMPANY SYSTEM */
 function loadCompanies(){
   auth.onAuthStateChanged(u=>{
     if(!u)return;
@@ -160,28 +143,24 @@ function loadCompanies(){
     .get()
     .then(snap=>{
       let html="";
-      snap.forEach(doc=>{
+      snap.forEach(d=>{
         html+=`
         <div>
-          ${doc.data().name}
-          <button onclick="openCompany('${doc.id}','${doc.data().name}')">Open</button>
+          ${d.data().name}
+          <button onclick="openCompany('${d.id}','${d.data().name}')">Open</button>
         </div>`;
       });
 
       companyList.innerHTML=html;
       authBox.style.display="none";
-      companySelect.style.display="flex";
+      companyBox.style.display="flex";
     });
   });
 }
 
-/* CREATE COMPANY */
 function createCompany(){
-  let name=newCompany.value.trim();
-  if(!name)return;
-
   db.collection("companies").add({
-    name:name,
+    name:newCompany.value,
     user:user
   });
 
@@ -189,32 +168,15 @@ function createCompany(){
   loadCompanies();
 }
 
-/* OPEN COMPANY */
 function openCompany(id,name){
   company=name;
-  companySelect.style.display="none";
+  companyBox.style.display="none";
   app.style.display="flex";
   companyName.innerText=name;
-
   loadData();
 }
 
-/* JOURNAL ROW */
-function addRow(){
-  let div=document.createElement("div");
-  div.className="row";
-
-  div.innerHTML=`
-    <input placeholder="Dr Account" class="drA">
-    <input type="number" class="drV">
-    <input placeholder="Cr Account" class="crA">
-    <input type="number" class="crV">
-  `;
-
-  rows.appendChild(div);
-}
-
-/* SAVE ENTRY */
+/* JOURNAL SAVE */
 function saveEntry(){
   let list=[];
   let dr=0,cr=0;
@@ -222,16 +184,15 @@ function saveEntry(){
   document.querySelectorAll(".row").forEach(r=>{
     let da=r.querySelector(".drA").value;
     let dv=+r.querySelector(".drV").value||0;
-
     let ca=r.querySelector(".crA").value;
     let cv=+r.querySelector(".crV").value||0;
 
-    if(dv>0){list.push({acc:da,type:"debit",amt:dv});dr+=dv;}
-    if(cv>0){list.push({acc:ca,type:"credit",amt:cv});cr+=cv;}
+    if(dv>0){list.push({acc:da,type:"dr",amt:dv});dr+=dv;}
+    if(cv>0){list.push({acc:ca,type:"cr",amt:cv});cr+=cv;}
   });
 
   if(Math.abs(dr-cr)>0.01){
-    alert("Entry not balanced!");
+    alert("Not Balanced");
     return;
   }
 
@@ -253,43 +214,27 @@ function loadData(){
   .where("company","==",company)
   .get()
   .then(snap=>{
-    entries=[];
     ledger.innerHTML="";
 
-    snap.forEach(doc=>{
-      let e=doc.data();
-      entries.push(e);
+    let inc=0,exp=0;
 
-      e.lines.forEach(l=>{
+    snap.forEach(d=>{
+      d.data().lines.forEach(l=>{
         ledger.innerHTML+=`
         <tr>
-          <td>${e.date}</td>
           <td>${l.acc}</td>
-          <td>${l.type==="debit"?l.amt:""}</td>
-          <td>${l.type==="credit"?l.amt:""}</td>
+          <td>${l.type==="dr"?l.amt:""}</td>
+          <td>${l.type==="cr"?l.amt:""}</td>
         </tr>`;
+
+        if(l.type==="dr") exp+=l.amt;
+        if(l.type==="cr") inc+=l.amt;
       });
     });
 
-    renderDash();
+    dash.innerHTML=
+    `Income ₹${inc}<br>Expense ₹${exp}<br>Profit ₹${inc-exp}`;
   });
-}
-
-/* DASHBOARD */
-function renderDash(){
-  let inc=0,exp=0;
-
-  entries.forEach(e=>{
-    e.lines.forEach(l=>{
-      if(l.type==="debit") exp+=l.amt;
-      if(l.type==="credit") inc+=l.amt;
-    });
-  });
-
-  dash.innerHTML=`
-  Income: ₹${inc}<br>
-  Expense: ₹${exp}<br>
-  Profit: ₹${inc-exp}`;
 }
 
 </script>
@@ -300,24 +245,22 @@ function renderDash(){
 <!-- LOGIN -->
 <div id="authBox" class="auth">
 <div class="box">
-<h2>Login</h2>
+<h2>Login SaaS</h2>
 <input id="email" placeholder="Email"><br>
 <input id="password" type="password" placeholder="Password"><br>
-<button onclick="submitAuth()">Login / Signup</button>
+<button onclick="login()">Login / Signup</button>
 </div>
 </div>
 
 <!-- COMPANY -->
-<div id="companySelect" class="auth">
+<div id="companyBox" class="auth">
 <div class="box">
 <h2>Companies</h2>
 
-<input id="newCompany" placeholder="New Company">
+<input id="newCompany" placeholder="Company">
 <button onclick="createCompany()">Create</button>
 
 <div id="companyList"></div>
-
-<button onclick="logout()">Logout</button>
 </div>
 </div>
 
@@ -327,24 +270,22 @@ function renderDash(){
 <div class="sidebar">
 <h3 id="companyName">Company</h3>
 <button onclick="addRow()">Add Row</button>
-<button onclick="saveEntry()">Save Entry</button>
-<button onclick="logout()">Logout</button>
+<button onclick="saveEntry()">Save</button>
 </div>
 
 <div class="main">
 
-<div class="box2">
+<div class="card">
 <h2>Dashboard</h2>
 <div id="dash"></div>
 </div>
 
-<div class="box2">
+<div class="card">
 <h2>Journal</h2>
 <div id="rows"></div>
 
 <table>
 <tr>
-<th>Date</th>
 <th>Account</th>
 <th>Dr</th>
 <th>Cr</th>
