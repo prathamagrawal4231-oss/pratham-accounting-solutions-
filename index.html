@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Accounting Pro - Tally UI</title>
+<title>Accounting Pro</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI}
@@ -16,10 +16,7 @@ body{display:flex;height:100vh;background:#e6edf5}
   padding:20px;
 }
 
-.sidebar h2{
-  margin-bottom:20px;
-  color:#93c5fd;
-}
+.sidebar h2{margin-bottom:20px;color:#93c5fd}
 
 .sidebar button{
   width:100%;
@@ -80,7 +77,7 @@ th,td{
   border-bottom:1px solid #cbd5e1;
 }
 
-/* AUTH */
+/* Auth */
 .auth{
   position:fixed;
   width:100%;
@@ -102,16 +99,15 @@ th,td{
 <input id="email" placeholder="Email"><br>
 <input id="password" type="password" placeholder="Password"><br>
 <button onclick="submitAuth()">Continue</button>
-<p onclick="toggleMode()" style="cursor:pointer;color:blue">Switch</p>
+<p onclick="toggleMode()" style="cursor:pointer;color:blue">Switch to Signup</p>
 </div>
 </div>
 
 <!-- APP -->
-<div id="app" style="display:none; width:100%; display:flex;">
+<div id="app" style="display:none;width:100%;display:flex">
 
 <div class="sidebar">
-<h2>Gateway of Tally</h2>
-
+<h2>Gateway</h2>
 <button onclick="show('dash')">Dashboard</button>
 <button onclick="show('accounts')">Accounts</button>
 <button onclick="show('journal')">Voucher Entry</button>
@@ -160,27 +156,47 @@ th,td{
 
 <script>
 
-// AUTH
+// ===== AUTH =====
 let mode="login";
 
 function toggleMode(){
-  mode=mode==="login"?"signup":"login";
-  authTitle.innerText=mode;
+  mode = mode==="login" ? "signup" : "login";
+  document.getElementById("authTitle").innerText = mode==="login"?"Login":"Signup";
 }
 
 function submitAuth(){
-  let email=emailEl.value;
-  let pass=passwordEl.value;
 
-  let users=JSON.parse(localStorage.getItem("users")||"{}");
+  let email = document.getElementById("email").value.trim();
+  let pass = document.getElementById("password").value.trim();
+
+  if(!email || !pass){
+    alert("Please fill all fields");
+    return;
+  }
+
+  let users = JSON.parse(localStorage.getItem("users") || "{}");
 
   if(mode==="signup"){
-    users[email]=pass;
-    localStorage.setItem("users",JSON.stringify(users));
-    alert("Signup done");
-  }else{
-    if(users[email]!==pass){alert("Wrong");return;}
-    localStorage.setItem("logged",email);
+
+    if(users[email]){
+      alert("User already exists");
+      return;
+    }
+
+    users[email] = pass;
+    localStorage.setItem("users", JSON.stringify(users));
+
+    alert("Signup successful! Now login.");
+    toggleMode();
+
+  } else {
+
+    if(users[email] !== pass){
+      alert("Invalid login");
+      return;
+    }
+
+    localStorage.setItem("logged", email);
     loadUser();
   }
 }
@@ -190,102 +206,116 @@ function logout(){
   location.reload();
 }
 
-// USER DATA
+// ===== USER DATA =====
 let user,accounts=[],entries=[];
 
 function loadUser(){
-  user=localStorage.getItem("logged");
-  accounts=JSON.parse(localStorage.getItem("acc_"+user)||"[]");
-  entries=JSON.parse(localStorage.getItem("ent_"+user)||"[]");
+  user = localStorage.getItem("logged");
 
-  auth.style.display="none";
-  app.style.display="flex";
+  accounts = JSON.parse(localStorage.getItem("acc_"+user) || "[]");
+  entries = JSON.parse(localStorage.getItem("ent_"+user) || "[]");
+
+  document.getElementById("auth").style.display="none";
+  document.getElementById("app").style.display="flex";
 
   renderAccounts();
   renderLedger();
   renderDash();
 }
 
+// AUTO LOGIN
 if(localStorage.getItem("logged")) loadUser();
 
-// NAV
+// ===== NAV =====
 function show(p){
-  dashPage.style.display=p==="dash"?"block":"none";
-  accountsPage.style.display=p==="accounts"?"block":"none";
-  journalPage.style.display=p==="journal"?"block":"none";
-  trialPage.style.display=p==="trial"?"block":"none";
-  plPage.style.display=p==="pl"?"block":"none";
-  bsPage.style.display=p==="bs"?"block":"none";
+  document.getElementById("dashPage").style.display = p==="dash"?"block":"none";
+  document.getElementById("accountsPage").style.display = p==="accounts"?"block":"none";
+  document.getElementById("journalPage").style.display = p==="journal"?"block":"none";
+  document.getElementById("trialPage").style.display = p==="trial"?"block":"none";
+  document.getElementById("plPage").style.display = p==="pl"?"block":"none";
+  document.getElementById("bsPage").style.display = p==="bs"?"block":"none";
 
   if(p==="trial") renderTrial();
   if(p==="pl") renderPL();
   if(p==="bs") renderBS();
 }
 
-// ACCOUNTS
+// ===== ACCOUNTS =====
 function addAccount(){
-  let name=accName.value;
-  let type=accType.value;
+  let name = document.getElementById("accName").value.trim();
+  let type = document.getElementById("accType").value;
 
-  if(!name){alert("Enter name");return;}
+  if(!name){ alert("Enter name"); return; }
 
   accounts.push({name,type});
-  localStorage.setItem("acc_"+user,JSON.stringify(accounts));
+  localStorage.setItem("acc_"+user, JSON.stringify(accounts));
 
-  accName.value="";
+  document.getElementById("accName").value="";
   renderAccounts();
 }
 
 function renderAccounts(){
-  accList.innerHTML=accounts.map(a=>`${a.name} (${a.type})`).join("<br>");
+  document.getElementById("accList").innerHTML =
+    accounts.map(a=>`${a.name} (${a.type})`).join("<br>");
 }
 
-// JOURNAL
+// ===== JOURNAL =====
 function addLine(){
-  let opts=accounts.map(a=>`<option>${a.name}</option>`).join("");
-  let div=document.createElement("div");
+  let opts = accounts.map(a=>`<option>${a.name}</option>`).join("");
+  let div = document.createElement("div");
 
-  div.innerHTML=`
+  div.innerHTML = `
   <select class="acc">${opts}</select>
-  <select class="type"><option>debit</option><option>credit</option></select>
+  <select class="type"><option value="debit">Dr</option><option value="credit">Cr</option></select>
   <input type="number" class="amt">
-  <button onclick="this.parentElement.remove()">X</button>`;
+  <button onclick="this.parentElement.remove()">X</button>
+  `;
 
-  lines.appendChild(div);
+  document.getElementById("lines").appendChild(div);
 }
 
 function saveEntry(){
-  let dr=0,cr=0,list=[];
+  let dr=0, cr=0, list=[];
 
   document.querySelectorAll("#lines div").forEach(d=>{
     let acc=d.querySelector(".acc").value;
     let type=d.querySelector(".type").value;
     let amt=parseFloat(d.querySelector(".amt").value||0);
 
-    if(amt<=0)return;
+    if(amt<=0) return;
 
     list.push({acc,type,amt});
-    if(type==="debit")dr+=amt; else cr+=amt;
+    if(type==="debit") dr+=amt; else cr+=amt;
   });
 
-  if(Math.abs(dr-cr)>0.01){alert("Not balanced");return;}
+  if(Math.abs(dr-cr)>0.01){
+    alert("Entry not balanced");
+    return;
+  }
 
-  entries.push({date:new Date().toLocaleDateString(),lines:list});
+  entries.push({
+    date:new Date().toLocaleDateString(),
+    lines:list
+  });
 
-  localStorage.setItem("ent_"+user,JSON.stringify(entries));
+  localStorage.setItem("ent_"+user, JSON.stringify(entries));
 
-  lines.innerHTML="";
+  document.getElementById("lines").innerHTML="";
   renderLedger();
   renderDash();
 }
 
-// LEDGER
+// ===== LEDGER =====
 function renderLedger(){
+  let ledger=document.getElementById("ledger");
   ledger.innerHTML="";
+
   entries.forEach(e=>{
     e.lines.forEach(l=>{
       let tr=document.createElement("tr");
-      tr.innerHTML=`<td>${e.date}</td><td>${l.acc}</td>
+      tr.innerHTML=`
+      <td>${e.date}</td>
+      <td>${l.acc}</td>
       <td>${l.type==="debit"?l.amt:""}</td>
       <td>${l.type==="credit"?l.amt:""}</td>`;
       ledger.appendChild(tr);
@@ -293,7 +323,7 @@ function renderLedger(){
   });
 }
 
-// DASHBOARD
+// ===== DASH =====
 function renderDash(){
   let inc=0,exp=0;
 
@@ -306,14 +336,14 @@ function renderDash(){
     });
   });
 
-  dashPage.innerHTML=`
+  document.getElementById("dashPage").innerHTML=`
   <h2>Dashboard</h2>
   <p>Total Income: ₹${inc}</p>
   <p>Total Expense: ₹${exp}</p>
   <p>Profit: ₹${inc-exp}</p>`;
 }
 
-// TRIAL
+// ===== TRIAL =====
 function renderTrial(){
   let b={};
   accounts.forEach(a=>b[a.name]={dr:0,cr:0});
@@ -326,16 +356,15 @@ function renderTrial(){
   });
 
   let html="<h2>Trial Balance</h2><table><tr><th>Account</th><th>Dr</th><th>Cr</th></tr>";
-
   for(let a in b){
     html+=`<tr><td>${a}</td><td>${b[a].dr}</td><td>${b[a].cr}</td></tr>`;
   }
-
   html+="</table>";
-  trialPage.innerHTML=html;
+
+  document.getElementById("trialPage").innerHTML=html;
 }
 
-// P&L
+// ===== P&L =====
 function renderPL(){
   let inc=0,exp=0;
 
@@ -348,13 +377,14 @@ function renderPL(){
     });
   });
 
-  plPage.innerHTML=`<h2>P&L</h2>
+  document.getElementById("plPage").innerHTML=`
+  <h2>P&L</h2>
   Income ₹${inc}<br>
   Expense ₹${exp}<br>
   Profit ₹${inc-exp}`;
 }
 
-// BALANCE SHEET
+// ===== BS =====
 function renderBS(){
   let asset=0,liab=0;
 
@@ -375,12 +405,13 @@ function renderBS(){
     });
   });
 
-  bsPage.innerHTML=`<h2>Balance Sheet</h2>
+  document.getElementById("bsPage").innerHTML=`
+  <h2>Balance Sheet</h2>
   Assets ₹${asset}<br>
-  Liability ₹${liab}`;
+  Liabilities ₹${liab}`;
 }
 
-// EXPORT
+// ===== EXPORT =====
 function exportData(){
   let data={accounts,entries};
   let blob=new Blob([JSON.stringify(data)],{type:"application/json"});
