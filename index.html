@@ -1,1 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Accounting SaaS</title>
 
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
+
+body{display:flex;height:100vh;background:#0f172a}
+
+/* Sidebar */
+.sidebar{
+  width:250px;
+  background:#020617;
+  color:white;
+  padding:20px;
+}
+
+.sidebar button{
+  width:100%;
+  margin:5px 0;
+  padding:10px;
+  background:#0f172a;
+  border:none;
+  color:white;
+  cursor:pointer;
+}
+
+/* Main */
+.main{
+  flex:1;
+  padding:20px;
+  background:#f1f5f9;
+}
+
+.box{
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  margin-bottom:20px;
+}
+
+input,select{
+  padding:8px;
+  margin:5px;
+}
+
+/* Journal */
+.journal-row{
+  display:grid;
+  grid-template-columns:1fr 100px 1fr 100px;
+  gap:10px;
+  margin:5px 0;
+}
+
+/* Auth */
+.auth{
+  position:fixed;
+  width:100%;
+  height:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#0f172a;
+}
+</style>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="auth" class="auth">
+<div class="box">
+<h2 id="authTitle">Login</h2>
+<input id="email" placeholder="Email"><br>
+<input id="password" type="password" placeholder="Password"><br>
+<button onclick="submitAuth()">Continue</button>
+<p onclick="toggleMode()" style="cursor:pointer;color:blue">Switch</p>
+</div>
+</div>
+
+<!-- COMPANY -->
+<div id="companySelect" class="auth" style="display:none">
+<div class="box">
+<h2>Select Company</h2>
+<input id="newCompany" placeholder="New Company">
+<button onclick="createCompany()">Create</button>
+<div id="companyList"></div>
+</div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;width:100%;display:flex">
+
+<div class="sidebar">
+<h2 id="companyName"></h2>
+<button onclick="switchCompany()">Switch Company</button>
+<button onclick="show('dash')">Dashboard</button>
+<button onclick="show('accounts')">Accounts</button>
+<button onclick="show('journal')">Journal</button>
+<button onclick="logout()">Logout</button>
+</div>
+
+<div class="main">
+
+<div id="dashPage" class="box"></div>
+
+<div id="accountsPage" class="box" style="display:none">
+<input id="accName" placeholder="Account Name">
+<select id="accType">
+<option>Asset</option>
+<option>Liability</option>
+<option>Income</option>
+<option>Expense</option>
+</select>
+<button onclick="addAccount()">Add</button>
+<div id="accList"></div>
+</div>
+
+<div id="journalPage" class="box" style="display:none">
+<div id="lines"></div>
+<button onclick="addLine()">+ Add Line</button>
+<button onclick="saveEntry()">Save</button>
+</div>
+
+</div>
+</div>
+
+<script>
+
+// CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyB38hscdHXDbQ3Bw6ZGLIgk8ci323KFAg4",
+  authDomain: "pratham-accounting-solution.firebaseapp.com",
+  projectId: "pratham-accounting-solution",
+  storageBucket: "pratham-accounting-solution.firebasestorage.app",
+  messagingSenderId: "261436280247",
+  appId: "1:261436280247:web:5af8a0f36ff722dce62c32",
+  measurementId: "G-W2Y5J3JZ1X"
+};
+
+// AUTH
+let mode="login";
+
+function toggleMode(){
+  mode=mode==="login"?"signup":"login";
+  authTitle.innerText=mode.toUpperCase();
+}
+
+function submitAuth(){
+  let email=document.getElementById("email").value;
+  let pass=document.getElementById("password").value;
+
+  if(mode==="signup"){
+    authF.createUserWithEmailAndPassword(email,pass)
+      .then(()=>alert("Signup success"))
+      .catch(e=>alert(e.message));
+  }else{
+    authF.signInWithEmailAndPassword(email,pass)
+      .then(()=>loadCompanies())
+      .catch(e=>alert(e.message));
+  }
+}
+
+function logout(){
+  authF.signOut();
+  location.reload();
+}
+
+// COMPANY
+let user,company;
+
+function loadCompanies(){
+  user=authF.currentUser.uid;
+  auth.style.display="none";
+  companySelect.style.display="flex";
+
+  db.collection("companies")
+    .where("user","==",user)
+    .get()
+    .then(snap=>{
+      companyList.innerHTML="";
+      snap.forEach(doc=>{
+        let c=doc.data().name;
+        companyList.innerHTML+=`
+        <div>${c}
+        <button onclick="openCompany('${c}')">Open</button></div>`;
+      });
+    });
+}
+
+function createCompany(){
+  let name=newCompany.value;
+
+  db.collection("companies").add({
+    user:user,
+    name:name
+  }).then(loadCompanies);
+}
+
+function openCompany(c){
+  company=c;
+  companySelect.style.display="none";
+  app.style.display="flex";
+  companyName.innerText=c;
+  loadData();
+}
+
+function switchCompany(){
+  app.style.display="none";
+  loadCompanies();
+}
+
+// DATA
+let accounts=[];
+
+function loadData(){
+  db.collection("accounts")
+    .where("user","==",user)
+    .where("company","==",company)
+    .onSnapshot(snap=>{
+      accounts=[];
+      accList.innerHTML="";
+      snap.forEach(doc=>{
+        let d=doc.data();
+        accounts.push(d);
+        accList.innerHTML+=`${d.name} (${d.type})<br>`;
+      });
+    });
+}
+
+// ACCOUNTS
+function addAccount(){
+  db.collection("accounts").add({
+    user:user,
+    company:company,
+    name:accName.value,
+    type:accType.value
+  });
+}
+
+// JOURNAL
+function addLine(){
+  let opts=accounts.map(a=>`<option>${a.name}</option>`).join("");
+
+  let div=document.createElement("div");
+  div.className="journal-row";
+  div.innerHTML=`
+  <select class="acc">${opts}</select>
+  <input class="dr" placeholder="Dr">
+  <select class="acc2">${opts}</select>
+  <input class="cr" placeholder="Cr">`;
+
+  lines.appendChild(div);
+}
+
+function saveEntry(){
+  let list=[];
+  let dr=0,cr=0;
+
+  document.querySelectorAll(".journal-row").forEach(d=>{
+    let a1=d.querySelector(".acc").value;
+    let d1=parseFloat(d.querySelector(".dr").value||0);
+
+    let a2=d.querySelector(".acc2").value;
+    let c1=parseFloat(d.querySelector(".cr").value||0);
+
+    if(d1>0){list.push({acc:a1,type:"debit",amt:d1});dr+=d1;}
+    if(c1>0){list.push({acc:a2,type:"credit",amt:c1});cr+=c1;}
+  });
+
+  if(Math.abs(dr-cr)>0.01){alert("Not balanced");return;}
+
+  db.collection("entries").add({
+    user:user,
+    company:company,
+    date:new Date(),
+    lines:list
+  });
+
+  lines.innerHTML="";
+}
+
+// NAV
+function show(p){
+  dashPage.style.display=p==="dash"?"block":"none";
+  accountsPage.style.display=p==="accounts"?"block":"none";
+  journalPage.style.display=p==="journal"?"block":"none";
+}
+
+</script>
+
+</body>
+</html>
