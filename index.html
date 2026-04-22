@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Tally Cloud Lite</title>
+<title>Tally Cloud Pro</title>
 
 <style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+
 body{
-  margin:0;
-  font-family:Arial;
   display:flex;
   height:100vh;
-  background:#0b1220;
+  background:#0f172a;
   color:white;
 }
 
+/* AUTH */
 .auth{
   position:fixed;
   width:100%;
@@ -20,7 +21,7 @@ body{
   display:flex;
   justify-content:center;
   align-items:center;
-  background:#0b1220;
+  background:#0f172a;
 }
 
 .box{
@@ -29,55 +30,58 @@ body{
   border-radius:10px;
 }
 
-input{
-  padding:8px;
-  margin:5px;
-  width:220px;
+/* COMPANY */
+#companySelect{
+  display:none;
 }
 
-button{
-  padding:8px 12px;
-  margin:5px;
-  cursor:pointer;
-}
-
+/* APP */
 .sidebar{
-  width:240px;
-  background:#0a1020;
+  width:250px;
+  background:#020617;
   padding:15px;
 }
 
-.menu button{
+.sidebar button{
   width:100%;
   margin:5px 0;
   padding:10px;
-  background:#18243f;
-  border:none;
+  background:#0f172a;
   color:white;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
 }
 
 .main{
   flex:1;
-  background:#f4f6fb;
+  background:#f1f5f9;
   color:black;
   padding:20px;
   overflow:auto;
 }
 
-.panel{
+.box2{
   background:white;
   padding:15px;
   border-radius:10px;
   margin-bottom:15px;
 }
 
-.journalRow{
+input,select{
+  padding:8px;
+  margin:5px;
+}
+
+/* JOURNAL */
+.row{
   display:grid;
   grid-template-columns:1fr 120px 1fr 120px;
   gap:10px;
   margin:6px 0;
 }
 
+/* TABLE */
 table{
   width:100%;
   border-collapse:collapse;
@@ -85,7 +89,7 @@ table{
 }
 
 th,td{
-  border:1px solid #ddd;
+  border:1px solid #ccc;
   padding:8px;
 }
 
@@ -95,69 +99,13 @@ th{
 }
 </style>
 
-<!-- Firebase -->
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-</head>
-
-<body>
-
-<!-- LOGIN -->
-<div id="auth" class="auth">
-  <div class="box">
-    <h2>Tally Cloud Login</h2>
-    <input id="email" placeholder="Email"><br>
-    <input id="pass" type="password" placeholder="Password"><br>
-    <button onclick="login()">Login / Signup</button>
-  </div>
-</div>
-
-<!-- APP -->
-<div id="app" style="display:none;width:100%;display:flex">
-
-<div class="sidebar">
-  <h3>Menu</h3>
-  <div class="menu">
-    <button onclick="show('journal')">Journal</button>
-    <button onclick="show('ledger')">Ledger</button>
-    <button onclick="addRow()">+ Row</button>
-    <button onclick="saveEntry()">Save</button>
-    <button onclick="logout()">Logout</button>
-  </div>
-</div>
-
-<div class="main">
-
-<!-- JOURNAL -->
-<div id="journalPage" class="panel">
-<h2>Journal Entry</h2>
-<div id="rows"></div>
-</div>
-
-<!-- LEDGER -->
-<div id="ledgerPage" class="panel" style="display:none">
-<h2>Ledger</h2>
-
-<table>
-<tr>
-<th>Dr Account</th>
-<th>Dr Amount</th>
-<th>Cr Account</th>
-<th>Cr Amount</th>
-</tr>
-<tbody id="table"></tbody>
-</table>
-
-</div>
-
-</div>
-</div>
-
 <script>
-
-/* ================= FIREBASE CONFIG (REPLACED) ================= */
+/* ================= FIREBASE CONFIG ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyB38hscdHXDbQ3Bw6ZGLIgk8ci323KFAg4",
   authDomain: "pratham-accounting-solution.firebaseapp.com",
@@ -171,54 +119,90 @@ firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.firestore();
-/* ============================================================ */
+/* =================================================== */
 
-let uid="";
+let user="",company="";
 
 /* LOGIN */
-function login(){
-  let e=document.getElementById("email").value;
-  let p=document.getElementById("pass").value;
+function submitAuth(){
+  let email=document.getElementById("email").value;
+  let pass=document.getElementById("password").value;
 
-  auth.signInWithEmailAndPassword(e,p)
+  auth.signInWithEmailAndPassword(email,pass)
   .then(u=>{
-    uid=u.user.uid;
-    start();
+    user=u.user.uid;
+    loadCompanies();
   })
   .catch(()=>{
-    auth.createUserWithEmailAndPassword(e,p)
+    auth.createUserWithEmailAndPassword(email,pass)
     .then(u=>{
-      uid=u.user.uid;
-      start();
-    })
-    .catch(e=>alert(e.message));
+      user=u.user.uid;
+      loadCompanies();
+    });
   });
 }
 
-function start(){
-  document.getElementById("auth").style.display="none";
-  document.getElementById("app").style.display="flex";
-  load();
-}
-
+/* LOGOUT */
 function logout(){
   auth.signOut();
   location.reload();
 }
 
-/* NAV */
-function show(page){
-  document.getElementById("journalPage").style.display =
-    page==="journal"?"block":"none";
+/* LOAD COMPANIES */
+function loadCompanies(){
+  auth.onAuthStateChanged(u=>{
+    if(!u)return;
 
-  document.getElementById("ledgerPage").style.display =
-    page==="ledger"?"block":"none";
+    user=u.uid;
+
+    db.collection("companies")
+    .where("user","==",user)
+    .get()
+    .then(snap=>{
+      let html="";
+      snap.forEach(doc=>{
+        html+=`
+        <div>
+          ${doc.data().name}
+          <button onclick="openCompany('${doc.id}','${doc.data().name}')">Open</button>
+        </div>`;
+      });
+
+      companyList.innerHTML=html;
+      authBox.style.display="none";
+      companySelect.style.display="flex";
+    });
+  });
+}
+
+/* CREATE COMPANY */
+function createCompany(){
+  let name=newCompany.value.trim();
+  if(!name)return;
+
+  db.collection("companies").add({
+    name:name,
+    user:user
+  });
+
+  newCompany.value="";
+  loadCompanies();
+}
+
+/* OPEN COMPANY */
+function openCompany(id,name){
+  company=name;
+  companySelect.style.display="none";
+  app.style.display="flex";
+  companyName.innerText=name;
+
+  loadData();
 }
 
 /* JOURNAL ROW */
 function addRow(){
   let div=document.createElement("div");
-  div.className="journalRow";
+  div.className="row";
 
   div.innerHTML=`
     <input placeholder="Dr Account" class="drA">
@@ -232,59 +216,146 @@ function addRow(){
 
 /* SAVE ENTRY */
 function saveEntry(){
-  let lines=[];
+  let list=[];
+  let dr=0,cr=0;
 
-  document.querySelectorAll(".journalRow").forEach(r=>{
+  document.querySelectorAll(".row").forEach(r=>{
     let da=r.querySelector(".drA").value;
     let dv=+r.querySelector(".drV").value||0;
+
     let ca=r.querySelector(".crA").value;
     let cv=+r.querySelector(".crV").value||0;
 
-    if(dv>0)lines.push({acc:da,type:"dr",amt:dv});
-    if(cv>0)lines.push({acc:ca,type:"cr",amt:cv});
+    if(dv>0){list.push({acc:da,type:"debit",amt:dv});dr+=dv;}
+    if(cv>0){list.push({acc:ca,type:"credit",amt:cv});cr+=cv;}
   });
 
-  let dr=lines.filter(l=>l.type==="dr").reduce((a,b)=>a+b.amt,0);
-  let cr=lines.filter(l=>l.type==="cr").reduce((a,b)=>a+b.amt,0);
-
   if(Math.abs(dr-cr)>0.01){
-    alert("Not Balanced!");
+    alert("Entry not balanced!");
     return;
   }
 
   db.collection("entries").add({
-    user:uid,
-    lines:lines,
-    date:new Date()
+    user:user,
+    company:company,
+    lines:list,
+    date:new Date().toLocaleDateString()
   });
 
   rows.innerHTML="";
-  load();
+  loadData();
 }
 
-/* LOAD */
-function load(){
-  table.innerHTML="";
-
+/* LOAD DATA */
+function loadData(){
   db.collection("entries")
-  .where("user","==",uid)
+  .where("user","==",user)
+  .where("company","==",company)
   .get()
   .then(snap=>{
+    entries=[];
+    ledger.innerHTML="";
+
     snap.forEach(doc=>{
-      doc.data().lines.forEach(l=>{
-        table.innerHTML+=`
+      let e=doc.data();
+      entries.push(e);
+
+      e.lines.forEach(l=>{
+        ledger.innerHTML+=`
         <tr>
-          <td>${l.type==="dr"?l.acc:""}</td>
-          <td>${l.type==="dr"?l.amt:""}</td>
-          <td>${l.type==="cr"?l.acc:""}</td>
-          <td>${l.type==="cr"?l.amt:""}</td>
+          <td>${e.date}</td>
+          <td>${l.acc}</td>
+          <td>${l.type==="debit"?l.amt:""}</td>
+          <td>${l.type==="credit"?l.amt:""}</td>
         </tr>`;
       });
     });
+
+    renderDash();
   });
 }
 
+/* DASHBOARD */
+function renderDash(){
+  let inc=0,exp=0;
+
+  entries.forEach(e=>{
+    e.lines.forEach(l=>{
+      if(l.type==="debit") exp+=l.amt;
+      if(l.type==="credit") inc+=l.amt;
+    });
+  });
+
+  dash.innerHTML=`
+  Income: ₹${inc}<br>
+  Expense: ₹${exp}<br>
+  Profit: ₹${inc-exp}`;
+}
+
 </script>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="authBox" class="auth">
+<div class="box">
+<h2>Login</h2>
+<input id="email" placeholder="Email"><br>
+<input id="password" type="password" placeholder="Password"><br>
+<button onclick="submitAuth()">Login / Signup</button>
+</div>
+</div>
+
+<!-- COMPANY -->
+<div id="companySelect" class="auth">
+<div class="box">
+<h2>Companies</h2>
+
+<input id="newCompany" placeholder="New Company">
+<button onclick="createCompany()">Create</button>
+
+<div id="companyList"></div>
+
+<button onclick="logout()">Logout</button>
+</div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;width:100%;display:flex">
+
+<div class="sidebar">
+<h3 id="companyName">Company</h3>
+<button onclick="addRow()">Add Row</button>
+<button onclick="saveEntry()">Save Entry</button>
+<button onclick="logout()">Logout</button>
+</div>
+
+<div class="main">
+
+<div class="box2">
+<h2>Dashboard</h2>
+<div id="dash"></div>
+</div>
+
+<div class="box2">
+<h2>Journal</h2>
+<div id="rows"></div>
+
+<table>
+<tr>
+<th>Date</th>
+<th>Account</th>
+<th>Dr</th>
+<th>Cr</th>
+</tr>
+<tbody id="ledger"></tbody>
+</table>
+
+</div>
+
+</div>
+</div>
 
 </body>
 </html>
