@@ -1,867 +1,206 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pratham’s Accounting Solution</title>
-  <style>
-    :root {
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --text: #0f172a;
-      --muted: #64748b;
-      --primary: #2563eb;
-      --border: #e2e8f0;
-      --success: #16a34a;
-      --danger: #dc2626;
-      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-      --radius: 18px;
-    }
-
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      background: linear-gradient(180deg, #eff6ff 0%, var(--bg) 35%, #fff 100%);
-      color: var(--text);
-    }
-
-    .app {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 24px;
-    }
-
-    .hero {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 28px;
-      box-shadow: var(--shadow);
-      margin-bottom: 24px;
-    }
-
-    h1 {
-      margin: 0 0 8px;
-      font-size: clamp(28px, 4vw, 42px);
-      line-height: 1.1;
-    }
-
-    .subtitle {
-      margin: 0;
-      color: var(--muted);
-    }
-
-    .panel {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 20px;
-      margin-bottom: 24px;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1fr auto auto auto;
-      gap: 12px;
-      align-items: end;
-    }
-
-    .field label {
-      display: block;
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: var(--muted);
-    }
-
-    input, select, button {
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      font: inherit;
-    }
-
-    input, select {
-      background: #fff;
-    }
-
-    input:focus, select:focus, button:focus {
-      outline: 3px solid rgba(37, 99, 235, 0.18);
-      border-color: var(--primary);
-    }
-
-    button {
-      cursor: pointer;
-      font-weight: 600;
-      background: #f8fafc;
-      transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-    }
-
-    button:hover {
-      transform: translateY(-1px);
-      border-color: #cbd5e1;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-    }
-
-    .btn-danger {
-      background: #fff1f2;
-      color: var(--danger);
-      border-color: #fecdd3;
-    }
-
-    .btn-secondary {
-      background: #eff6ff;
-      color: var(--primary);
-      border-color: #bfdbfe;
-    }
-
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px;
-      box-shadow: var(--shadow);
-    }
-
-    .card-title {
-      color: var(--muted);
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-
-    .card-value {
-      font-size: 28px;
-      font-weight: 800;
-    }
-
-    .balance-box {
-      font-size: 22px;
-      font-weight: 800;
-      color: var(--primary);
-    }
-
-    .table-wrap {
-      overflow-x: auto;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      background: white;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 820px;
-    }
-
-    th, td {
-      padding: 14px 16px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-    }
-
-    th {
-      background: #f8fafc;
-      color: #334155;
-      font-size: 14px;
-    }
-
-    tbody tr:hover {
-      background: #f8fafc;
-    }
-
-    .type-income { color: var(--success); font-weight: 700; }
-    .type-expense { color: var(--danger); font-weight: 700; }
-
-    .actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 16px;
-    }
-
-    .empty {
-      padding: 18px;
-      color: var(--muted);
-      text-align: center;
-    }
-
-    @media (max-width: 1100px) {
-      .form-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-      .summary {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .app { padding: 14px; }
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-      button { width: 100%; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { scroll-behavior: auto; transition: none !important; }
-    }
-  </style>
-</head>
-<body>
-  <div class="app">
-    <section class="hero">
-      <h1>Pratham’s Accounting Solution</h1>
-      <p class="subtitle">Add transactions like in Tally. Track income, expenses, GST, and balance in one place.</p>
-    </section>
-
-    <section class="panel">
-      <div class="form-grid">
-        <div class="field">
-          <label for="desc">Particular</label>
-          <input id="desc" placeholder="e.g. Salary" />
-        </div>
-
-        <div class="field">
-          <label for="amt">Amount</label>
-          <input id="amt" type="number" placeholder="₹ Amount" min="0" step="0.01" />
-        </div>
-
-        <div class="field">
-          <label for="gst">GST</label>
-          <input id="gst" type="number" placeholder="₹ GST" min="0" step="0.01" />
-        </div>
-
-        <div class="field">
-          <label for="type">Type</label>
-          <select id="type">
-            <option value="income">Income</option>
-            <option value="expense">Expense</option>
-          </select>
-        </div>
-
-        <button class="btn-primary" onclick="addTrans()">Add Transaction</button>
-        <button class="btn-secondary" onclick="showBalance()">Show Balance</button>
-        <button class="btn-danger" onclick="clearAll()">Clear All</button>
-      </div>
-    </section>
-
-    <section class="summary">
-      <div class="card">
-        <div class="card-title">Balance</div>
-        <div id="balance" class="card-value balance-box">₹0.00</div>
-      </div>
-      <div class="card">
-        <div class="card-title">Total GST</div>
-        <div id="gstTotal" class="card-value" style="color: var(--warning, #f59e0b);">₹0.00</div>
-      </div>
-      <div class="card">
-        <div class="card-title">Entries</div>
-        <div id="entryCount" class="card-value" style="color: #0f172a;">0</div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <h3 style="margin-top:0;">Ledger</h3>
-      <div class="table-wrap" role="region" aria-label="Ledger table" tabindex="0">
-        <table id="ledger">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Particular</th>
-              <th>Type</th>
-              <th>₹ Amount</th>
-              <th>₹ GST</th>
-              <th>Net Total ₹</th>
-            </tr>
-          </thead>
-          <tbody id="ledgerBody">
-            <tr>
-              <td colspan="6" class="empty">No transactions yet.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </div>
-
-  <script>
-    let entries = [];
-    let total = 0;
-    let totalGst = 0;
-
-    const ledgerBody = document.getElementById("ledgerBody");
-    const balanceEl = document.getElementById("balance");
-    const gstTotalEl = document.getElementById("gstTotal");
-    const entryCountEl = document.getElementById("entryCount");
-
-    function saveData() {
-      localStorage.setItem("pratham-ledger", JSON.stringify(entries));
-    }
-
-    function renderSummary() {
-      balanceEl.innerText = `₹${total.toFixed(2)}`;
-      gstTotalEl.innerText = `₹${totalGst.toFixed(2)}`;
-      entryCountEl.innerText = entries.length;
-    }
-
-    function renderTable() {
-      ledgerBody.innerHTML = "";
-
-      if (entries.length === 0) {
-        ledgerBody.innerHTML = '<tr><td colspan="6" class="empty">No transactions yet.</td></tr>';
-        return;
-      }
-
-      entries.forEach(e => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${e.date}</td>
-          <td>${e.desc}</td>
-          <td class="${e.type === "income" ? "type-income" : "type-expense"}">${e.type}</td>
-          <td>₹${e.amt.toFixed(2)}</td>
-          <td>₹${e.gst.toFixed(2)}</td>
-          <td>₹${e.net.toFixed(2)}</td>
-        `;
-        ledgerBody.appendChild(row);
-      });
-    }
-
-    function addTrans() {
-      const desc = document.getElementById("desc").value.trim();
-      const amt = parseFloat(document.getElementById("amt").value);
-      const gstRaw = document.getElementById("gst").value;
-      const type = document.getElementById("type").value;
-      const gst = gstRaw === "" ? 0 : Math.abs(parseFloat(gstRaw));
-
-      if (!desc || Number.isNaN(amt)) {
-        alert("Please enter a particular and a valid amount.");
-        return;
-      }
-
-      const net = type === "income" ? amt + gst : amt - gst;
-      const row = {
-        date: new Date().toLocaleDateString("en-IN"),
-        desc,
-        type,
-        amt,
-        gst,
-        net
-      };
-
-      entries.push(row);
-      total += net;
-      totalGst += gst;
-
-      saveData();
-      renderTable();
-      renderSummary();
-
-      document.getElementById("desc").value = "";
-      document.getElementById("amt").value = "";
-      document.getElementById("gst").value = "";
-      document.getElementById("desc").focus();
-    }
-
-    function showBalance() {
-      const income = entries.filter(e => e.type === "income").reduce((s, e) => s + e.net, 0);
-      const expense = entries.filter(e => e.type === "expense").reduce((s, e) => s + e.net, 0);
-      alert(
-        `Income (Net): ₹${income.toFixed(2)}\\n` +
-        `Expense (Net): ₹${expense.toFixed(2)}\\n` +
-        `Net Balance: ₹${(income - expense).toFixed(2)}\\n` +
-        `GST Total: ₹${totalGst.toFixed(2)}`
-      );
-    }
-
-    function clearAll() {
-      if (!confirm("Are you sure you want to clear all data?")) return;
-      entries = [];
-      total = 0;
-      totalGst = 0;
-      localStorage.removeItem("pratham-ledger");
-      renderTable();
-      renderSummary();
-    }
-
-    const saved = localStorage.getItem("pratham-ledger");
-    if (saved) {
-      try {
-        entries = JSON.parse(saved);
-        total = entries.reduce((sum, e) => sum + e.net, 0);
-        totalGst = entries.reduce((sum, e) => sum + e.gst, 0);
-      } catch (e) {
-        entries = [];
-      }
-    }
-
-    renderTable();
-    renderSummary();
-  </script>
-</body>
-</html>
-<!-- Journal mode toggle -->
-<div style="margin-top:16px;">
-  <label>
-    <input type="checkbox" id="useJournal"> Use Journal Entry
-  </label>
-</div>
-
-<!-- Journal entry area (hidden by default) -->
-<div id="journalArea" style="margin-top:20px; display:none;">
-  <h4>Journal Lines</h4>
-  <div id="journalLines"></div>
-  <button type="button" id="addJournalLine" class="btn-secondary" style="margin-top:8px;">
-    + Add Line
-  </button>
-</div>
-// --- Journal entry state ---
-const journalArea   = document.getElementById("journalArea");
-const useJournalBox = document.getElementById("useJournal");
-const journalLines  = document.getElementById("journalLines");
-const addJournalLineBtn = document.getElementById("addJournalLine");
-
-let journal = {
-  // [{ type: 'debit' | 'credit', account: '...', amount: 0 }]
-  lines: [],
-  valid: true
-};
-
-// Show/hide journal area when checkbox changes
-useJournalBox.addEventListener("change", () => {
-  if (useJournalBox.checked) {
-    journalArea.style.display = "block";
-    // Hide original "desc/amt" inputs visually (or keep them disabled)
-    document.getElementById("desc").disabled = true;
-    document.getElementById("amt").disabled = true;
-    document.getElementById("type").disabled = true;
-    document.getElementById("gst").disabled = true;
-
-    // If no lines yet, add one default line
-    if (journal.lines.length === 0) {
-      addJournalLine();
-    }
-  } else {
-    journalArea.style.display = "none";
-    document.getElementById("desc").disabled = false;
-    document.getElementById("amt").disabled = false;
-    document.getElementById("type").disabled = false;
-    document.getElementById("gst").disabled = false;
-    journal.lines = [];
-    journal.valid = true;
-    journalLines.innerHTML = "";
-  }
-});
-
-function addJournalLine() {
-  const lineId = Date.now();
-  const line = {
-    id: lineId,
-    type: "debit",
-    account: "",
-    gst: 0,
-    net: 0
-  };
-  journal.lines.push(line);
-
-  const lineEl = document.createElement("div");
-  lineEl.style.marginTop = "10px";
-  lineEl.style.padding = "10px";
-  lineEl.style.border = "1px solid #d1d5db";
-  lineEl.style.borderRadius = "8px";
-  lineEl.style.display = "flex";
-  lineEl.style.alignItems = "center";
-  lineEl.style.gap = "8px";
-
-  lineEl.innerHTML = `
-    <select data-id="${lineId}" data-field="type" class="journal-type">
-      <option value="debit">Debit</option>
-      <option value="credit">Credit</option>
-    </select>
-    <input placeholder="Account / Description" 
-           data-id="${lineId}" data-field="account"
-           class="journal-account"
-           style="flex:1; padding:8px; border-radius:6px; border:1px solid #d1d5db;">
-    <input type="number" placeholder="₹ Amount"
-           data-id="${lineId}" data-field="amount"
-           class="journal-amount"
-           style="width:100px; padding:8px; border-radius:6px; border:1px solid #d1d5db;">
-    <button type="button" data-id="${lineId}" class="btn-danger" style="padding:5px 10px; font-size:12px;">
-      ×
-    </button>
-  `;
-
-  const sel = lineEl.querySelector("select[data-field='type']");
-  sel.value = "debit";
-
-  // Events on this line
-  lineEl.querySelectorAll("input,select").forEach(input => {
-    input.addEventListener("input", () => {
-      const id = Number(input.dataset.id);
-      const field = input.dataset.field;
-      const line = journal.lines.find(l => l.id === id);
-      if (!line) return;
-
-      if (field === "type") {
-        line.type = input.value;
-      } else if (field === "account") {
-        line.account = input.value;
-      } else if (field === "amount") {
-        const raw = input.value;
-        line.amount = raw === "" ? 0 : parseFloat(raw);
-        if (isNaN(line.amount)) line.amount = 0;
-      }
-
-      updateJournalValidity();
-      renderJournalSummary();
-    });
-  });
-
-  lineEl.querySelector("button").addEventListener("click", () => {
-    journalLines.removeChild(lineEl);
-    journal.lines = journal.lines.filter(l => l.id !== lineId);
-    updateJournalValidity();
-    renderJournalSummary();
-  });
-
-  journalLines.appendChild(lineEl);
-}
-
-function updateJournalValidity() {
-  const debits = journal.lines
-    .filter(l => l.type === "debit")
-    .reduce((sum, l) => sum + (l.amount || 0), 0);
-  const credits = journal.lines
-    .filter(l => l.type === "credit")
-    .reduce((sum, l) => sum + (l.amount || 0), 0);
-
-  journal.valid = Math.abs(debits - credits) < 0.015; // 0.01 tolerance
-}
-
-function renderJournalSummary() {
-  const debits   = journal.lines
-                     .filter(l => l.type === "debit")
-                     .reduce((sum, l) => sum + (l.amount || 0), 0);
-  const credits  = journal.lines
-                     .filter(l => l.type === "credit")
-                     .reduce((sum, l) => sum + (l.amount || 0), 0);
-  const diff = debits - credits;
-  const sign = diff > 0 ? "Dr" : diff < 0 ? "Cr" : "Balanced";
-  const bal = Math.abs(diff).toFixed(2);
-}
-function renderTable() {
-  ledgerBody.innerHTML = "";
-
-  if (entries.length === 0) {
-    ledgerBody.innerHTML = '<tr><td colspan="6" class="empty">No transactions yet.</td></tr>';
-    return;
-  }
-
-  entries.forEach(e => {
-    const row = document.createElement("tr");
-
-    const net = e.net || 0;
-
-    if (e.journal) {
-      // First row: summary
-      const summary = document.createElement("tr");
-      summary.innerHTML = `
-        <td>${e.date}</td>
-        <td><i>JOURNAL</i>: ${e.desc || "Multiple accounts"}</td>
-        <td class="${e.type === "income" ? "type-income" : "type-expense"}">Journal</td>
-        <td>₹${e.amt.toFixed(2)}</td>
-        <td>₹0.00</td>
-        <td>₹${net.toFixed(2)}</td>
-      `;
-      ledgerBody.appendChild(summary);
-
-      // Detail lines
-      e.lines.forEach(li => {
-        const detail = document.createElement("tr");
-        detail.style.fontSize = "13px";
-        detail.style.backgroundColor = "#f9fafb";
-        detail.innerHTML = `
-          <td></td>
-          <td>${li.type === "debit" ? "Dr" : "Cr"} – ${li.account || "Unknown"}</td>
-          <td>${li.type === "debit" ? "Debit" : "Credit"}</td>
-          <td>₹${+li.amount.toFixed(2)}</td>
-          <td></td>
-          <td></td>
-        `;
-        ledgerBody.appendChild(detail);
-      });
-    } else {
-      row.innerHTML = `
-        <td>${e.date}</td>
-        <td>${e.desc}</td>
-        <td class="${e.type === "income" ? "type-income" : "type-expense"}">${e.type}</td>
-        <td>₹${e.amt.toFixed(2)}</td>
-        <td>₹${e.gst.toFixed(2)}</td>
-        <td>₹${e.net.toFixed(2)}</td>
-      `;
-      ledgerBody.appendChild(row);
-    }
-  });
-}
-<!DOCTYPE html>
-<html lang="en">
-<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pratham Accounting App</title>
+<title>Pratham Accounting Pro</title>
 
 <style>
-body { font-family: Arial; padding:20px; background:#f5f7fb; }
-input,select,button { padding:8px; margin:5px; }
-table { width:100%; margin-top:20px; border-collapse: collapse; }
-th,td { border:1px solid #ccc; padding:10px; }
-.type-income { color:green; }
-.type-expense { color:red; }
+body { margin:0; font-family:Arial; display:flex; height:100vh; }
+
+.sidebar {
+  width:220px;
+  background:#0f172a;
+  color:white;
+  padding:20px;
+}
+
+.sidebar h2 { margin-bottom:20px; }
+
+.sidebar button {
+  width:100%;
+  margin:5px 0;
+  padding:10px;
+  border:none;
+  background:#1e293b;
+  color:white;
+  cursor:pointer;
+}
+
+.main {
+  flex:1;
+  padding:20px;
+  background:#f1f5f9;
+}
+
+input, select {
+  padding:8px;
+  margin:5px;
+}
+
+button.action {
+  padding:8px 12px;
+  margin:5px;
+}
+
+table {
+  width:100%;
+  border-collapse: collapse;
+  margin-top:20px;
+}
+
+th, td {
+  border:1px solid #ccc;
+  padding:10px;
+}
 </style>
 </head>
 
 <body>
 
-<h1>Accounting App</h1>
-
-<!-- NORMAL ENTRY -->
-<input id="desc" placeholder="Particular">
-<input id="amt" type="number" placeholder="Amount">
-<input id="gst" type="number" placeholder="GST">
-<select id="type">
-<option value="income">Income</option>
-<option value="expense">Expense</option>
-</select>
-
-<button onclick="addTrans()">Add</button>
-<button onclick="clearAll()">Clear</button>
-
-<br><br>
-
-<label>
-<input type="checkbox" id="useJournal"> Use Journal Entry
-</label>
-
-<!-- JOURNAL AREA -->
-<div id="journalArea" style="display:none;">
-<h3>Journal Entry</h3>
-<div id="journalLines"></div>
-<button onclick="addJournalLine()">+ Add Line</button>
+<div class="sidebar">
+  <h2>Accounts</h2>
+  <div id="accountList"></div>
+  <button onclick="addAccount()">+ Add Account</button>
 </div>
 
-<h2>Balance: ₹<span id="balance">0</span></h2>
+<div class="main">
 
+<h2>Journal Entry</h2>
+
+<div id="journalLines"></div>
+<button onclick="addLine()">+ Add Line</button>
+<button class="action" onclick="saveEntry()">Save Entry</button>
+
+<h2>Ledger</h2>
 <table>
 <thead>
 <tr>
 <th>Date</th>
-<th>Particular</th>
-<th>Type</th>
-<th>Amount</th>
-<th>GST</th>
-<th>Net</th>
+<th>Account</th>
+<th>Dr</th>
+<th>Cr</th>
 </tr>
 </thead>
-<tbody id="ledgerBody"></tbody>
+<tbody id="ledger"></tbody>
 </table>
+
+</div>
 
 <script>
 
 // ===== DATA =====
+let accounts = ["Cash", "Bank", "Sales"];
 let entries = [];
-let total = 0;
-let totalGst = 0;
 
 // ===== ELEMENTS =====
-const ledgerBody = document.getElementById("ledgerBody");
-const balanceEl = document.getElementById("balance");
-
-const useJournalBox = document.getElementById("useJournal");
-const journalArea = document.getElementById("journalArea");
+const accountList = document.getElementById("accountList");
 const journalLines = document.getElementById("journalLines");
+const ledger = document.getElementById("ledger");
 
-// ===== TOGGLE JOURNAL =====
-useJournalBox.addEventListener("change", () => {
-  journalArea.style.display = useJournalBox.checked ? "block" : "none";
-});
+// ===== LOAD ACCOUNTS =====
+function renderAccounts() {
+  accountList.innerHTML = "";
+  accounts.forEach(acc => {
+    const div = document.createElement("div");
+    div.innerText = acc;
+    accountList.appendChild(div);
+  });
+}
+
+// ===== ADD ACCOUNT =====
+function addAccount() {
+  const name = prompt("Enter account name:");
+  if (!name) return;
+  accounts.push(name);
+  renderAccounts();
+}
 
 // ===== ADD JOURNAL LINE =====
-function addJournalLine() {
+function addLine() {
 
   const div = document.createElement("div");
 
+  let options = accounts.map(a => `<option>${a}</option>`).join("");
+
   div.innerHTML = `
+    <select class="account">${options}</select>
     <select class="type">
-      <option value="debit">Debit</option>
-      <option value="credit">Credit</option>
+      <option value="debit">Dr</option>
+      <option value="credit">Cr</option>
     </select>
-
-    <input placeholder="Account Name" class="acc">
-
-    <input type="number" placeholder="Amount" class="amt">
-
-    <button onclick="this.parentElement.remove()">❌</button>
+    <input type="number" class="amt" placeholder="Amount">
+    <button onclick="this.parentElement.remove()">X</button>
   `;
 
   journalLines.appendChild(div);
 }
 
-// ===== ADD TRANSACTION =====
-function addTrans() {
+// ===== SAVE ENTRY =====
+function saveEntry() {
 
-  // ===== JOURNAL MODE =====
-  if (useJournalBox.checked) {
+  let lines = [];
+  let dr = 0;
+  let cr = 0;
 
-    let lines = [];
-    let debit = 0;
-    let credit = 0;
+  document.querySelectorAll("#journalLines div").forEach(div => {
+    const acc = div.querySelector(".account").value;
+    const type = div.querySelector(".type").value;
+    const amt = parseFloat(div.querySelector(".amt").value || 0);
 
-    document.querySelectorAll("#journalLines div").forEach(div => {
+    if (amt <= 0) return;
 
-      const type = div.querySelector(".type").value;
-      const acc = div.querySelector(".acc").value;
-      const amt = parseFloat(div.querySelector(".amt").value || 0);
+    lines.push({ acc, type, amt });
 
-      if (!acc || amt <= 0) return;
+    if (type === "debit") dr += amt;
+    else cr += amt;
+  });
 
-      lines.push({ type, account: acc, amount: amt });
-
-      if (type === "debit") debit += amt;
-      else credit += amt;
-    });
-
-    if (lines.length < 2) {
-      alert("Add at least 2 lines");
-      return;
-    }
-
-    if (Math.abs(debit - credit) > 0.01) {
-      alert("Journal must balance (Debit = Credit)");
-      return;
-    }
-
-    entries.push({
-      date: new Date().toLocaleDateString(),
-      journal: true,
-      lines: lines,
-      total: debit
-    });
-
-    // clear journal UI
-    journalLines.innerHTML = "";
-
+  if (lines.length < 2) {
+    alert("Minimum 2 lines required");
+    return;
   }
 
-  // ===== NORMAL MODE =====
-  else {
-
-    const desc = document.getElementById("desc").value;
-    const amt = parseFloat(document.getElementById("amt").value);
-    const gst = parseFloat(document.getElementById("gst").value || 0);
-    const type = document.getElementById("type").value;
-
-    if (!desc || isNaN(amt)) {
-      alert("Fill properly");
-      return;
-    }
-
-    const net = type === "income" ? amt + gst : amt - gst;
-
-    entries.push({
-      date: new Date().toLocaleDateString(),
-      desc, type, amt, gst, net
-    });
-
-    total += net;
-    totalGst += gst;
+  if (Math.abs(dr - cr) > 0.01) {
+    alert("Entry not balanced!");
+    return;
   }
 
-  render();
+  entries.push({
+    date: new Date().toLocaleDateString(),
+    lines
+  });
+
+  journalLines.innerHTML = "";
+  renderLedger();
 }
 
-// ===== RENDER =====
-function render() {
+// ===== LEDGER =====
+function renderLedger() {
 
-  ledgerBody.innerHTML = "";
+  ledger.innerHTML = "";
 
   entries.forEach(e => {
 
-    // JOURNAL ENTRY
-    if (e.journal) {
+    e.lines.forEach(l => {
 
-      let main = document.createElement("tr");
-      main.innerHTML = `
-        <td>${e.date}</td>
-        <td><b>Journal Entry</b></td>
-        <td>-</td>
-        <td>${e.total}</td>
-        <td>-</td>
-        <td>-</td>
-      `;
-      ledgerBody.appendChild(main);
-
-      e.lines.forEach(l => {
-        let row = document.createElement("tr");
-        row.style.background = "#f9fafb";
-
-        row.innerHTML = `
-          <td></td>
-          <td>${l.type === "debit" ? "Dr" : "Cr"} - ${l.account}</td>
-          <td>${l.type}</td>
-          <td>${l.amount}</td>
-          <td></td>
-          <td></td>
-        `;
-
-        ledgerBody.appendChild(row);
-      });
-
-    }
-
-    // NORMAL ENTRY
-    else {
-
-      let row = document.createElement("tr");
+      const row = document.createElement("tr");
 
       row.innerHTML = `
         <td>${e.date}</td>
-        <td>${e.desc}</td>
-        <td class="${e.type === "income" ? "type-income" : "type-expense"}">${e.type}</td>
-        <td>${e.amt}</td>
-        <td>${e.gst}</td>
-        <td>${e.net}</td>
+        <td>${l.acc}</td>
+        <td>${l.type === "debit" ? l.amt : ""}</td>
+        <td>${l.type === "credit" ? l.amt : ""}</td>
       `;
 
-      ledgerBody.appendChild(row);
-    }
+      ledger.appendChild(row);
+    });
 
   });
-
-  balanceEl.innerText = total.toFixed(2);
 }
 
-// ===== CLEAR =====
-function clearAll() {
-  entries = [];
-  total = 0;
-  totalGst = 0;
-  render();
-}
+// INIT
+renderAccounts();
 
 </script>
 
