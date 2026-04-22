@@ -1,15 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Pratham Accounting Pro</title>
+<title>Accounting Pro+</title>
 
 <style>
-body {
-  margin:0;
-  font-family: Arial;
-  display:flex;
-  height:100vh;
-}
+body { margin:0; font-family:Arial; display:flex; height:100vh; }
 
 /* Sidebar */
 .sidebar {
@@ -17,12 +12,6 @@ body {
   background:#0f172a;
   color:white;
   padding:20px;
-}
-
-.sidebar h2 { margin-bottom:15px; }
-
-.sidebar div {
-  margin:5px 0;
 }
 
 .sidebar button {
@@ -42,29 +31,12 @@ body {
   background:#f1f5f9;
 }
 
-input, select {
-  padding:8px;
-  margin:5px;
-}
-
-button {
-  padding:8px 12px;
-  margin:5px;
-  cursor:pointer;
-}
+input, select { padding:8px; margin:5px; }
+button { padding:8px 12px; margin:5px; }
 
 /* Table */
-table {
-  width:100%;
-  border-collapse: collapse;
-  margin-top:20px;
-}
-
-th, td {
-  border:1px solid #ccc;
-  padding:10px;
-  text-align:left;
-}
+table { width:100%; border-collapse: collapse; margin-top:20px; }
+th, td { border:1px solid #ccc; padding:10px; }
 </style>
 </head>
 
@@ -72,23 +44,29 @@ th, td {
 
 <!-- SIDEBAR -->
 <div class="sidebar">
-  <h2>Accounts</h2>
+  <h3>Accounts</h3>
   <div id="accountList"></div>
-  <button id="addAccountBtn">+ Add Account</button>
+  <button onclick="addAccount()">+ Add Account</button>
+
+  <hr>
+
+  <button onclick="showPage('journal')">Journal</button>
+  <button onclick="showPage('trial')">Trial Balance</button>
 </div>
 
 <!-- MAIN -->
 <div class="main">
 
+<!-- JOURNAL -->
+<div id="journalPage">
 <h2>Journal Entry</h2>
 
 <div id="journalLines"></div>
 
-<button id="addLineBtn">+ Add Line</button>
-<button id="saveBtn">Save Entry</button>
+<button onclick="addLine()">+ Add Line</button>
+<button onclick="saveEntry()">Save Entry</button>
 
 <h2>Ledger</h2>
-
 <table>
 <thead>
 <tr>
@@ -100,120 +78,186 @@ th, td {
 </thead>
 <tbody id="ledger"></tbody>
 </table>
+</div>
+
+<!-- TRIAL BALANCE -->
+<div id="trialPage" style="display:none;">
+<h2>Trial Balance</h2>
+
+<table>
+<thead>
+<tr>
+<th>Account</th>
+<th>Debit</th>
+<th>Credit</th>
+</tr>
+</thead>
+<tbody id="trial"></tbody>
+</table>
+
+<h3 id="totals"></h3>
+</div>
 
 </div>
 
 <script>
 
 // ===== DATA =====
-let accounts = ["Cash", "Bank", "Sales"];
+let accounts = ["Cash","Bank","Sales"];
 let entries = [];
 
 // ===== ELEMENTS =====
 const accountList = document.getElementById("accountList");
 const journalLines = document.getElementById("journalLines");
-const ledger = document.getElementById("ledger");
 
-// ===== RENDER ACCOUNTS =====
-function renderAccounts() {
-  accountList.innerHTML = "";
-  accounts.forEach(acc => {
-    const div = document.createElement("div");
-    div.innerText = acc;
-    accountList.appendChild(div);
+// ===== NAVIGATION =====
+function showPage(page){
+  document.getElementById("journalPage").style.display = page==="journal"?"block":"none";
+  document.getElementById("trialPage").style.display = page==="trial"?"block":"none";
+
+  if(page==="trial") renderTrial();
+}
+
+// ===== ACCOUNTS =====
+function renderAccounts(){
+  accountList.innerHTML="";
+  accounts.forEach(a=>{
+    let d=document.createElement("div");
+    d.innerText=a;
+    accountList.appendChild(d);
   });
 }
 
-// ===== ADD ACCOUNT =====
-document.getElementById("addAccountBtn").onclick = () => {
-  const name = prompt("Enter account name:");
-  if (!name) return;
+function addAccount(){
+  let name = prompt("Account name:");
+  if(!name) return;
   accounts.push(name);
   renderAccounts();
-};
+}
 
-// ===== ADD JOURNAL LINE =====
-document.getElementById("addLineBtn").onclick = () => {
+// ===== JOURNAL =====
+function addLine(){
 
-  const div = document.createElement("div");
+  let div=document.createElement("div");
 
-  const options = accounts.map(a => `<option>${a}</option>`).join("");
+  let opts = accounts.map(a=>`<option>${a}</option>`).join("");
 
-  div.innerHTML = `
-    <select class="account">${options}</select>
+  div.innerHTML=`
+    <select class="acc">${opts}</select>
     <select class="type">
       <option value="debit">Dr</option>
       <option value="credit">Cr</option>
     </select>
-    <input type="number" class="amt" placeholder="Amount">
-    <button class="del">X</button>
+    <input type="number" class="amt">
+    <button onclick="this.parentElement.remove()">X</button>
   `;
 
-  div.querySelector(".del").onclick = () => div.remove();
-
   journalLines.appendChild(div);
-};
+}
 
-// ===== SAVE ENTRY =====
-document.getElementById("saveBtn").onclick = () => {
+function saveEntry(){
 
-  let dr = 0;
-  let cr = 0;
-  let lines = [];
+  let dr=0, cr=0;
+  let lines=[];
 
-  document.querySelectorAll("#journalLines div").forEach(div => {
+  document.querySelectorAll("#journalLines div").forEach(div=>{
+    let acc = div.querySelector(".acc").value;
+    let type = div.querySelector(".type").value;
+    let amt = parseFloat(div.querySelector(".amt").value||0);
 
-    const acc = div.querySelector(".account").value;
-    const type = div.querySelector(".type").value;
-    const amt = parseFloat(div.querySelector(".amt").value || 0);
+    if(amt<=0) return;
 
-    if (amt <= 0) return;
+    lines.push({acc,type,amt});
 
-    lines.push({ acc, type, amt });
-
-    if (type === "debit") dr += amt;
-    else cr += amt;
+    if(type==="debit") dr+=amt;
+    else cr+=amt;
   });
 
-  if (lines.length < 2) {
-    alert("Add at least 2 lines");
+  if(lines.length<2){
+    alert("Add 2 lines");
     return;
   }
 
-  if (Math.abs(dr - cr) > 0.01) {
-    alert("Entry not balanced!");
+  if(Math.abs(dr-cr)>0.01){
+    alert("Not balanced");
     return;
   }
 
   entries.push({
-    date: new Date().toLocaleDateString(),
+    date:new Date().toLocaleDateString(),
     lines
   });
 
-  journalLines.innerHTML = "";
+  journalLines.innerHTML="";
   renderLedger();
-};
+}
 
-// ===== RENDER LEDGER =====
-function renderLedger() {
+// ===== LEDGER =====
+function renderLedger(){
 
-  ledger.innerHTML = "";
+  let ledger = document.getElementById("ledger");
+  ledger.innerHTML="";
 
-  entries.forEach(e => {
-    e.lines.forEach(l => {
+  entries.forEach(e=>{
+    e.lines.forEach(l=>{
+      let tr=document.createElement("tr");
 
-      const row = document.createElement("tr");
-
-      row.innerHTML = `
+      tr.innerHTML=`
         <td>${e.date}</td>
         <td>${l.acc}</td>
-        <td>${l.type === "debit" ? l.amt : ""}</td>
-        <td>${l.type === "credit" ? l.amt : ""}</td>
+        <td>${l.type==="debit"?l.amt:""}</td>
+        <td>${l.type==="credit"?l.amt:""}</td>
       `;
 
-      ledger.appendChild(row);
+      ledger.appendChild(tr);
     });
   });
+}
+
+// ===== TRIAL BALANCE =====
+function renderTrial(){
+
+  let trial = document.getElementById("trial");
+  trial.innerHTML="";
+
+  let balances = {};
+
+  accounts.forEach(a=>{
+    balances[a]={dr:0,cr:0};
+  });
+
+  entries.forEach(e=>{
+    e.lines.forEach(l=>{
+      if(l.type==="debit") balances[l.acc].dr+=l.amt;
+      else balances[l.acc].cr+=l.amt;
+    });
+  });
+
+  let totalDr=0, totalCr=0;
+
+  for(let acc in balances){
+
+    let dr = balances[acc].dr;
+    let cr = balances[acc].cr;
+
+    if(dr===0 && cr===0) continue;
+
+    let tr=document.createElement("tr");
+
+    tr.innerHTML=`
+      <td>${acc}</td>
+      <td>${dr.toFixed(2)}</td>
+      <td>${cr.toFixed(2)}</td>
+    `;
+
+    trial.appendChild(tr);
+
+    totalDr+=dr;
+    totalCr+=cr;
+  }
+
+  document.getElementById("totals").innerText =
+    "Total Dr: ₹"+totalDr.toFixed(2)+" | Total Cr: ₹"+totalCr.toFixed(2);
 }
 
 // INIT
