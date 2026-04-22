@@ -618,3 +618,252 @@ function renderTable() {
     }
   });
 }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pratham Accounting App</title>
+
+<style>
+body { font-family: Arial; padding:20px; background:#f5f7fb; }
+input,select,button { padding:8px; margin:5px; }
+table { width:100%; margin-top:20px; border-collapse: collapse; }
+th,td { border:1px solid #ccc; padding:10px; }
+.type-income { color:green; }
+.type-expense { color:red; }
+</style>
+</head>
+
+<body>
+
+<h1>Accounting App</h1>
+
+<!-- NORMAL ENTRY -->
+<input id="desc" placeholder="Particular">
+<input id="amt" type="number" placeholder="Amount">
+<input id="gst" type="number" placeholder="GST">
+<select id="type">
+<option value="income">Income</option>
+<option value="expense">Expense</option>
+</select>
+
+<button onclick="addTrans()">Add</button>
+<button onclick="clearAll()">Clear</button>
+
+<br><br>
+
+<label>
+<input type="checkbox" id="useJournal"> Use Journal Entry
+</label>
+
+<!-- JOURNAL AREA -->
+<div id="journalArea" style="display:none;">
+<h3>Journal Entry</h3>
+<div id="journalLines"></div>
+<button onclick="addJournalLine()">+ Add Line</button>
+</div>
+
+<h2>Balance: ₹<span id="balance">0</span></h2>
+
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Particular</th>
+<th>Type</th>
+<th>Amount</th>
+<th>GST</th>
+<th>Net</th>
+</tr>
+</thead>
+<tbody id="ledgerBody"></tbody>
+</table>
+
+<script>
+
+// ===== DATA =====
+let entries = [];
+let total = 0;
+let totalGst = 0;
+
+// ===== ELEMENTS =====
+const ledgerBody = document.getElementById("ledgerBody");
+const balanceEl = document.getElementById("balance");
+
+const useJournalBox = document.getElementById("useJournal");
+const journalArea = document.getElementById("journalArea");
+const journalLines = document.getElementById("journalLines");
+
+// ===== TOGGLE JOURNAL =====
+useJournalBox.addEventListener("change", () => {
+  journalArea.style.display = useJournalBox.checked ? "block" : "none";
+});
+
+// ===== ADD JOURNAL LINE =====
+function addJournalLine() {
+
+  const div = document.createElement("div");
+
+  div.innerHTML = `
+    <select class="type">
+      <option value="debit">Debit</option>
+      <option value="credit">Credit</option>
+    </select>
+
+    <input placeholder="Account Name" class="acc">
+
+    <input type="number" placeholder="Amount" class="amt">
+
+    <button onclick="this.parentElement.remove()">❌</button>
+  `;
+
+  journalLines.appendChild(div);
+}
+
+// ===== ADD TRANSACTION =====
+function addTrans() {
+
+  // ===== JOURNAL MODE =====
+  if (useJournalBox.checked) {
+
+    let lines = [];
+    let debit = 0;
+    let credit = 0;
+
+    document.querySelectorAll("#journalLines div").forEach(div => {
+
+      const type = div.querySelector(".type").value;
+      const acc = div.querySelector(".acc").value;
+      const amt = parseFloat(div.querySelector(".amt").value || 0);
+
+      if (!acc || amt <= 0) return;
+
+      lines.push({ type, account: acc, amount: amt });
+
+      if (type === "debit") debit += amt;
+      else credit += amt;
+    });
+
+    if (lines.length < 2) {
+      alert("Add at least 2 lines");
+      return;
+    }
+
+    if (Math.abs(debit - credit) > 0.01) {
+      alert("Journal must balance (Debit = Credit)");
+      return;
+    }
+
+    entries.push({
+      date: new Date().toLocaleDateString(),
+      journal: true,
+      lines: lines,
+      total: debit
+    });
+
+    // clear journal UI
+    journalLines.innerHTML = "";
+
+  }
+
+  // ===== NORMAL MODE =====
+  else {
+
+    const desc = document.getElementById("desc").value;
+    const amt = parseFloat(document.getElementById("amt").value);
+    const gst = parseFloat(document.getElementById("gst").value || 0);
+    const type = document.getElementById("type").value;
+
+    if (!desc || isNaN(amt)) {
+      alert("Fill properly");
+      return;
+    }
+
+    const net = type === "income" ? amt + gst : amt - gst;
+
+    entries.push({
+      date: new Date().toLocaleDateString(),
+      desc, type, amt, gst, net
+    });
+
+    total += net;
+    totalGst += gst;
+  }
+
+  render();
+}
+
+// ===== RENDER =====
+function render() {
+
+  ledgerBody.innerHTML = "";
+
+  entries.forEach(e => {
+
+    // JOURNAL ENTRY
+    if (e.journal) {
+
+      let main = document.createElement("tr");
+      main.innerHTML = `
+        <td>${e.date}</td>
+        <td><b>Journal Entry</b></td>
+        <td>-</td>
+        <td>${e.total}</td>
+        <td>-</td>
+        <td>-</td>
+      `;
+      ledgerBody.appendChild(main);
+
+      e.lines.forEach(l => {
+        let row = document.createElement("tr");
+        row.style.background = "#f9fafb";
+
+        row.innerHTML = `
+          <td></td>
+          <td>${l.type === "debit" ? "Dr" : "Cr"} - ${l.account}</td>
+          <td>${l.type}</td>
+          <td>${l.amount}</td>
+          <td></td>
+          <td></td>
+        `;
+
+        ledgerBody.appendChild(row);
+      });
+
+    }
+
+    // NORMAL ENTRY
+    else {
+
+      let row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${e.date}</td>
+        <td>${e.desc}</td>
+        <td class="${e.type === "income" ? "type-income" : "type-expense"}">${e.type}</td>
+        <td>${e.amt}</td>
+        <td>${e.gst}</td>
+        <td>${e.net}</td>
+      `;
+
+      ledgerBody.appendChild(row);
+    }
+
+  });
+
+  balanceEl.innerText = total.toFixed(2);
+}
+
+// ===== CLEAR =====
+function clearAll() {
+  entries = [];
+  total = 0;
+  totalGst = 0;
+  render();
+}
+
+</script>
+
+</body>
+</html>
