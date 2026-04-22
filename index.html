@@ -1,1 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Accounting Pro</title>
 
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+
+body{background:#f1f5f9}
+
+/* AUTH */
+.auth{
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.box{
+  background:white;
+  padding:30px;
+  border-radius:10px;
+  width:300px;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+}
+
+button{
+  padding:10px;
+  margin:5px 0;
+  width:100%;
+  cursor:pointer;
+}
+
+/* APP */
+.app{
+  display:none;
+  height:100vh;
+}
+
+.sidebar{
+  width:220px;
+  background:#0f172a;
+  color:white;
+  padding:20px;
+}
+
+.sidebar button{
+  background:#1e293b;
+  color:white;
+  border:none;
+}
+
+.main{
+  flex:1;
+  padding:20px;
+}
+
+.flex{display:flex}
+
+table{
+  width:100%;
+  margin-top:20px;
+  border-collapse:collapse;
+  background:white;
+}
+
+th,td{padding:10px;border:1px solid #ccc}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div class="auth" id="authBox">
+  <div class="box">
+    <h2 id="title">Login</h2>
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="submit()">Continue</button>
+    <p onclick="toggle()" style="cursor:pointer;color:blue;text-align:center;">
+      Switch mode
+    </p>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app flex" id="app">
+
+<div class="sidebar">
+  <h3>Menu</h3>
+  <button onclick="show('journal')">Journal</button>
+  <button onclick="show('trial')">Trial</button>
+  <button onclick="show('pl')">P&L</button>
+  <button onclick="show('bs')">Balance Sheet</button>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<div class="main">
+
+<div id="journalPage">
+  <h2>Journal</h2>
+  <div id="lines"></div>
+  <button onclick="addLine()">+ Add Line</button>
+  <button onclick="save()">Save</button>
+
+  <table>
+    <tr><th>Date</th><th>Acc</th><th>Dr</th><th>Cr</th></tr>
+    <tbody id="ledger"></tbody>
+  </table>
+</div>
+
+<div id="trialPage" style="display:none"></div>
+<div id="plPage" style="display:none"></div>
+<div id="bsPage" style="display:none"></div>
+
+</div>
+</div>
+
+<script>
+
+let mode="login";
+let accounts=["Cash","Bank","Sales","Expense"];
+let entries=[];
+
+// CHECK LOGIN
+if(localStorage.getItem("logged")){
+  showApp();
+}
+
+// TOGGLE LOGIN/SIGNUP
+function toggle(){
+  mode = mode==="login"?"signup":"login";
+  document.getElementById("title").innerText = mode;
+}
+
+// SUBMIT
+function submit(){
+  let email=emailEl.value;
+  let pass=passwordEl.value;
+
+  let users=JSON.parse(localStorage.getItem("users")||"{}");
+
+  if(mode==="signup"){
+    users[email]=pass;
+    localStorage.setItem("users",JSON.stringify(users));
+    alert("Signup done");
+  }else{
+    if(users[email]!==pass){
+      alert("Wrong login"); return;
+    }
+    localStorage.setItem("logged",email);
+    showApp();
+  }
+}
+
+// SHOW APP
+function showApp(){
+  document.getElementById("authBox").style.display="none";
+  document.getElementById("app").style.display="flex";
+}
+
+// LOGOUT
+function logout(){
+  localStorage.removeItem("logged");
+  location.reload();
+}
+
+// NAV
+function show(p){
+  journalPage.style.display=p==="journal"?"block":"none";
+  trialPage.style.display=p==="trial"?"block":"none";
+  plPage.style.display=p==="pl"?"block":"none";
+  bsPage.style.display=p==="bs"?"block":"none";
+
+  if(p==="trial") renderTrial();
+  if(p==="pl") renderPL();
+  if(p==="bs") renderBS();
+}
+
+// ADD LINE
+function addLine(){
+  let div=document.createElement("div");
+
+  let opts=accounts.map(a=>`<option>${a}</option>`).join("");
+
+  div.innerHTML=`
+  <select class="acc">${opts}</select>
+  <select class="type">
+    <option value="debit">Dr</option>
+    <option value="credit">Cr</option>
+  </select>
+  <input type="number" class="amt">
+  <button onclick="this.parentElement.remove()">X</button>
+  `;
+
+  lines.appendChild(div);
+}
+
+// SAVE ENTRY
+function save(){
+  let dr=0,cr=0,ls=[];
+
+  document.querySelectorAll("#lines div").forEach(d=>{
+    let acc=d.querySelector(".acc").value;
+    let type=d.querySelector(".type").value;
+    let amt=parseFloat(d.querySelector(".amt").value||0);
+
+    if(amt<=0)return;
+
+    ls.push({acc,type,amt});
+    if(type==="debit")dr+=amt; else cr+=amt;
+  });
+
+  if(ls.length<2||Math.abs(dr-cr)>0.01){
+    alert("Not balanced"); return;
+  }
+
+  entries.push({date:new Date().toLocaleDateString(),lines:ls});
+  lines.innerHTML="";
+  render();
+}
+
+// RENDER LEDGER
+function render(){
+  ledger.innerHTML="";
+  entries.forEach(e=>{
+    e.lines.forEach(l=>{
+      let tr=document.createElement("tr");
+      tr.innerHTML=`
+      <td>${e.date}</td>
+      <td>${l.acc}</td>
+      <td>${l.type==="debit"?l.amt:""}</td>
+      <td>${l.type==="credit"?l.amt:""}</td>`;
+      ledger.appendChild(tr);
+    });
+  });
+}
+
+// TRIAL
+function renderTrial(){
+  let b={};
+  accounts.forEach(a=>b[a]={dr:0,cr:0});
+
+  entries.forEach(e=>{
+    e.lines.forEach(l=>{
+      if(l.type==="debit")b[l.acc].dr+=l.amt;
+      else b[l.acc].cr+=l.amt;
+    });
+  });
+
+  let html="<h2>Trial</h2><table><tr><th>Acc</th><th>Dr</th><th>Cr</th></tr>";
+  for(let a in b){
+    if(b[a].dr||b[a].cr)
+      html+=`<tr><td>${a}</td><td>${b[a].dr}</td><td>${b[a].cr}</td></tr>`;
+  }
+  html+="</table>";
+
+  trialPage.innerHTML=html;
+}
+
+// PL
+function renderPL(){
+  let inc=0,exp=0;
+
+  entries.forEach(e=>{
+    e.lines.forEach(l=>{
+      if(l.acc==="Sales")inc+=l.amt;
+      if(l.acc==="Expense")exp+=l.amt;
+    });
+  });
+
+  plPage.innerHTML=`<h2>P&L</h2>
+  Income: ₹${inc}<br>Expense: ₹${exp}<br>
+  <h3>${inc-exp>=0?"Profit":"Loss"}: ₹${inc-exp}</h3>`;
+}
+
+// BS
+function renderBS(){
+  let assets=0,liab=0;
+
+  entries.forEach(e=>{
+    e.lines.forEach(l=>{
+      if(l.acc==="Cash"||l.acc==="Bank"){
+        if(l.type==="debit")assets+=l.amt;
+        else assets-=l.amt;
+      }else{
+        if(l.type==="credit")liab+=l.amt;
+        else liab-=l.amt;
+      }
+    });
+  });
+
+  bsPage.innerHTML=`<h2>Balance Sheet</h2>
+  Assets: ₹${assets}<br>Liabilities: ₹${liab}`;
+}
+
+</script>
+
+</body>
+</html>
