@@ -4,75 +4,96 @@
 <title>Pratham Accounting Solution</title>
 
 <style>
-body{margin:0;font-family:Arial;background:#cfd8dc}
+body{margin:0;font-family:Arial;background:#0b1e3a;color:white}
 
-/* PREMIUM LOGIN */
-.auth{
-position:fixed;
-width:100%;
-height:100%;
+/* TOP BAR */
+.topbar{
+background:#0b3d91;
+padding:10px;
 display:flex;
-justify-content:center;
-align-items:center;
-background:linear-gradient(135deg,#0f172a,#020617);
+justify-content:space-between;
 }
 
-.login-container{text-align:center;color:white}
-
-.brand h1{color:#38bdf8}
-
-.login-box{
-background:rgba(255,255,255,0.05);
-backdrop-filter:blur(12px);
-padding:30px;
-border-radius:16px;
-width:320px;
-color:white;
-}
-
-.login-box input{
-width:100%;
-padding:12px;
-margin:8px 0;
-border-radius:8px;
-border:1px solid rgba(255,255,255,0.2);
-background:rgba(255,255,255,0.05);
-color:white;
-}
-
-.login-box button{
-width:100%;
-padding:12px;
-background:#2563eb;
-color:white;
-border:none;
-border-radius:8px;
-}
-
-/* APP UI */
-.topbar{background:#0b3d91;color:white;padding:8px;display:flex;justify-content:space-between}
+/* LAYOUT */
 .container{display:flex;height:calc(100vh - 40px)}
-.sidebar{width:250px;background:#e3f2fd;padding:10px}
-.main{flex:1;padding:15px;background:white}
 
-.menu-item{padding:6px;cursor:pointer}
-.menu-item:hover{background:#bbdefb}
+/* SIDEBAR */
+.sidebar{
+width:260px;
+background:#102a54;
+padding:10px;
+}
 
-.card{border:1px solid #ccc;padding:10px;margin-bottom:10px}
+.menu-title{margin:10px 0;color:#60a5fa}
 
+.menu-item{
+padding:8px;
+cursor:pointer;
+border-radius:6px;
+}
+
+.menu-item:hover{background:#1d4ed8}
+
+/* MAIN */
+.main{
+flex:1;
+background:#f1f5f9;
+color:black;
+padding:15px;
+overflow:auto;
+}
+
+.card{
+background:white;
+padding:10px;
+margin-bottom:10px;
+border-radius:8px;
+}
+
+/* TABLE */
 table{width:100%;border-collapse:collapse}
-th{background:#0b3d91;color:white}
+th{background:#1e3a8a;color:white}
 td{padding:6px;border-bottom:1px solid #ddd}
 
 /* POPUP */
-#popup{
+.popup{
 display:none;
 position:fixed;
 top:50%;left:50%;
 transform:translate(-50%,-50%);
 background:white;
+color:black;
 padding:20px;
-border:2px solid #0b3d91;
+width:600px;
+border-radius:10px;
+}
+
+/* LOGIN */
+.auth{
+position:fixed;
+width:100%;height:100%;
+display:flex;
+justify-content:center;
+align-items:center;
+background:#020617;
+}
+
+.login-box{
+background:#111827;
+padding:30px;
+border-radius:10px;
+width:300px;
+}
+
+input,select{
+width:100%;
+padding:10px;
+margin:5px 0;
+}
+button{
+padding:10px;
+margin-top:5px;
+cursor:pointer;
 }
 </style>
 
@@ -91,47 +112,39 @@ firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
 
-let user=null,company=null;
+let user,company;
 
-/* FIXED AUTH */
-auth.onAuthStateChanged(u=>{
-if(u){
-  user=u.uid;
-} else {
-  authBox.style.display="flex";
-}
-});
-
-/* LOGIN BUTTON */
+/* LOGIN */
 function login(){
 auth.signInWithEmailAndPassword(email.value,password.value)
 .then(()=>{
-  user=auth.currentUser.uid;
-  authBox.style.display="none";
-  companyBox.style.display="flex";
-  loadCompanies();
+user=auth.currentUser.uid;
+authBox.style.display="none";
+companyBox.style.display="flex";
+loadCompanies();
 })
 .catch(()=>{
-  auth.createUserWithEmailAndPassword(email.value,password.value)
-  .then(()=>{
-    user=auth.currentUser.uid;
-    authBox.style.display="none";
-    companyBox.style.display="flex";
-    loadCompanies();
-  });
+auth.createUserWithEmailAndPassword(email.value,password.value)
+.then(()=>{
+user=auth.currentUser.uid;
+authBox.style.display="none";
+companyBox.style.display="flex";
+loadCompanies();
+});
 });
 }
 
-/* COMPANIES */
+/* COMPANY */
 function loadCompanies(){
 db.collection("companies").where("user","==",user).get()
 .then(s=>{
 companyList.innerHTML="";
 s.forEach(d=>{
 companyList.innerHTML+=`
-<div style="margin:10px 0;padding:10px;background:#1e293b;border-radius:8px;color:white;display:flex;justify-content:space-between;">
-<span>${d.data().name}</span>
-<button onclick="openCompany('${d.data().name}')" style="background:#2563eb;color:white;border:none;border-radius:6px;">Open</button>
+<div style="background:#1e293b;padding:10px;margin:5px;color:white;border-radius:6px">
+${d.data().name}
+<button onclick="openCompany('${d.data().name}')">Open</button>
+<button onclick="deleteCompany('${d.id}')">Delete</button>
 </div>`;
 });
 });
@@ -143,6 +156,11 @@ newCompany.value="";
 loadCompanies();
 }
 
+function deleteCompany(id){
+db.collection("companies").doc(id).delete();
+loadCompanies();
+}
+
 function openCompany(name){
 company=name;
 companyBox.style.display="none";
@@ -151,16 +169,117 @@ companyTitle.innerText=name;
 loadData();
 }
 
-/* SIMPLE DATA */
+/* LEDGER */
+function createLedger(){
+let name=prompt("Ledger Name");
+let type=prompt("Type");
+
+db.collection("ledgers").add({user:user,company:company,name,type});
+}
+
+function editLedger(){
+let oldName=prompt("Existing Ledger Name");
+let newName=prompt("New Name");
+
+db.collection("ledgers")
+.where("name","==",oldName)
+.get()
+.then(s=>{
+s.forEach(d=>db.collection("ledgers").doc(d.id).update({name:newName}));
+});
+}
+
+/* JOURNAL */
+async function getLedgers(){
+let snap=await db.collection("ledgers")
+.where("user","==",user)
+.where("company","==",company)
+.get();
+
+let arr=[];
+snap.forEach(d=>arr.push(d.data().name));
+return arr;
+}
+
+function openJournal(){
+popup.style.display="block";
+rows.innerHTML="";
+addRow();
+}
+
+async function addRow(){
+let ledgers=await getLedgers();
+let opts=ledgers.map(l=>`<option>${l}</option>`).join("");
+
+let div=document.createElement("div");
+div.innerHTML=`
+<select>${opts}</select>
+<input type="number">
+<select>${opts}</select>
+<input type="number">`;
+
+rows.appendChild(div);
+}
+
+function saveEntry(){
+let list=[],dr=0,cr=0;
+
+rows.querySelectorAll("div").forEach(r=>{
+let acc1=r.children[0].value;
+let d=+r.children[1].value||0;
+let acc2=r.children[2].value;
+let c=+r.children[3].value||0;
+
+if(d){list.push({acc:acc1,type:"dr",amt:d});dr+=d;}
+if(c){list.push({acc:acc2,type:"cr",amt:c});cr+=c;}
+});
+
+if(dr!==cr){alert("Not Balanced");return;}
+
+db.collection("entries").add({
+user,company,lines:list,date:new Date().toLocaleDateString()
+});
+
+popup.style.display="none";
+loadData();
+}
+
+/* GST INVOICE */
+function createInvoice(){
+let name=prompt("Customer Name");
+let amount=prompt("Amount");
+
+let gst=amount*0.18;
+let total=+amount+gst;
+
+db.collection("invoices").add({
+user,company,name,amount,gst,total,date:new Date().toLocaleDateString()
+});
+
+alert("Invoice Created");
+}
+
+/* DATA */
 function loadData(){
-db.collection("entries").where("company","==",company).get()
+db.collection("entries")
+.where("company","==",company)
+.get()
 .then(s=>{
 ledger.innerHTML="";
+let inc=0,exp=0;
+
 s.forEach(d=>{
 d.data().lines.forEach(l=>{
-ledger.innerHTML+=`<tr><td>${l.acc}</td><td>${l.type}</td><td>${l.amt}</td></tr>`;
+ledger.innerHTML+=`
+<tr><td>${l.acc}</td><td>${l.type}</td><td>${l.amt}</td></tr>`;
+
+if(l.type==="cr") inc+=l.amt;
+if(l.type==="dr") exp+=l.amt;
 });
 });
+
+pl.innerHTML="Profit ₹"+(inc-exp);
+bs.innerHTML="Assets ₹"+inc+" | Liabilities ₹"+exp;
 });
 }
 </script>
@@ -170,20 +289,18 @@ ledger.innerHTML+=`<tr><td>${l.acc}</td><td>${l.type}</td><td>${l.amt}</td></tr>
 
 <!-- LOGIN -->
 <div id="authBox" class="auth">
-<div class="login-container">
-<div class="brand"><h1>Pratham Accounting Solution</h1></div>
 <div class="login-box">
+<h2>Pratham Accounting Solution</h2>
 <input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
-<button onclick="login()">Continue</button>
-</div>
+<input id="password" type="password">
+<button onclick="login()">Login / Signup</button>
 </div>
 </div>
 
 <!-- COMPANY -->
 <div id="companyBox" class="auth" style="display:none">
 <div class="login-box">
-<input id="newCompany" placeholder="New Company">
+<input id="newCompany" placeholder="Company Name">
 <button onclick="createCompany()">Create</button>
 <div id="companyList"></div>
 </div>
@@ -191,23 +308,49 @@ ledger.innerHTML+=`<tr><td>${l.acc}</td><td>${l.type}</td><td>${l.amt}</td></tr>
 
 <!-- APP -->
 <div id="app" style="display:none">
+
 <div class="topbar">
 <div>Pratham Accounting Solution</div>
 <div id="companyTitle"></div>
 </div>
 
 <div class="container">
+
 <div class="sidebar">
-<div class="menu-item">Dashboard</div>
+<div class="menu-title">Gateway</div>
+<div class="menu-item" onclick="openJournal()">Journal</div>
+<div class="menu-item" onclick="createLedger()">Create Ledger</div>
+<div class="menu-item" onclick="editLedger()">Edit Ledger</div>
+<div class="menu-item" onclick="createInvoice()">Create Invoice</div>
 </div>
 
 <div class="main">
+
+<div class="card">
+<h3>P&L</h3>
+<div id="pl"></div>
+</div>
+
+<div class="card">
+<h3>Balance Sheet</h3>
+<div id="bs"></div>
+</div>
+
 <table>
 <tr><th>Account</th><th>Type</th><th>Amount</th></tr>
 <tbody id="ledger"></tbody>
 </table>
+
 </div>
 </div>
+</div>
+
+<div id="popup" class="popup">
+<h3>Journal Entry</h3>
+<div id="rows"></div>
+<button onclick="addRow()">Add Line</button>
+<button onclick="saveEntry()">Save</button>
+<button onclick="popup.style.display='none'">Close</button>
 </div>
 
 </body>
