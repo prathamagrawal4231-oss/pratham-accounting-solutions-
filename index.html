@@ -1,128 +1,104 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Mini ERP Pro</title>
+<title>Mini ERP - Tally Style</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui}
-body{background:#0b1220;color:#e2e8f0}
+body{margin:0;font-family:Arial;background:#cfd8dc}
 
-/* AUTH */
-.auth{
-position:fixed;width:100%;height:100%;
-display:flex;justify-content:center;align-items:center;
-background:linear-gradient(135deg,#020617,#0f172a);
-}
-
-.box{
-background:#111827;
-padding:25px;
-border-radius:12px;
-width:320px;
-box-shadow:0 20px 50px rgba(0,0,0,0.5);
-}
-
-input,select{
-width:100%;
-padding:10px;
-margin:6px 0;
-border-radius:6px;
-border:1px solid #374151;
-background:#0f172a;
+/* TOP BAR */
+.topbar{
+background:#0b3d91;
 color:white;
+padding:8px 15px;
+display:flex;
+justify-content:space-between;
 }
 
-button{
-padding:10px;
-width:100%;
-margin-top:6px;
-background:#2563eb;
-color:white;
-border:none;
-border-radius:6px;
-cursor:pointer;
-}
-
-button:hover{transform:scale(1.03)}
-
-/* APP */
-#app{display:flex;height:100vh}
+/* LAYOUT */
+#app{display:flex;flex-direction:column;height:100vh}
+.container{display:flex;flex:1}
 
 /* SIDEBAR */
 .sidebar{
 width:260px;
-background:#020617;
-padding:15px;
-border-right:1px solid #1e293b;
+background:#e3f2fd;
+border-right:2px solid #90caf9;
+padding:10px;
 }
 
-.sidebar h2{color:#38bdf8;margin-bottom:15px}
+.menu-title{
+font-weight:bold;
+margin:10px 0;
+color:#0b3d91;
+}
 
-.nav{background:#0f172a;margin-bottom:6px}
-.nav.active{background:#1d4ed8}
+.menu-item{
+padding:6px;
+cursor:pointer;
+}
+
+.menu-item:hover{
+background:#bbdefb;
+}
 
 /* MAIN */
 .main{
 flex:1;
-padding:20px;
-background:#f1f5f9;
-color:black;
+background:white;
+padding:15px;
 overflow:auto;
 }
 
-.card{
-background:white;
-padding:15px;
-border-radius:10px;
-margin-bottom:10px;
-box-shadow:0 6px 18px rgba(0,0,0,0.1);
-}
-
 /* TABLE */
-table{
-width:100%;
-border-collapse:collapse;
-background:white;
-border-radius:10px;
-overflow:hidden;
-}
+table{width:100%;border-collapse:collapse}
+th{background:#0b3d91;color:white;padding:8px}
+td{padding:6px;border-bottom:1px solid #ddd}
 
-th{
-background:#1e293b;color:white;padding:10px;
-}
-
-td{
-padding:8px;border-bottom:1px solid #eee;
+/* CARD */
+.card{
+border:1px solid #ccc;
+padding:10px;
+margin-bottom:10px;
 }
 
 /* POPUP */
 #popup{
 display:none;
 position:fixed;
-top:0;left:0;
-width:100%;height:100%;
-background:rgba(0,0,0,0.6);
-justify-content:center;
-align-items:center;
-animation:fadeIn 0.2s ease;
-}
-
-#popup .box{
-width:500px;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
 background:white;
-color:black;
-transform:scale(0.9);
-animation:pop 0.2s ease forwards;
+width:600px;
+border:2px solid #0b3d91;
+padding:15px;
 }
-
-@keyframes pop{to{transform:scale(1)}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
 #rows div{
 display:grid;
 grid-template-columns:1fr 100px 1fr 100px;
 gap:10px;
-margin-bottom:10px;
+margin-bottom:8px;
+}
+
+/* AUTH */
+.auth{
+position:fixed;width:100%;height:100%;
+display:flex;justify-content:center;align-items:center;
+background:#0b1220;color:white;
+}
+
+.box{
+background:#111827;
+padding:20px;
+border-radius:10px;
+}
+
+input{
+width:100%;
+padding:8px;
+margin:5px 0;
 }
 </style>
 
@@ -168,7 +144,7 @@ db.collection("companies").where("user","==",user).get()
 companyList.innerHTML="";
 s.forEach(d=>{
 companyList.innerHTML+=`
-<div style="margin:5px 0">
+<div>
 ${d.data().name}
 <button onclick="openCompany('${d.data().name}')">Open</button>
 </div>`;
@@ -191,10 +167,7 @@ loadData();
 }
 
 /* NAVIGATION */
-function navigate(page,el){
-document.querySelectorAll(".nav").forEach(b=>b.classList.remove("active"));
-el.classList.add("active");
-
+function navigate(page){
 dash.style.display="none";
 ledgerPage.style.display="none";
 reports.style.display="none";
@@ -235,10 +208,10 @@ let snap=await db.collection("ledgers")
 .where("company","==",company)
 .get();
 
-let html=`<div class="card"><h3>Ledgers</h3>`;
+let html="<div class='card'><h3>Ledgers</h3>";
 
 snap.forEach(d=>{
-html+=`<div onclick="openLedger('${d.data().name}')" style="cursor:pointer;padding:8px;border-bottom:1px solid #eee">${d.data().name}</div>`;
+html+=`<div onclick="openLedger('${d.data().name}')" style="cursor:pointer">${d.data().name}</div>`;
 });
 
 html+="</div>";
@@ -268,7 +241,7 @@ ledgerPage.innerHTML=html;
 
 /* JOURNAL */
 function openJournal(){
-popup.style.display="flex";
+popup.style.display="block";
 rows.innerHTML="";
 addRow();
 }
@@ -354,9 +327,10 @@ bs.innerHTML=`Assets ₹${inc}<br>Liabilities ₹${exp}`;
 
 /* KEYBOARD */
 document.addEventListener("keydown",e=>{
-if(e.key==="F2") navigate('dash',document.querySelectorAll(".nav")[0]);
-if(e.key==="F4") openJournal();
-if(e.key==="F6") navigate('ledgerPage',document.querySelectorAll(".nav")[1]);
+if(e.key==="d"||e.key==="D") navigate('dash');
+if(e.key==="l"||e.key==="L") navigate('ledgerPage');
+if(e.key==="j"||e.key==="J") openJournal();
+if(e.key==="r"||e.key==="R") navigate('reports');
 if(e.key==="Escape") closePopup();
 });
 </script>
@@ -364,6 +338,7 @@ if(e.key==="Escape") closePopup();
 
 <body>
 
+<!-- LOGIN -->
 <div id="authBox" class="auth">
 <div class="box">
 <h2>Login</h2>
@@ -373,6 +348,7 @@ if(e.key==="Escape") closePopup();
 </div>
 </div>
 
+<!-- COMPANY -->
 <div id="companyBox" class="auth" style="display:none">
 <div class="box">
 <h2>Companies</h2>
@@ -382,19 +358,28 @@ if(e.key==="Escape") closePopup();
 </div>
 </div>
 
+<!-- APP -->
 <div id="app" style="display:none">
 
+<div class="topbar">
+<div>Mini ERP (Tally Style)</div>
+<div id="companyTitle"></div>
+</div>
+
+<div class="container">
+
 <div class="sidebar">
-<h2 id="companyTitle"></h2>
+<div class="menu-title">Gateway of Tally</div>
 
-<button class="nav active" onclick="navigate('dash',this)">🏠 Dashboard</button>
-<button class="nav" onclick="navigate('ledgerPage',this)">📘 Ledgers</button>
-<button class="nav" onclick="openJournal()">🧾 Journal</button>
-<button class="nav" onclick="navigate('reports',this)">📊 Reports</button>
+<div class="menu-item" onclick="navigate('dash')">D: Dashboard</div>
+<div class="menu-item" onclick="navigate('ledgerPage')">L: Ledgers</div>
+<div class="menu-item" onclick="openJournal()">J: Journal</div>
+<div class="menu-item" onclick="navigate('reports')">R: Reports</div>
 
-<hr style="margin:10px 0">
+<hr>
 
-<button onclick="createLedger()">➕ Create Ledger</button>
+<div class="menu-title">Masters</div>
+<div class="menu-item" onclick="createLedger()">Create Ledger</div>
 </div>
 
 <div class="main">
@@ -413,16 +398,17 @@ if(e.key==="Escape") closePopup();
 </table>
 
 </div>
+
+</div>
 </div>
 
+<!-- POPUP -->
 <div id="popup">
-<div class="box">
-<h3>Journal Entry</h3>
+<h3>Journal Voucher</h3>
 <div id="rows"></div>
 <button onclick="addRow()">Add Line</button>
 <button onclick="saveEntry()">Save</button>
 <button onclick="closePopup()">Close</button>
-</div>
 </div>
 
 </body>
