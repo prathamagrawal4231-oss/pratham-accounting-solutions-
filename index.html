@@ -1,92 +1,94 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Tally Prime SaaS Ultimate</title>
+<title>Tally SaaS Prime Full</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI}
 
-body{display:flex;height:100vh;background:#0b1220;color:white}
+body{display:flex;height:100vh;background:#0b1220}
 
 /* AUTH */
 .auth{
 position:fixed;width:100%;height:100%;
 display:flex;justify-content:center;align-items:center;
-background:#0b1220;
+background:#0b1220;color:white;
 }
 
 .box{
-background:#111c33;
-padding:20px;
-border-radius:10px;
+background:#111827;
+padding:24px;
+border-radius:12px;
+min-width:280px;
 }
 
-/* LEFT MENU (TALLY STYLE) */
+input,button{
+padding:8px;
+margin:5px;
+}
+
+/* SIDEBAR */
 .sidebar{
-width:280px;
-background:#020617;
+width:270px;
+background:#050a18;
+color:white;
 padding:15px;
-border-right:2px solid #1e293b;
+border-right:1px solid #1f2937;
 }
 
 .sidebar h2{
 color:#38bdf8;
-font-size:18px;
+font-size:16px;
 margin-bottom:10px;
 }
 
 .sidebar button{
 width:100%;
+text-align:left;
 padding:10px;
 margin:5px 0;
-background:#0f172a;
-color:white;
+background:#111827;
 border:none;
-text-align:left;
-border-radius:5px;
+color:white;
+border-radius:6px;
 cursor:pointer;
 }
 
 .sidebar button:hover{
-background:#1e3a8a;
+background:#1d4ed8;
 }
 
-/* MAIN AREA */
+/* MAIN */
 .main{
 flex:1;
-background:#f1f5f9;
-color:black;
-padding:20px;
+background:#f3f4f6;
+padding:18px;
 overflow:auto;
 }
 
 .card{
 background:white;
 padding:15px;
-border-radius:10px;
-margin-bottom:15px;
+border-radius:12px;
+margin-bottom:12px;
 }
 
-/* JOURNAL GRID */
+/* JOURNAL */
 .row{
 display:grid;
-grid-template-columns:1fr 100px 1fr 100px;
+grid-template-columns:2fr 1fr 2fr 1fr;
 gap:10px;
-margin:5px 0;
+margin:6px 0;
 }
 
-input,button{
-padding:8px;
-}
-
-/* TABLE */
 table{
 width:100%;
 border-collapse:collapse;
+margin-top:10px;
 }
 
 th,td{
-border:1px solid #ddd;
+border:1px solid #e5e7eb;
 padding:8px;
 }
 
@@ -104,24 +106,24 @@ color:white;
 <script>
 
 /* FIREBASE CONFIG */
-const firebaseConfig={
-apiKey:"AIzaSyB38hscdHXDbQ3Bw6ZGLIgk8ci323KFAg4",
-authDomain:"pratham-accounting-solution.firebaseapp.com",
-projectId:"pratham-accounting-solution",
-storageBucket:"pratham-accounting-solution.firebasestorage.app",
-messagingSenderId:"261436280247",
-appId:"1:261436280247:web:5af8a0f36ff722dce62c32"
+const firebaseConfig = {
+apiKey: "AIzaSyB38hscdHXDbQ3Bw6ZGLIgk8ci323KFAg4",
+authDomain: "pratham-accounting-solution.firebaseapp.com",
+projectId: "pratham-accounting-solution",
+storageBucket: "pratham-accounting-solution.firebasestorage.app",
+messagingSenderId: "261436280247",
+appId: "1:261436280247:web:5af8a0f36ff722dce62c32"
 };
 
 firebase.initializeApp(firebaseConfig);
 
-const auth=firebase.auth();
-const db=firebase.firestore();
+const auth = firebase.auth();
+const db = firebase.firestore();
 
 let user=null;
 let company=null;
 
-/* AUTH STATE FIX */
+/* AUTH STATE */
 auth.onAuthStateChanged(u=>{
 if(u){
 user=u.uid;
@@ -131,7 +133,7 @@ loadCompanies();
 }
 });
 
-/* LOGIN */
+/* LOGIN / SIGNUP */
 function login(){
 let e=email.value;
 let p=password.value;
@@ -178,25 +180,24 @@ let div=document.createElement("div");
 div.className="row";
 
 div.innerHTML=`
-<input class="da" placeholder="Dr Account">
-<input class="dv" type="number">
-<input class="ca" placeholder="Cr Account">
-<input class="cv" type="number">
+<input placeholder="Dr Account">
+<input type="number">
+<input placeholder="Cr Account">
+<input type="number">
 `;
 
 rows.appendChild(div);
 }
 
-/* SAVE ENTRY */
 function saveEntry(){
 let list=[];
 let dr=0,cr=0;
 
 document.querySelectorAll(".row").forEach(r=>{
-let da=r.querySelector(".da").value;
-let dv=+r.querySelector(".dv").value||0;
-let ca=r.querySelector(".ca").value;
-let cv=+r.querySelector(".cv").value||0;
+let da=r.children[0].value;
+let dv=+r.children[1].value||0;
+let ca=r.children[2].value;
+let cv=+r.children[3].value||0;
 
 if(dv){list.push({acc:da,type:"dr",amt:dv});dr+=dv;}
 if(cv){list.push({acc:ca,type:"cr",amt:cv});cr+=cv;}
@@ -218,8 +219,9 @@ rows.innerHTML="";
 loadData();
 }
 
-/* FULL ACCOUNTING ENGINE */
+/* LOAD + ENGINE */
 function loadData(){
+
 db.collection("entries")
 .where("user","==",user)
 .where("company","==",company)
@@ -228,21 +230,21 @@ db.collection("entries")
 
 ledger.innerHTML="";
 
-let accMap={};
+let acc={};
 let income=0,expense=0;
 
 s.forEach(d=>{
 d.data().lines.forEach(l=>{
 
-if(!accMap[l.acc]) accMap[l.acc]={dr:0,cr:0};
+if(!acc[l.acc]) acc[l.acc]={dr:0,cr:0};
 
 if(l.type==="dr"){
-accMap[l.acc].dr+=l.amt;
+acc[l.acc].dr+=l.amt;
 expense+=l.amt;
 }
 
 if(l.type==="cr"){
-accMap[l.acc].cr+=l.amt;
+acc[l.acc].cr+=l.amt;
 income+=l.amt;
 }
 
@@ -255,43 +257,29 @@ ledger.innerHTML+=`
 });
 });
 
-/* DASHBOARD */
+/* DASH */
 dash.innerHTML=`
-<b>Gateway of Accounts</b><br><br>
 Income: ₹${income}<br>
 Expense: ₹${expense}<br>
 Profit: ₹${income-expense}
 `;
 
-/* TRIAL BALANCE */
-trial.innerHTML="<h3>Trial Balance</h3><table><tr><th>Account</th><th>Dr</th><th>Cr</th></tr>";
+/* TRIAL */
+trial.innerHTML="<h3>Trial Balance</h3><table><tr><th>Acc</th><th>Dr</th><th>Cr</th></tr>";
 
-for(let a in accMap){
+for(let a in acc){
 trial.innerHTML+=`
-<tr>
-<td>${a}</td>
-<td>${accMap[a].dr}</td>
-<td>${accMap[a].cr}</td>
-</tr>`;
+<tr><td>${a}</td><td>${acc[a].dr}</td><td>${acc[a].cr}</td></tr>`;
 }
-
 trial.innerHTML+="</table>";
 
 /* P&L */
-pl.innerHTML=`
-<h3>Profit & Loss</h3>
-Revenue: ₹${income}<br>
-Expenses: ₹${expense}<br>
-<b>Profit: ₹${income-expense}</b>
-`;
+pl.innerHTML=`Profit & Loss: ₹${income-expense}`;
 
-/* BALANCE SHEET */
-bs.innerHTML=`
-<h3>Balance Sheet</h3>
-Assets: ₹${income}<br>
-Liabilities: ₹${expense}
-`;
+/* BS */
+bs.innerHTML=`Balance Sheet<br>Assets: ₹${income}<br>Liabilities: ₹${expense}`;
 });
+
 }
 
 </script>
@@ -323,16 +311,16 @@ Liabilities: ₹${expense}
 <div id="app" style="display:none;width:100%;display:flex">
 
 <div class="sidebar">
-<h2 id="companyTitle">Tally SaaS</h2>
+<h2 id="companyTitle"></h2>
 
-<button onclick="addRow()">➕ Journal Entry</button>
-<button onclick="saveEntry()">💾 Save Entry</button>
+<button onclick="addRow()">+ Journal</button>
+<button onclick="saveEntry()">Save Entry</button>
 </div>
 
 <div class="main">
 
 <div class="card">
-<h2>Gateway of Accounts</h2>
+<h2>Dashboard</h2>
 <div id="dash"></div>
 </div>
 
@@ -341,7 +329,7 @@ Liabilities: ₹${expense}
 <div id="rows"></div>
 
 <table>
-<tr><th>Account</th><th>Dr</th><th>Cr</th></tr>
+<tr><th>Acc</th><th>Dr</th><th>Cr</th></tr>
 <tbody id="ledger"></tbody>
 </table>
 </div>
