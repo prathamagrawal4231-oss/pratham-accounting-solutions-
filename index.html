@@ -1,32 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Pratham Accounting Solution</title>
-
-<style>
-body{margin:0;font-family:Arial;background:#0f2a44;color:white}
-.topbar{background:#0b3d91;padding:8px;display:flex;justify-content:space-between}
-.container{display:flex;height:calc(100vh - 40px)}
-.sidebar{width:220px;background:#0b3d91;padding:10px}
-.center{flex:1;padding:20px}
-.tally-btn{background:#1d4ed8;padding:8px;margin:5px 0;cursor:pointer;border-radius:4px}
-.tally-btn:hover{background:#2563eb}
-.gateway{background:#102a54;padding:20px;border-radius:6px}
-table{width:100%;border-collapse:collapse;margin-top:10px;background:white;color:black}
-th{background:#1e3a8a;color:white}
-td{padding:6px;border-bottom:1px solid #ddd}
-.popup{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;color:black;padding:20px;width:500px;border-radius:10px}
-.row{display:grid;grid-template-columns:1fr 100px 100px;gap:10px;margin:5px 0}
-.auth{position:fixed;width:100%;height:100%;display:flex;justify-content:center;align-items:center;background:#020617}
-.login-box{background:#111827;padding:30px;border-radius:10px;width:300px}
-input,select,textarea{width:100%;padding:10px;margin:5px 0}
-button{padding:10px;width:100%;margin-top:5px}
-</style>
-
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-
 <script>
 const firebaseConfig={
 apiKey:"AIzaSyB38hscdHXDbQ3Bw6ZGLIgk8ci323KFAg4",
@@ -40,17 +11,29 @@ const db=firebase.firestore();
 
 let user,company;
 
-/* LOGIN */
-function login(){
-auth.signInWithEmailAndPassword(email.value,password.value)
-.then(()=>init())
-.catch(()=>auth.createUserWithEmailAndPassword(email.value,password.value).then(()=>init()));
-}
-function init(){
-user=auth.currentUser.uid;
+/* ✅ AUTH STATE FIX (MAIN FIX) */
+auth.onAuthStateChanged(u=>{
+if(u){
+user=u.uid;
 authBox.style.display="none";
 companyBox.style.display="flex";
 loadCompanies();
+}else{
+authBox.style.display="flex";
+companyBox.style.display="none";
+app.style.display="none";
+}
+});
+
+/* LOGIN */
+function login(){
+let e=email.value;
+let p=password.value;
+
+auth.signInWithEmailAndPassword(e,p)
+.catch(()=>{
+auth.createUserWithEmailAndPassword(e,p);
+});
 }
 
 /* COMPANY */
@@ -61,22 +44,26 @@ companyList.innerHTML="";
 s.forEach(d=>{
 companyList.innerHTML+=`
 <div style="background:#1e293b;padding:10px;margin:5px">
-${d.data().name}
+<span style="color:white">${d.data().name}</span>
 <button onclick="openCompany('${d.data().name}')">Open</button>
 <button onclick="deleteCompany('${d.id}')">Delete</button>
 </div>`;
 });
 });
 }
+
 function createCompany(){
+if(!newCompany.value)return;
 db.collection("companies").add({name:newCompany.value,user:user});
 newCompany.value="";
 loadCompanies();
 }
+
 function deleteCompany(id){
 db.collection("companies").doc(id).delete();
 loadCompanies();
 }
+
 function openCompany(name){
 company=name;
 companyBox.style.display="none";
@@ -85,7 +72,7 @@ companyTitle.innerText=name;
 loadData();
 }
 
-/* LEDGER CREATION */
+/* LEDGER */
 function addLedger(){
 db.collection("ledgers").add({
 name:ledgerName.value,
@@ -106,6 +93,10 @@ async function addRow(){
 let list=[];
 let snap=await db.collection("ledgers").where("company","==",company).get();
 snap.forEach(d=>list.push(d.data().name));
+
+if(list.length===0){
+list=["Cash","Bank","Sales","Purchase"];
+}
 
 let options=list.map(l=>`<option>${l}</option>`).join("");
 
@@ -153,12 +144,11 @@ journalPopup.style.display="none";
 loadData();
 }
 
-/* LOAD DATA */
+/* DATA */
 async function loadData(){
 
 let ledgerMap={};
 let snapLedgers=await db.collection("ledgers").where("company","==",company).get();
-
 snapLedgers.forEach(d=>{
 ledgerMap[d.data().name]=d.data().type;
 });
@@ -203,7 +193,7 @@ bsData={asset,liability};
 
 }
 
-/* PAGE SWITCH */
+/* PAGE */
 function showPage(p){
 dashboard.style.display="none";
 plPage.style.display="none";
@@ -216,118 +206,16 @@ if(p==="bs"){bsPage.style.display="block";renderBS();}
 
 /* P&L */
 function renderPL(){
-plDetails.innerHTML="";
-
-for(let k in plData){
-plDetails.innerHTML+=`
-<div onclick="drill('${k}')">${k}: ₹ ${plData[k]}</div>`;
-}
-
-plDetails.innerHTML+=`<hr>Profit: ₹ ${plData.income - plData.expense}`;
+plDetails.innerHTML=`
+Income: ₹ ${plData.income}<br>
+Expense: ₹ ${plData.expense}<br>
+<hr>Profit: ₹ ${plData.income - plData.expense}`;
 }
 
 /* BS */
 function renderBS(){
 bsDetails.innerHTML=`
-<h3>Assets</h3>
-₹ ${bsData.asset}
-<h3>Liabilities</h3>
-₹ ${bsData.liability}`;
-}
-
-/* DRILL DOWN */
-async function drill(type){
-let html="<h3>"+type+" Details</h3>";
-
-let snap=await db.collection("entries").where("company","==",company).get();
-
-snap.forEach(d=>{
-d.data().lines.forEach(l=>{
-html+=`${l.acc} : ₹ ${l.amt}<br>`;
-});
-});
-
-plDetails.innerHTML=html;
+Assets: ₹ ${bsData.asset}<br>
+Liabilities: ₹ ${bsData.liability}`;
 }
 </script>
-</head>
-
-<body>
-
-<div id="authBox" class="auth">
-<div class="login-box">
-<input id="email"><input id="password">
-<button onclick="login()">Login</button>
-</div>
-</div>
-
-<div id="companyBox" class="auth" style="display:none">
-<div class="login-box">
-<input id="newCompany">
-<button onclick="createCompany()">Create</button>
-<div id="companyList"></div>
-</div>
-</div>
-
-<div id="app" style="display:none">
-
-<div class="topbar">
-<div>Pratham Accounting Solution</div>
-<div id="companyTitle"></div>
-</div>
-
-<div class="container">
-
-<div class="sidebar">
-<div class="tally-btn" onclick="showPage('dashboard')">Dashboard</div>
-<div class="tally-btn" onclick="openJournal()">Journal</div>
-<div class="tally-btn" onclick="showPage('pl')">P&L</div>
-<div class="tally-btn" onclick="showPage('bs')">Balance Sheet</div>
-
-<hr>
-<input id="ledgerName" placeholder="Ledger Name">
-<select id="ledgerType">
-<option>Asset</option>
-<option>Liability</option>
-<option>Income</option>
-<option>Expense</option>
-</select>
-<button onclick="addLedger()">Add Ledger</button>
-
-</div>
-
-<div class="center">
-
-<div id="dashboard" class="gateway">
-<h2>Gateway</h2>
-<table>
-<tr><th>Date</th><th>Account</th><th>Dr</th><th>Cr</th><th>Narration</th></tr>
-<tbody id="ledger"></tbody>
-</table>
-</div>
-
-<div id="plPage" class="gateway" style="display:none">
-<h2>P&L</h2>
-<div id="plDetails"></div>
-</div>
-
-<div id="bsPage" class="gateway" style="display:none">
-<h2>Balance Sheet</h2>
-<div id="bsDetails"></div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-<div id="journalPopup" class="popup">
-<div id="rows"></div>
-<button onclick="addRow()">Add Line</button>
-<div>Dr: <span id="totalDr"></span> Cr: <span id="totalCr"></span></div>
-<textarea id="narration"></textarea>
-<button onclick="saveJournal()">Save</button>
-</div>
-
-</body>
-</html>
