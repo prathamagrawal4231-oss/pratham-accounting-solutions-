@@ -1,1 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Accounting Pro Cloud</title>
 
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
+
+body{display:flex;height:100vh;background:#0f172a;color:#0f172a}
+
+/* SIDEBAR */
+.sidebar{
+  width:260px;
+  background:#020617;
+  color:white;
+  padding:20px;
+}
+
+.sidebar button{
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+  background:#0f172a;
+  color:white;
+  border:none;
+  border-radius:8px;
+}
+
+/* MAIN */
+.main{flex:1;padding:20px;background:#f1f5f9;overflow:auto}
+
+.box{background:white;padding:20px;border-radius:10px;margin-bottom:20px}
+
+input,select{padding:8px;margin:5px;border-radius:6px;border:1px solid #ccc}
+
+/* AUTH */
+.auth{
+  position:fixed;
+  width:100%;
+  height:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#0f172a;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="auth" class="auth">
+<div class="box">
+<h2>Login</h2>
+<input id="email" placeholder="Email"><br>
+<input id="password" type="password" placeholder="Password"><br>
+<button onclick="login()">Login / Signup</button>
+</div>
+</div>
+
+<!-- COMPANY -->
+<div id="companySelect" class="auth" style="display:none">
+<div class="box">
+<h2>Companies</h2>
+
+<input id="newCompany" placeholder="New Company">
+<button onclick="createCompany()">Create</button>
+
+<div id="companyList"></div>
+
+<button onclick="logout()">Logout</button>
+</div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;width:100%;display:flex">
+
+<div class="sidebar">
+<h2 id="companyName"></h2>
+<button onclick="addRow()">Add Row</button>
+<button onclick="saveEntry()">Save</button>
+</div>
+
+<div class="main">
+
+<div class="box">
+<h2>Dashboard</h2>
+<div id="dash"></div>
+</div>
+
+<div class="box">
+<h2>Journal</h2>
+<div id="rows"></div>
+
+<table>
+<tr><th>Account</th><th>Dr</th><th>Cr</th></tr>
+<tbody id="ledger"></tbody>
+</table>
+
+</div>
+
+</div>
+</div>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+
+/* 🔥 YOUR FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyB38hscdHXDbQ3Bw6ZGLIgk8ci323KFAg4",
+  authDomain: "pratham-accounting-solution.firebaseapp.com",
+  projectId: "pratham-accounting-solution",
+  storageBucket: "pratham-accounting-solution.firebasestorage.app",
+  messagingSenderId: "261436280247",
+  appId: "1:261436280247:web:5af8a0f36ff722dce62c32"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let user=null;
+let company=null;
+
+/* LOGIN */
+function login(){
+let e=email.value;
+let p=password.value;
+
+auth.signInWithEmailAndPassword(e,p)
+.then(u=>start(u.user.uid))
+.catch(()=>auth.createUserWithEmailAndPassword(e,p)
+.then(u=>start(u.user.uid)));
+}
+
+function start(uid){
+user=uid;
+auth.style.display="none";
+loadCompanies();
+}
+
+/* LOGOUT */
+function logout(){
+auth.signOut();
+location.reload();
+}
+
+/* COMPANIES */
+function loadCompanies(){
+companySelect.style.display="flex";
+
+db.collection("companies")
+.where("user","==",user)
+.get()
+.then(s=>{
+companyList.innerHTML="";
+s.forEach(d=>{
+companyList.innerHTML+=`
+<div>
+${d.data().name}
+<button onclick="openCompany('${d.id}','${d.data().name}')">Open</button>
+</div>`;
+});
+});
+}
+
+function createCompany(){
+db.collection("companies").add({
+name:newCompany.value,
+user:user
+});
+
+newCompany.value="";
+loadCompanies();
+}
+
+function openCompany(id,name){
+company=name;
+companySelect.style.display="none";
+app.style.display="flex";
+companyName.innerText=name;
+loadData();
+}
+
+/* JOURNAL */
+function addRow(){
+let div=document.createElement("div");
+div.innerHTML=`
+<input class="da" placeholder="Dr Account">
+<input class="dv" type="number">
+<input class="ca" placeholder="Cr Account">
+<input class="cv" type="number">
+`;
+rows.appendChild(div);
+}
+
+/* SAVE */
+function saveEntry(){
+let list=[];
+let dr=0,cr=0;
+
+document.querySelectorAll("#rows div").forEach(r=>{
+let da=r.querySelector(".da").value;
+let dv=+r.querySelector(".dv").value||0;
+let ca=r.querySelector(".ca").value;
+let cv=+r.querySelector(".cv").value||0;
+
+if(dv){list.push({acc:da,type:"dr",amt:dv});dr+=dv;}
+if(cv){list.push({acc:ca,type:"cr",amt:cv});cr+=cv;}
+});
+
+if(Math.abs(dr-cr)>0.01){alert("Not balanced");return;}
+
+db.collection("entries").add({
+user:user,
+company:company,
+lines:list,
+date:new Date().toLocaleDateString()
+});
+
+rows.innerHTML="";
+loadData();
+}
+
+/* LOAD */
+function loadData(){
+db.collection("entries")
+.where("user","==",user)
+.where("company","==",company)
+.get()
+.then(s=>{
+ledger.innerHTML="";
+dash.innerHTML="";
+
+let inc=0,exp=0;
+
+s.forEach(d=>{
+d.data().lines.forEach(l=>{
+ledger.innerHTML+=`
+<tr>
+<td>${l.acc}</td>
+<td>${l.type==="dr"?l.amt:""}</td>
+<td>${l.type==="cr"?l.amt:""}</td>
+</tr>`;
+
+if(l.type==="dr") exp+=l.amt;
+if(l.type==="cr") inc+=l.amt;
+});
+});
+
+dash.innerHTML=
+`Income ₹${inc}<br>Expense ₹${exp}<br>Profit ₹${inc-exp}`;
+});
+}
+
+</script>
+
+</body>
+</html>
