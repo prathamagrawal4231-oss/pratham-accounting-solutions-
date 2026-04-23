@@ -4,71 +4,112 @@
 <title>Tally SaaS Ultimate ERP</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI}
-
-body{display:flex;height:100vh;background:#0b1220}
-
-/* AUTH */
-.auth{
-position:fixed;width:100%;height:100%;
-display:flex;justify-content:center;align-items:center;
-background:#0b1220;color:white;
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter, system-ui, Segoe UI;
 }
 
-.box{
-background:#111827;
-padding:22px;
-border-radius:12px;
-min-width:280px;
+body{
+display:flex;
+height:100vh;
+background:#0a0f1c;
+color:#111827;
 }
 
-/* SIDEBAR */
+/* TOP BAR (NEW ERP STYLE) */
+.topbar{
+position:fixed;
+top:0;
+left:0;
+right:0;
+height:50px;
+background:#0b1220;
+color:white;
+display:flex;
+align-items:center;
+padding:0 15px;
+border-bottom:1px solid #1f2937;
+z-index:10;
+}
+
+.brand{
+font-weight:600;
+color:#38bdf8;
+}
+
+/* LEFT NAV */
 .sidebar{
-width:280px;
+width:260px;
+margin-top:50px;
 background:#050a18;
 color:white;
-padding:15px;
+padding:12px;
 border-right:1px solid #1f2937;
+height:calc(100vh - 50px);
+overflow:auto;
 }
 
-.sidebar h2{
-color:#38bdf8;
-font-size:16px;
-margin-bottom:10px;
-}
-
-.sidebar button{
+.menu-btn{
 width:100%;
-text-align:left;
 padding:10px;
-margin:5px 0;
+margin:6px 0;
 background:#111827;
-border:none;
-color:white;
-border-radius:6px;
+border:1px solid #1f2937;
+color:#e5e7eb;
+border-radius:8px;
+text-align:left;
 cursor:pointer;
+transition:0.2s;
 }
 
-.sidebar button:hover{
+.menu-btn:hover{
 background:#1d4ed8;
 }
 
-/* MAIN */
+/* MAIN WORKSPACE */
 .main{
 flex:1;
-background:#f3f4f6;
+margin-top:50px;
 padding:18px;
+background:#f4f6fb;
 overflow:auto;
+}
+
+/* DASHBOARD CARDS */
+.grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px;
+margin-bottom:15px;
 }
 
 .card{
 background:white;
-padding:15px;
+padding:16px;
+border-radius:14px;
+box-shadow:0 6px 18px rgba(0,0,0,0.08);
+}
+
+.card h3{
+font-size:14px;
+color:#6b7280;
+margin-bottom:5px;
+}
+
+.card h1{
+font-size:22px;
+}
+
+/* JOURNAL UI (ERP STYLE) */
+.voucher{
+background:white;
+padding:12px;
 border-radius:12px;
 margin-bottom:12px;
 }
 
-/* JOURNAL */
 .row{
 display:grid;
 grid-template-columns:2fr 1fr 2fr 1fr;
@@ -77,9 +118,23 @@ margin:6px 0;
 }
 
 input{
-padding:8px;
+padding:10px;
 border:1px solid #d1d5db;
-border-radius:6px;
+border-radius:8px;
+outline:none;
+}
+
+button{
+padding:10px 12px;
+background:#1d4ed8;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+button:hover{
+background:#2563eb;
 }
 
 /* TABLE */
@@ -87,6 +142,7 @@ table{
 width:100%;
 border-collapse:collapse;
 margin-top:10px;
+font-size:13px;
 }
 
 th,td{
