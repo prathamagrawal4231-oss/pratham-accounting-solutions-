@@ -1,72 +1,121 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Tally SaaS Prime</title>
+<title>Tally SaaS Prime - UI Upgrade</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:system-ui, Segoe UI, Inter;
+}
 
-body{height:100vh;display:flex;background:#0b1220}
+body{
+height:100vh;
+display:flex;
+background:#0b1220;
+}
 
 /* AUTH */
 .auth{
-position:fixed;width:100%;height:100%;
-display:flex;justify-content:center;align-items:center;
-background:#0b1220;color:white;
+position:fixed;
+width:100%;
+height:100%;
+display:flex;
+justify-content:center;
+align-items:center;
+background:#0b1220;
+color:white;
 }
 
 .box{
 background:#111827;
-padding:22px;
-border-radius:12px;
-min-width:300px;
+padding:24px;
+border-radius:14px;
+min-width:320px;
+box-shadow:0 10px 30px rgba(0,0,0,0.4);
 }
 
 /* APP */
-#app{display:flex;width:100%}
+#app{
+display:flex;
+width:100%;
+height:100vh;
+}
 
 /* SIDEBAR */
 .sidebar{
-width:260px;
+width:270px;
 background:#050a18;
 color:white;
-padding:15px;
+padding:16px;
 border-right:1px solid #1f2937;
+display:flex;
+flex-direction:column;
+gap:6px;
 }
 
 .sidebar h2{
+font-size:16px;
 color:#38bdf8;
-font-size:15px;
 margin-bottom:10px;
 }
 
 .sidebar button{
-width:100%;
 padding:10px;
-margin:6px 0;
 background:#111827;
-border:none;
-color:white;
-border-radius:6px;
+border:1px solid #1f2937;
+color:#e5e7eb;
+border-radius:10px;
+text-align:left;
 cursor:pointer;
+transition:0.2s;
 }
 
-.sidebar button:hover{background:#1d4ed8}
+.sidebar button:hover{
+background:#1d4ed8;
+}
 
 /* MAIN */
 .main{
 flex:1;
 background:#f4f6fb;
-padding:18px;
+padding:20px;
 overflow:auto;
 }
 
 /* CARDS */
 .card{
 background:white;
-padding:15px;
+padding:18px;
+border-radius:14px;
+margin-bottom:14px;
+box-shadow:0 6px 16px rgba(0,0,0,0.06);
+}
+
+/* DASHBOARD GRID */
+#dash{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px;
+}
+
+.stat{
+background:#fff;
+padding:14px;
 border-radius:12px;
-margin-bottom:12px;
+box-shadow:0 4px 10px rgba(0,0,0,0.05);
+}
+
+.stat h3{
+font-size:12px;
+color:#6b7280;
+}
+
+.stat h1{
+font-size:20px;
+margin-top:6px;
 }
 
 /* JOURNAL */
@@ -74,15 +123,17 @@ margin-bottom:12px;
 display:grid;
 grid-template-columns:2fr 1fr 2fr 1fr;
 gap:10px;
-margin:6px 0;
+margin:8px 0;
 }
 
 input{
 padding:10px;
 border:1px solid #d1d5db;
 border-radius:8px;
+outline:none;
 }
 
+/* BUTTON */
 button{
 padding:10px 12px;
 background:#1d4ed8;
@@ -90,6 +141,11 @@ color:white;
 border:none;
 border-radius:8px;
 cursor:pointer;
+transition:0.2s;
+}
+
+button:hover{
+background:#2563eb;
 }
 
 /* TABLE */
@@ -97,6 +153,7 @@ table{
 width:100%;
 border-collapse:collapse;
 margin-top:10px;
+font-size:13px;
 }
 
 th,td{
@@ -110,25 +167,25 @@ color:white;
 }
 </style>
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <script>
-
-const firebaseConfig={
-apiKey:"AIzaSyB38hscdHXDbQ3Bw6ZGLIgk8ci323KFAg4",
-authDomain:"pratham-accounting-solution.firebaseapp.com",
-projectId:"pratham-accounting-solution",
-storageBucket:"pratham-accounting-solution.firebasestorage.app",
-messagingSenderId:"261436280247",
-appId:"1:261436280247:web:5af8a0f36ff722dce62c32"
+const firebaseConfig = {
+apiKey: "AIzaSyB38hscdHXDbQ3Bw6ZGLIgk8ci323KFAg4",
+authDomain: "pratham-accounting-solution.firebaseapp.com",
+projectId: "pratham-accounting-solution",
+storageBucket: "pratham-accounting-solution.firebasestorage.app",
+messagingSenderId: "261436280247",
+appId: "1:261436280247:web:5af8a0f36ff722dce62c32"
 };
 
 firebase.initializeApp(firebaseConfig);
 
-const auth=firebase.auth();
-const db=firebase.firestore();
+const auth = firebase.auth();
+const db = firebase.firestore();
 
 let user=null;
 let company=null;
@@ -139,7 +196,7 @@ auth.signInWithEmailAndPassword(email.value,password.value)
 .catch(()=>auth.createUserWithEmailAndPassword(email.value,password.value));
 }
 
-/* AUTH */
+/* AUTH STATE */
 auth.onAuthStateChanged(u=>{
 if(u){
 user=u.uid;
@@ -154,22 +211,13 @@ function loadCompanies(){
 db.collection("companies").where("user","==",user).get()
 .then(s=>{
 companyList.innerHTML="";
-
 s.forEach(d=>{
 companyList.innerHTML+=`
-<div style="background:#111827;padding:10px;margin:6px 0;border-radius:8px">
+<div style="background:#111827;padding:10px;margin:6px 0;border-radius:8px;color:white">
 ${d.data().name}
 <br><br>
-
-<button onclick="openCompany('${d.id}','${d.data().name}')">
-Open
-</button>
-
-<button style="background:red;margin-left:6px"
-onclick="deleteCompany('${d.id}','${d.data().name}')">
-Delete
-</button>
-
+<button onclick="openCompany('${d.id}','${d.data().name}')">Open</button>
+<button style="background:red" onclick="deleteCompany('${d.id}','${d.data().name}')">Delete</button>
 </div>`;
 });
 });
@@ -185,7 +233,7 @@ newCompany.value="";
 loadCompanies();
 }
 
-/* OPEN */
+/* OPEN COMPANY */
 function openCompany(id,name){
 company=name;
 companyBox.style.display="none";
@@ -194,27 +242,21 @@ companyTitle.innerText=name;
 loadData();
 }
 
-/* DELETE COMPANY (NEW FEATURE) */
+/* DELETE COMPANY */
 async function deleteCompany(id,name){
 
-let ok=confirm("Delete company + all data?");
-if(!ok) return;
+if(!confirm("Delete company and all data?")) return;
 
-/* delete entries */
 let snap=await db.collection("entries")
 .where("user","==",user)
 .where("company","==",name)
 .get();
 
-snap.forEach(doc=>{
-doc.ref.delete();
-});
+snap.forEach(doc=>doc.ref.delete());
 
-/* delete company */
 await db.collection("companies").doc(id).delete();
 
 loadCompanies();
-alert("Company deleted");
 }
 
 /* JOURNAL */
@@ -246,10 +288,7 @@ if(dv){list.push({acc:da,type:"dr",amt:dv});dr+=dv;}
 if(cv){list.push({acc:ca,type:"cr",amt:cv});cr+=cv;}
 });
 
-if(dr!==cr){
-alert("Not Balanced");
-return;
-}
+if(dr!==cr){alert("Not Balanced");return;}
 
 db.collection("entries").add({
 user:user,
@@ -262,7 +301,7 @@ rows.innerHTML="";
 loadData();
 }
 
-/* ENGINE */
+/* LOAD DATA */
 function loadData(){
 
 db.collection("entries")
@@ -272,7 +311,6 @@ db.collection("entries")
 .then(s=>{
 
 ledger.innerHTML="";
-
 let acc={};
 let income=0,expense=0;
 
@@ -300,14 +338,15 @@ ledger.innerHTML+=`
 });
 });
 
+/* DASHBOARD */
 dash.innerHTML=`
-Income: ₹${income}<br>
-Expense: ₹${expense}<br>
-Profit: ₹${income-expense}
+<div class="stat"><h3>Income</h3><h1>₹${income}</h1></div>
+<div class="stat"><h3>Expense</h3><h1>₹${expense}</h1></div>
+<div class="stat"><h3>Profit</h3><h1>₹${income-expense}</h1></div>
 `;
 
+/* TRIAL */
 trial.innerHTML="<h3>Trial Balance</h3><table><tr><th>Acc</th><th>Dr</th><th>Cr</th></tr>";
-
 for(let a in acc){
 trial.innerHTML+=`<tr><td>${a}</td><td>${acc[a].dr}</td><td>${acc[a].cr}</td></tr>`;
 }
@@ -318,14 +357,13 @@ pl.innerHTML=`Profit: ₹${income-expense}`;
 bs.innerHTML=`Assets: ₹${income}<br>Liabilities: ₹${expense}`;
 
 });
-}
 
+}
 </script>
 </head>
 
 <body>
 
-<!-- AUTH -->
 <div id="authBox" class="auth">
 <div class="box">
 <h2>Login</h2>
@@ -335,7 +373,6 @@ bs.innerHTML=`Assets: ₹${income}<br>Liabilities: ₹${expense}`;
 </div>
 </div>
 
-<!-- COMPANY -->
 <div id="companyBox" class="auth" style="display:none">
 <div class="box">
 <h2>Companies</h2>
@@ -345,12 +382,11 @@ bs.innerHTML=`Assets: ₹${income}<br>Liabilities: ₹${expense}`;
 </div>
 </div>
 
-<!-- APP -->
 <div id="app" style="display:none">
 
 <div class="sidebar">
 <h2 id="companyTitle"></h2>
-<button onclick="addRow()">Journal</button>
+<button onclick="addRow()">Journal Entry</button>
 <button onclick="saveEntry()">Save</button>
 </div>
 
