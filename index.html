@@ -1,1 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Tally SaaS Prime (Rebuilt)</title>
 
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+
+body{
+height:100vh;
+display:flex;
+background:#0b1220;
+}
+
+/* AUTH */
+.auth{
+position:fixed;
+width:100%;
+height:100%;
+display:flex;
+justify-content:center;
+align-items:center;
+background:#0b1220;
+color:white;
+}
+
+.box{
+background:#111827;
+padding:24px;
+border-radius:12px;
+min-width:300px;
+}
+
+/* APP */
+#app{
+display:flex;
+width:100%;
+height:100vh;
+}
+
+/* SIDEBAR */
+.sidebar{
+width:260px;
+background:#050a18;
+color:white;
+padding:15px;
+border-right:1px solid #1f2937;
+}
+
+.sidebar h2{
+color:#38bdf8;
+font-size:15px;
+margin-bottom:10px;
+}
+
+.sidebar button{
+width:100%;
+padding:10px;
+margin:6px 0;
+background:#111827;
+border:1px solid #1f2937;
+color:#e5e7eb;
+border-radius:8px;
+text-align:left;
+cursor:pointer;
+}
+
+.sidebar button:hover{
+background:#1d4ed8;
+}
+
+/* MAIN */
+.main{
+flex:1;
+background:#f4f6fb;
+padding:18px;
+overflow:auto;
+}
+
+/* CARDS */
+.card{
+background:white;
+padding:16px;
+border-radius:12px;
+margin-bottom:12px;
+box-shadow:0 4px 10px rgba(0,0,0,0.06);
+}
+
+/* JOURNAL */
+.row{
+display:grid;
+grid-template-columns:2fr 1fr 2fr 1fr;
+gap:10px;
+margin:6px 0;
+}
+
+input,select{
+padding:10px;
+border:1px solid #d1d5db;
+border-radius:8px;
+outline:none;
+}
+
+button{
+padding:10px 12px;
+background:#1d4ed8;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+button:hover{
+background:#2563eb;
+}
+
+/* TABLE */
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+font-size:13px;
+}
+
+th,td{
+border:1px solid #e5e7eb;
+padding:8px;
+}
+
+th{
+background:#1e3a8a;
+color:white;
+}
+</style>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+apiKey: "AIzaSyB38hscdHXDbQ3Bw6ZGLIgk8ci323KFAg4",
+authDomain: "pratham-accounting-solution.firebaseapp.com",
+projectId: "pratham-accounting-solution",
+storageBucket: "pratham-accounting-solution.firebasestorage.app",
+messagingSenderId: "261436280247",
+appId: "1:261436280247:web:5af8a0f36ff722dce62c32"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let user=null;
+let company=null;
+
+/* LOGIN */
+function login(){
+auth.signInWithEmailAndPassword(email.value,password.value)
+.catch(()=>auth.createUserWithEmailAndPassword(email.value,password.value));
+}
+
+/* AUTH STATE */
+auth.onAuthStateChanged(u=>{
+if(u){
+user=u.uid;
+authBox.style.display="none";
+companyBox.style.display="flex";
+loadCompanies();
+}
+});
+
+/* COMPANIES */
+function loadCompanies(){
+db.collection("companies").where("user","==",user).get()
+.then(s=>{
+companyList.innerHTML="";
+s.forEach(d=>{
+companyList.innerHTML+=`
+<div>
+${d.data().name}
+<button onclick="openCompany('${d.id}','${d.data().name}')">Open</button>
+</div>`;
+});
+});
+}
+
+function createCompany(){
+db.collection("companies").add({
+name:newCompany.value,
+user:user
+});
+newCompany.value="";
+loadCompanies();
+}
+
+function openCompany(id,name){
+company=name;
+companyBox.style.display="none";
+app.style.display="flex";
+companyTitle.innerText=name;
+loadData();
+}
+
+/* JOURNAL */
+function addRow(){
+let div=document.createElement("div");
+div.className="row";
+
+div.innerHTML=`
+<input placeholder="Dr Account">
+<input type="number">
+<input placeholder="Cr Account">
+<input type="number">
+`;
+
+rows.appendChild(div);
+}
+
+function saveEntry(){
+let list=[];
+let dr=0,cr=0;
+
+document.querySelectorAll(".row").forEach(r=>{
+let da=r.children[0].value;
+let dv=+r.children[1].value||0;
+let ca=r.children[2].value;
+let cv=+r.children[3].value||0;
+
+if(dv){list.push({acc:da,type:"dr",amt:dv});dr+=dv;}
+if(cv){list.push({acc:ca,type:"cr",amt:cv});cr+=cv;}
+});
+
+if(dr!==cr){
+alert("Not Balanced");
+return;
+}
+
+db.collection("entries").add({
+user:user,
+company:company,
+lines:list,
+date:new Date().toLocaleDateString()
+});
+
+rows.innerHTML="";
+loadData();
+}
+
+/* ENGINE */
+function loadData(){
+
+db.collection("entries")
+.where("user","==",user)
+.where("company","==",company)
+.get()
+.then(s=>{
+
+ledger.innerHTML="";
+
+let acc={};
+let income=0,expense=0;
+
+s.forEach(d=>{
+d.data().lines.forEach(l=>{
+
+if(!acc[l.acc]) acc[l.acc]={dr:0,cr:0};
+
+if(l.type==="dr"){
+acc[l.acc].dr+=l.amt;
+expense+=l.amt;
+}
+
+if(l.type==="cr"){
+acc[l.acc].cr+=l.amt;
+income+=l.amt;
+}
+
+ledger.innerHTML+=`
+<tr>
+<td>${l.acc}</td>
+<td>${l.type==="dr"?l.amt:""}</td>
+<td>${l.type==="cr"?l.amt:""}</td>
+</tr>`;
+});
+});
+
+/* DASHBOARD */
+dash.innerHTML=`
+<h3>Dashboard</h3>
+Income: ₹${income}<br>
+Expense: ₹${expense}<br>
+Profit: ₹${income-expense}
+`;
+
+/* TRIAL */
+trial.innerHTML=`<h3>Trial Balance</h3><table><tr><th>Acc</th><th>Dr</th><th>Cr</th></tr>`;
+for(let a in acc){
+trial.innerHTML+=`<tr><td>${a}</td><td>${acc[a].dr}</td><td>${acc[a].cr}</td></tr>`;
+}
+trial.innerHTML+="</table>";
+
+/* P&L */
+pl.innerHTML=`<h3>P&L</h3>Profit: ₹${income-expense}`;
+
+/* BS */
+bs.innerHTML=`<h3>Balance Sheet</h3>Assets: ₹${income}<br>Liabilities: ₹${expense}`;
+
+});
+
+}
+</script>
+</head>
+
+<body>
+
+<!-- AUTH -->
+<div id="authBox" class="auth">
+<div class="box">
+<h2>Login</h2>
+<input id="email"><br><br>
+<input id="password" type="password"><br><br>
+<button onclick="login()">Login</button>
+</div>
+</div>
+
+<!-- COMPANY -->
+<div id="companyBox" class="auth" style="display:none">
+<div class="box">
+<h2>Companies</h2>
+<input id="newCompany"><br><br>
+<button onclick="createCompany()">Create</button>
+<div id="companyList"></div>
+</div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+
+<div class="sidebar">
+<h2 id="companyTitle"></h2>
+
+<button onclick="addRow()">+ Journal</button>
+<button onclick="saveEntry()">Save</button>
+</div>
+
+<div class="main">
+
+<div class="card">
+<div id="dash"></div>
+</div>
+
+<div class="card">
+<h3>Journal</h3>
+<div id="rows"></div>
+
+<table>
+<tr><th>Acc</th><th>Dr</th><th>Cr</th></tr>
+<tbody id="ledger"></tbody>
+</table>
+</div>
+
+<div class="card" id="trial"></div>
+<div class="card" id="pl"></div>
+<div class="card" id="bs"></div>
+
+</div>
+</div>
+
+</body>
+</html>
