@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Mini ERP</title>
+<title>Mini ERP Pro</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#0b1220;color:white}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui}
+body{background:#0b1220;color:#e2e8f0}
 
 /* AUTH */
 .auth{
 position:fixed;width:100%;height:100%;
 display:flex;justify-content:center;align-items:center;
-background:#0b1220;
+background:linear-gradient(135deg,#020617,#0f172a);
 }
 
 .box{
@@ -19,6 +19,7 @@ background:#111827;
 padding:25px;
 border-radius:12px;
 width:320px;
+box-shadow:0 20px 50px rgba(0,0,0,0.5);
 }
 
 input,select{
@@ -26,7 +27,7 @@ width:100%;
 padding:10px;
 margin:6px 0;
 border-radius:6px;
-border:1px solid #333;
+border:1px solid #374151;
 background:#0f172a;
 color:white;
 }
@@ -42,24 +43,30 @@ border-radius:6px;
 cursor:pointer;
 }
 
+button:hover{transform:scale(1.03)}
+
 /* APP */
 #app{display:flex;height:100vh}
 
 /* SIDEBAR */
 .sidebar{
-width:250px;
+width:260px;
 background:#020617;
 padding:15px;
+border-right:1px solid #1e293b;
 }
 
-.sidebar button{margin-bottom:6px}
+.sidebar h2{color:#38bdf8;margin-bottom:15px}
+
+.nav{background:#0f172a;margin-bottom:6px}
+.nav.active{background:#1d4ed8}
 
 /* MAIN */
 .main{
 flex:1;
+padding:20px;
 background:#f1f5f9;
 color:black;
-padding:15px;
 overflow:auto;
 }
 
@@ -68,19 +75,54 @@ background:white;
 padding:15px;
 border-radius:10px;
 margin-bottom:10px;
+box-shadow:0 6px 18px rgba(0,0,0,0.1);
 }
 
-table{width:100%;border-collapse:collapse}
-th,td{padding:8px;border-bottom:1px solid #ccc}
+/* TABLE */
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+border-radius:10px;
+overflow:hidden;
+}
+
+th{
+background:#1e293b;color:white;padding:10px;
+}
+
+td{
+padding:8px;border-bottom:1px solid #eee;
+}
 
 /* POPUP */
 #popup{
 display:none;
 position:fixed;
-top:0;left:0;width:100%;height:100%;
+top:0;left:0;
+width:100%;height:100%;
 background:rgba(0,0,0,0.6);
 justify-content:center;
 align-items:center;
+animation:fadeIn 0.2s ease;
+}
+
+#popup .box{
+width:500px;
+background:white;
+color:black;
+transform:scale(0.9);
+animation:pop 0.2s ease forwards;
+}
+
+@keyframes pop{to{transform:scale(1)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+#rows div{
+display:grid;
+grid-template-columns:1fr 100px 1fr 100px;
+gap:10px;
+margin-bottom:10px;
 }
 </style>
 
@@ -148,24 +190,31 @@ companyTitle.innerText=name;
 loadData();
 }
 
-/* LEDGER SYSTEM */
+/* NAVIGATION */
+function navigate(page,el){
+document.querySelectorAll(".nav").forEach(b=>b.classList.remove("active"));
+el.classList.add("active");
+
+dash.style.display="none";
+ledgerPage.style.display="none";
+reports.style.display="none";
+
+if(page==="dash") dash.style.display="block";
+if(page==="ledgerPage") loadLedgerPage();
+if(page==="reports") reports.style.display="block";
+}
+
+/* LEDGER */
 function createLedger(){
 let name=prompt("Ledger Name");
 let type=prompt("Type: Asset / Liability / Income / Expense");
 
 if(!name||!type)return;
 
-db.collection("ledgers").add({
-user:user,
-company:company,
-name:name,
-type:type
-});
-
+db.collection("ledgers").add({user:user,company:company,name,type});
 alert("Ledger Created");
 }
 
-/* LOAD LEDGERS */
 async function getLedgers(){
 let snap=await db.collection("ledgers")
 .where("user","==",user)
@@ -175,6 +224,46 @@ let snap=await db.collection("ledgers")
 let arr=[];
 snap.forEach(d=>arr.push(d.data().name));
 return arr;
+}
+
+/* LEDGER PAGE */
+async function loadLedgerPage(){
+ledgerPage.style.display="block";
+
+let snap=await db.collection("ledgers")
+.where("user","==",user)
+.where("company","==",company)
+.get();
+
+let html=`<div class="card"><h3>Ledgers</h3>`;
+
+snap.forEach(d=>{
+html+=`<div onclick="openLedger('${d.data().name}')" style="cursor:pointer;padding:8px;border-bottom:1px solid #eee">${d.data().name}</div>`;
+});
+
+html+="</div>";
+ledgerPage.innerHTML=html;
+}
+
+/* DRILL */
+async function openLedger(name){
+let snap=await db.collection("entries")
+.where("user","==",user)
+.where("company","==",company)
+.get();
+
+let html=`<div class="card"><h3>${name}</h3>`;
+
+snap.forEach(d=>{
+d.data().lines.forEach(l=>{
+if(l.acc===name){
+html+=`<div>₹${l.amt} (${l.type})</div>`;
+}
+});
+});
+
+html+="</div>";
+ledgerPage.innerHTML=html;
 }
 
 /* JOURNAL */
@@ -188,15 +277,14 @@ function closePopup(){popup.style.display="none"}
 
 async function addRow(){
 let ledgers=await getLedgers();
-
 let options=ledgers.map(l=>`<option>${l}</option>`).join("");
 
 let div=document.createElement("div");
 div.innerHTML=`
 <select>${options}</select>
-<input type="number" placeholder="Debit">
+<input type="number">
 <select>${options}</select>
-<input type="number" placeholder="Credit">
+<input type="number">
 `;
 
 rows.appendChild(div);
@@ -241,7 +329,6 @@ ledger.innerHTML="";
 
 s.forEach(d=>{
 d.data().lines.forEach(l=>{
-
 if(l.type==="cr") inc+=l.amt;
 if(l.type==="dr") exp+=l.amt;
 
@@ -260,14 +347,23 @@ dash.innerHTML=`
 <div class="card">Profit ₹${inc-exp}</div>
 `;
 
+pl.innerHTML=`Profit ₹${inc-exp}`;
+bs.innerHTML=`Assets ₹${inc}<br>Liabilities ₹${exp}`;
 });
 }
+
+/* KEYBOARD */
+document.addEventListener("keydown",e=>{
+if(e.key==="F2") navigate('dash',document.querySelectorAll(".nav")[0]);
+if(e.key==="F4") openJournal();
+if(e.key==="F6") navigate('ledgerPage',document.querySelectorAll(".nav")[1]);
+if(e.key==="Escape") closePopup();
+});
 </script>
 </head>
 
 <body>
 
-<!-- LOGIN -->
 <div id="authBox" class="auth">
 <div class="box">
 <h2>Login</h2>
@@ -277,7 +373,6 @@ dash.innerHTML=`
 </div>
 </div>
 
-<!-- COMPANY -->
 <div id="companyBox" class="auth" style="display:none">
 <div class="box">
 <h2>Companies</h2>
@@ -287,19 +382,30 @@ dash.innerHTML=`
 </div>
 </div>
 
-<!-- APP -->
 <div id="app" style="display:none">
 
 <div class="sidebar">
 <h2 id="companyTitle"></h2>
-<button onclick="createLedger()">Create Ledger</button>
-<button onclick="openJournal()">Journal</button>
-<button onclick="loadData()">Refresh</button>
+
+<button class="nav active" onclick="navigate('dash',this)">🏠 Dashboard</button>
+<button class="nav" onclick="navigate('ledgerPage',this)">📘 Ledgers</button>
+<button class="nav" onclick="openJournal()">🧾 Journal</button>
+<button class="nav" onclick="navigate('reports',this)">📊 Reports</button>
+
+<hr style="margin:10px 0">
+
+<button onclick="createLedger()">➕ Create Ledger</button>
 </div>
 
 <div class="main">
 
 <div id="dash"></div>
+<div id="ledgerPage" style="display:none"></div>
+
+<div id="reports" style="display:none">
+<div class="card"><h3>P&L</h3><div id="pl"></div></div>
+<div class="card"><h3>Balance Sheet</h3><div id="bs"></div></div>
+</div>
 
 <table>
 <tr><th>Account</th><th>Dr</th><th>Cr</th></tr>
@@ -309,7 +415,6 @@ dash.innerHTML=`
 </div>
 </div>
 
-<!-- POPUP -->
 <div id="popup">
 <div class="box">
 <h3>Journal Entry</h3>
