@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>ERP Tally Style System</title>
+<title>ERP Accounting System</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
@@ -22,10 +22,9 @@ color:white;
 
 .loginBox{
 background:#111827;
-padding:30px;
+padding:28px;
 border-radius:14px;
 min-width:340px;
-box-shadow:0 20px 60px rgba(0,0,0,0.6);
 }
 
 input{
@@ -76,7 +75,6 @@ padding:18px;
 overflow:auto;
 }
 
-/* CARDS */
 .card{
 background:white;
 padding:16px;
@@ -103,7 +101,7 @@ background:#1e3a8a;
 color:white;
 }
 
-/* JOURNAL POPUP */
+/* JOURNAL */
 #journalPopup{
 display:none;
 position:fixed;
@@ -119,25 +117,6 @@ background:white;
 width:650px;
 padding:20px;
 border-radius:12px;
-}
-
-/* COMMAND PALETTE */
-#cmdBox{
-display:none;
-position:fixed;
-top:20%;
-left:50%;
-transform:translateX(-50%);
-background:white;
-width:320px;
-padding:12px;
-border-radius:10px;
-box-shadow:0 10px 40px rgba(0,0,0,0.3);
-}
-
-#cmdInput{
-width:100%;
-padding:10px;
 }
 </style>
 
@@ -156,6 +135,7 @@ appId:"1:261436280247:web:5af8a0f36ff722dce62c32"
 };
 
 firebase.initializeApp(firebaseConfig);
+
 const auth=firebase.auth();
 const db=firebase.firestore();
 
@@ -261,44 +241,7 @@ closeJournal();
 loadData();
 }
 
-/* KEYBOARD SYSTEM */
-document.addEventListener("keydown",(e)=>{
-
-// COMMAND PALETTE
-if(e.ctrlKey && e.key.toLowerCase()==="g"){
-cmdBox.style.display="block";
-cmdInput.focus();
-}
-
-// SHORTCUTS
-if(e.altKey && e.key.toLowerCase()==="v") openJournal();
-if(e.altKey && e.key.toLowerCase()==="l") loadData();
-if(e.altKey && e.key.toLowerCase()==="b") alert("Balance Sheet");
-if(e.altKey && e.key.toLowerCase()==="p") alert("P&L");
-
-// ESC
-if(e.key==="Escape"){
-cmdBox.style.display="none";
-journalPopup.style.display="none";
-}
-});
-
-/* COMMAND ENGINE */
-cmdInput?.addEventListener("keydown",(e)=>{
-if(e.key==="Enter"){
-let v=cmdInput.value.toLowerCase();
-
-if(v.includes("journal")) openJournal();
-if(v.includes("ledger")) loadData();
-if(v.includes("balance")) alert("Balance Sheet");
-if(v.includes("pl")) alert("Profit & Loss");
-
-cmdBox.style.display="none";
-cmdInput.value="";
-}
-});
-
-/* LOAD DATA */
+/* LOAD DATA + FIXED UI SYSTEM */
 function loadData(){
 
 db.collection("entries")
@@ -328,12 +271,36 @@ ledger.innerHTML+=`
 });
 });
 
+/* DASHBOARD */
 dash.innerHTML=`
-Income: ₹${income}<br>
-Expense: ₹${expense}<br>
-Profit: ₹${income-expense}
+<div class="card">Income: ₹${income}</div>
+<div class="card">Expense: ₹${expense}</div>
+<div class="card"><b>Profit: ₹${income-expense}</b></div>
 `;
 
+/* LEDGER FIX */
+ledgerView.innerHTML=Object.keys(acc).map(a=>
+`<tr><td>${a}</td><td>${acc[a].dr}</td><td>${acc[a].cr}</td></tr>`
+).join("");
+
+/* P&L */
+pl.innerHTML=`
+<div class="card">
+<h3>Profit & Loss</h3>
+<p>Income: ₹${income}</p>
+<p>Expense: ₹${expense}</p>
+<p><b>Profit: ₹${income-expense}</b></p>
+</div>`;
+
+/* BALANCE SHEET FIXED */
+bs.innerHTML=`
+<div class="card">
+<h3>Balance Sheet</h3>
+<div style="display:flex;gap:20px">
+<div><b>Assets</b><br>₹${income}</div>
+<div><b>Liabilities</b><br>₹${expense}</div>
+</div>
+</div>`;
 });
 }
 
@@ -367,16 +334,23 @@ Profit: ₹${income-expense}
 
 <div class="sidebar">
 <h2 id="companyTitle"></h2>
-<button onclick="openJournal()">Journal (Alt+V)</button>
+<button onclick="openJournal()">Journal</button>
+<button onclick="loadData()">Refresh</button>
 </div>
 
 <div class="main">
-<div class="card"><div id="dash"></div></div>
+
+<div id="dash"></div>
 
 <table>
 <tr><th>Acc</th><th>Dr</th><th>Cr</th></tr>
 <tbody id="ledger"></tbody>
+<tbody id="ledgerView"></tbody>
 </table>
+
+<div id="pl"></div>
+<div id="bs"></div>
+
 </div>
 </div>
 
@@ -392,11 +366,6 @@ Profit: ₹${income-expense}
 <button onclick="closeJournal()">Close</button>
 
 </div>
-</div>
-
-<!-- COMMAND PALETTE -->
-<div id="cmdBox">
-<input id="cmdInput" placeholder="journal / ledger / pl / balance">
 </div>
 
 </body>
