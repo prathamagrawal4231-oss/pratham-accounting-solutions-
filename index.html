@@ -1,25 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Tally SaaS Prime - ERP Mode</title>
+<title>Tally SaaS Prime - Final UI Upgrade</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 
-body{height:100vh;display:flex;background:#0b1220}
+body{
+height:100vh;
+display:flex;
+background:#0b1220;
+}
 
 /* AUTH */
 .auth{
-position:fixed;width:100%;height:100%;
-display:flex;justify-content:center;align-items:center;
-background:#0b1220;color:white;
+position:fixed;
+width:100%;
+height:100%;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#0b1220,#111827);
+color:white;
 }
 
-.box{
+.loginBox{
 background:#111827;
-padding:22px;
-border-radius:14px;
-min-width:320px;
+padding:30px;
+border-radius:16px;
+min-width:340px;
+box-shadow:0 20px 60px rgba(0,0,0,0.6);
+}
+
+.loginBox h2{
+margin-bottom:15px;
+color:#38bdf8;
+}
+
+input{
+width:100%;
+padding:10px;
+margin:8px 0;
+border-radius:8px;
+border:1px solid #374151;
+background:#0f172a;
+color:white;
 }
 
 /* APP */
@@ -37,7 +62,6 @@ border-right:1px solid #1f2937;
 .sidebar h2{
 color:#38bdf8;
 margin-bottom:10px;
-font-size:15px;
 }
 
 .sidebar button{
@@ -61,11 +85,27 @@ padding:18px;
 overflow:auto;
 }
 
+/* CARDS */
 .card{
 background:white;
 padding:16px;
 border-radius:12px;
 margin-bottom:12px;
+box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* DASH */
+#dash{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px;
+}
+
+.stat{
+padding:14px;
+border-radius:12px;
+background:#fff;
+box-shadow:0 4px 10px rgba(0,0,0,0.05);
 }
 
 /* TABLE */
@@ -73,12 +113,12 @@ table{
 width:100%;
 border-collapse:collapse;
 margin-top:10px;
-font-size:13px;
 }
 
 th,td{
 border:1px solid #e5e7eb;
 padding:8px;
+font-size:13px;
 }
 
 th{
@@ -86,20 +126,8 @@ background:#1e3a8a;
 color:white;
 }
 
-/* BUTTON */
-button{
-padding:10px 12px;
-background:#1d4ed8;
-color:white;
-border:none;
-border-radius:8px;
-cursor:pointer;
-}
-
-button:hover{background:#2563eb}
-
-/* VOUCHER POPUP */
-#voucher{
+/* JOURNAL POPUP */
+#journalPopup{
 display:none;
 position:fixed;
 top:0;left:0;
@@ -109,15 +137,35 @@ justify-content:center;
 align-items:center;
 }
 
-.vbox{
+.popup{
 background:white;
 width:650px;
 padding:20px;
 border-radius:12px;
 }
+
+/* LEDGER */
+.ledgerBox{
+max-height:300px;
+overflow:auto;
+}
+
+/* BALANCE SHEET */
+.bsGrid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
+}
+
+.bsBox{
+background:white;
+padding:16px;
+border-radius:12px;
+box-shadow:0 4px 10px rgba(0,0,0,0.08);
+}
+
 </style>
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -146,7 +194,6 @@ auth.signInWithEmailAndPassword(email.value,password.value)
 .catch(()=>auth.createUserWithEmailAndPassword(email.value,password.value));
 }
 
-/* AUTH */
 auth.onAuthStateChanged(u=>{
 if(u){
 user=u.uid;
@@ -156,49 +203,29 @@ loadCompanies();
 }
 });
 
-/* COMPANY SYSTEM */
+/* COMPANY */
 function loadCompanies(){
 db.collection("companies").where("user","==",user).get()
 .then(s=>{
 companyList.innerHTML="";
 s.forEach(d=>{
 companyList.innerHTML+=`
-<div style="background:#111827;padding:10px;margin:6px 0;border-radius:8px;color:white">
-${d.data().name}<br><br>
-
-<button onclick="openCompany('${d.id}','${d.data().name}')">Open</button>
-<button style="background:red" onclick="deleteCompany('${d.id}','${d.data().name}')">Delete</button>
+<div style="background:#111827;color:white;padding:10px;margin:6px 0;border-radius:8px">
+${d.data().name}
+<br><br>
+<button onclick="openCompany('${d.data().name}')">Open</button>
 </div>`;
 });
 });
 }
 
 function createCompany(){
-db.collection("companies").add({
-name:newCompany.value,
-user:user
-});
+db.collection("companies").add({name:newCompany.value,user:user});
 newCompany.value="";
 loadCompanies();
 }
 
-async function deleteCompany(id,name){
-
-if(!confirm("Delete company + all data?")) return;
-
-let snap=await db.collection("entries")
-.where("user","==",user)
-.where("company","==",name)
-.get();
-
-snap.forEach(doc=>doc.ref.delete());
-
-await db.collection("companies").doc(id).delete();
-
-loadCompanies();
-}
-
-function openCompany(id,name){
+function openCompany(name){
 company=name;
 companyBox.style.display="none";
 app.style.display="flex";
@@ -206,18 +233,18 @@ companyTitle.innerText=name;
 loadData();
 }
 
-/* VOUCHER SYSTEM */
-function openVoucher(){
-voucher.style.display="flex";
-voucherRows.innerHTML="";
-addVoucherRow();
+/* JOURNAL POPUP */
+function openJournal(){
+journalPopup.style.display="flex";
+journalRows.innerHTML="";
+addRow();
 }
 
-function closeVoucher(){
-voucher.style.display="none";
+function closeJournal(){
+journalPopup.style.display="none";
 }
 
-function addVoucherRow(){
+function addRow(){
 let div=document.createElement("div");
 div.style.display="grid";
 div.style.gridTemplateColumns="2fr 1fr 2fr 1fr";
@@ -231,15 +258,15 @@ div.innerHTML=`
 <input type="number">
 `;
 
-voucherRows.appendChild(div);
+journalRows.appendChild(div);
 }
 
-function saveVoucher(){
+function saveJournal(){
 
 let list=[];
 let dr=0,cr=0;
 
-document.querySelectorAll("#voucherRows div").forEach(r=>{
+document.querySelectorAll("#journalRows div").forEach(r=>{
 let da=r.children[0].value;
 let dv=+r.children[1].value||0;
 let ca=r.children[2].value;
@@ -261,16 +288,9 @@ lines:list,
 date:new Date().toLocaleDateString()
 });
 
-closeVoucher();
+closeJournal();
 loadData();
 }
-
-/* KEYBOARD */
-document.addEventListener("keydown",e=>{
-if(e.altKey && e.key==="v") openVoucher();
-if(e.key==="Escape") closeVoucher();
-if(e.ctrlKey && e.key==="Enter") saveVoucher();
-});
 
 /* LOAD DATA */
 function loadData(){
@@ -290,15 +310,8 @@ d.data().lines.forEach(l=>{
 
 if(!acc[l.acc]) acc[l.acc]={dr:0,cr:0};
 
-if(l.type==="dr"){
-acc[l.acc].dr+=l.amt;
-expense+=l.amt;
-}
-
-if(l.type==="cr"){
-acc[l.acc].cr+=l.amt;
-income+=l.amt;
-}
+if(l.type==="dr"){acc[l.acc].dr+=l.amt;expense+=l.amt;}
+if(l.type==="cr"){acc[l.acc].cr+=l.amt;income+=l.amt;}
 
 ledger.innerHTML+=`
 <tr>
@@ -311,44 +324,59 @@ ledger.innerHTML+=`
 
 /* DASH */
 dash.innerHTML=`
-Income: ₹${income}<br>
-Expense: ₹${expense}<br>
-Profit: ₹${income-expense}
+<div class="stat">Income<br><b>₹${income}</b></div>
+<div class="stat">Expense<br><b>₹${expense}</b></div>
+<div class="stat">Profit<br><b>₹${income-expense}</b></div>
 `;
 
-/* TRIAL */
-trial.innerHTML="<h3>Trial Balance</h3><table><tr><th>Acc</th><th>Dr</th><th>Cr</th></tr>";
-for(let a in acc){
-trial.innerHTML+=`<tr><td>${a}</td><td>${acc[a].dr}</td><td>${acc[a].cr}</td></tr>`;
-}
-trial.innerHTML+="</table>";
+/* LEDGER VIEW */
+ledgerView.innerHTML=Object.keys(acc).map(a=>
+`<tr><td>${a}</td><td>${acc[a].dr}</td><td>${acc[a].cr}</td></tr>`
+).join("");
 
+/* P&L */
 pl.innerHTML=`Profit: ₹${income-expense}`;
-bs.innerHTML=`Assets: ₹${income}<br>Liabilities: ₹${expense}`;
+
+/* BALANCE SHEET (IMPROVED) */
+bs.innerHTML=`
+<div class="bsGrid">
+
+<div class="bsBox">
+<h3>Assets</h3>
+<p>₹${income}</p>
+</div>
+
+<div class="bsBox">
+<h3>Liabilities</h3>
+<p>₹${expense}</p>
+</div>
+
+</div>
+`;
 
 });
-
 }
+
 </script>
 </head>
 
 <body>
 
-<!-- AUTH -->
+<!-- LOGIN -->
 <div id="authBox" class="auth">
-<div class="box">
-<h2>Login</h2>
-<input id="email"><br><br>
-<input id="password" type="password"><br><br>
+<div class="loginBox">
+<h2>Welcome Back</h2>
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
 <button onclick="login()">Login</button>
 </div>
 </div>
 
 <!-- COMPANY -->
 <div id="companyBox" class="auth" style="display:none">
-<div class="box">
+<div class="loginBox">
 <h2>Companies</h2>
-<input id="newCompany"><br><br>
+<input id="newCompany">
 <button onclick="createCompany()">Create</button>
 <div id="companyList"></div>
 </div>
@@ -360,38 +388,42 @@ bs.innerHTML=`Assets: ₹${income}<br>Liabilities: ₹${expense}`;
 <div class="sidebar">
 <h2 id="companyTitle"></h2>
 
-<button onclick="openVoucher()">+ Voucher (Alt+V)</button>
+<button onclick="openJournal()">Journal (Alt+V)</button>
 <button onclick="loadData()">Refresh</button>
 </div>
 
 <div class="main">
 
-<div class="card"><div id="dash"></div></div>
+<div class="card">
+<div id="dash"></div>
+</div>
 
 <div class="card">
+<h3>Ledger</h3>
 <table>
-<tr><th>Acc</th><th>Dr</th><th>Cr</th></tr>
+<tr><th>Account</th><th>Dr</th><th>Cr</th></tr>
 <tbody id="ledger"></tbody>
+<tbody id="ledgerView"></tbody>
 </table>
 </div>
 
-<div class="card" id="trial"></div>
 <div class="card" id="pl"></div>
 <div class="card" id="bs"></div>
 
 </div>
 </div>
 
-<!-- VOUCHER -->
-<div id="voucher">
-<div class="vbox">
-<h3>Journal Voucher</h3>
+<!-- JOURNAL POPUP -->
+<div id="journalPopup">
+<div class="popup">
 
-<div id="voucherRows"></div>
+<h3>Journal Entry</h3>
 
-<button onclick="addVoucherRow()">Add Line</button>
-<button onclick="saveVoucher()">Save (Ctrl+Enter)</button>
-<button onclick="closeVoucher()">Close (Esc)</button>
+<div id="journalRows"></div>
+
+<button onclick="addRow()">Add Line</button>
+<button onclick="saveJournal()">Save</button>
+<button onclick="closeJournal()">Close</button>
 
 </div>
 </div>
