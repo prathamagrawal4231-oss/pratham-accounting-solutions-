@@ -6,95 +6,48 @@
 <style>
 body{margin:0;font-family:Arial;background:#0f2a44;color:white}
 
-/* TOP */
-.topbar{
-background:#0b3d91;
-padding:8px;
-display:flex;
-justify-content:space-between;
-}
+.topbar{background:#0b3d91;padding:8px;display:flex;justify-content:space-between}
 
-/* LAYOUT */
 .container{display:flex;height:calc(100vh - 40px)}
 
-/* LEFT */
-.sidebar{
-width:220px;
-background:#0b3d91;
-padding:10px;
-}
+.sidebar{width:220px;background:#0b3d91;padding:10px}
+.rightbar{width:260px;background:#0b3d91;padding:10px}
+.center{flex:1;display:flex;justify-content:center;align-items:center}
 
-/* RIGHT */
-.rightbar{
-width:260px;
-background:#0b3d91;
-padding:10px;
-}
+.gateway{width:520px;background:#102a54;padding:20px;border-radius:6px}
 
-/* CENTER */
-.center{
-flex:1;
-display:flex;
-justify-content:center;
-align-items:center;
-}
-
-/* BOX */
-.gateway{
-width:500px;
-background:#102a54;
-padding:20px;
-border-radius:6px;
-}
-
-/* BUTTONS */
-.tally-btn{
-background:#1d4ed8;
-padding:8px;
-margin:5px 0;
-cursor:pointer;
-border-radius:4px;
-}
-
+.tally-btn{background:#1d4ed8;padding:8px;margin:5px 0;cursor:pointer;border-radius:4px}
 .tally-btn:hover{background:#2563eb}
 
-.gateway-option{
-display:flex;
-justify-content:space-between;
-padding:8px;
-margin:5px 0;
-background:#1e3a8a;
-cursor:pointer;
-}
-
+.gateway-option{display:flex;justify-content:space-between;padding:8px;margin:5px 0;background:#1e3a8a;cursor:pointer}
 .gateway-option:hover{background:#2563eb}
 
-/* LOGIN */
-.auth{
-position:fixed;width:100%;height:100%;
-display:flex;justify-content:center;align-items:center;
-background:#020617;
-}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th{background:#1e3a8a;color:white}
+td{padding:6px;border-bottom:1px solid #ddd;color:black}
+.main-table{background:white}
 
-.login-box{
-background:#111827;
-padding:30px;
-border-radius:10px;
-width:300px;
-}
+.auth{position:fixed;width:100%;height:100%;display:flex;justify-content:center;align-items:center;background:#020617}
 
-input{width:100%;padding:10px;margin:5px 0}
+.login-box{background:#111827;padding:30px;border-radius:10px;width:300px}
+
+input,select,textarea{width:100%;padding:10px;margin:5px 0}
 button{padding:10px;width:100%;margin-top:5px}
 
-/* POPUP */
 .popup{
 display:none;
 position:fixed;
 top:50%;left:50%;
 transform:translate(-50%,-50%);
 background:white;color:black;
-padding:20px;width:400px;
-border-radius:10px;
+padding:20px;width:500px;border-radius:10px;
+}
+
+.row{
+display:grid;
+grid-template-columns:1fr 100px 100px;
+gap:10px;
+margin:5px 0;
 }
 </style>
 
@@ -146,6 +99,7 @@ ${d.data().name}
 }
 
 function createCompany(){
+if(!newCompany.value)return;
 db.collection("companies").add({name:newCompany.value,user:user});
 newCompany.value="";
 loadCompanies();
@@ -164,29 +118,107 @@ companyTitle.innerText=name;
 loadData();
 }
 
-/* JOURNAL */
-function openJournal(){journalPopup.style.display="block"}
+/* JOURNAL MULTI LINE */
+function openJournal(){
+journalPopup.style.display="block";
+rows.innerHTML="";
+addRow();
+}
+
+async function addRow(){
+let ledgerList=[];
+
+let snap=await db.collection("ledgers").where("company","==",company).get();
+snap.forEach(d=>ledgerList.push(d.data().name));
+
+if(ledgerList.length===0){
+ledgerList=["Cash","Bank","Sales","Purchase"];
+}
+
+let options=ledgerList.map(l=>`<option>${l}</option>`).join("");
+
+let div=document.createElement("div");
+div.className="row";
+
+div.innerHTML=`
+<select>${options}</select>
+<input type="number" placeholder="Debit" oninput="calcTotal()">
+<input type="number" placeholder="Credit" oninput="calcTotal()">`;
+
+rows.appendChild(div);
+}
+
+function calcTotal(){
+let dr=0,cr=0;
+
+document.querySelectorAll(".row").forEach(r=>{
+dr+=+r.children[1].value||0;
+cr+=+r.children[2].value||0;
+});
+
+totalDr.innerText=dr;
+totalCr.innerText=cr;
+}
 
 function saveJournal(){
-let acc=accName.value;
-let dr=+drAmt.value||0;
-let cr=+crAmt.value||0;
+let list=[],dr=0,cr=0;
 
-if(dr!==cr){alert("Not Balanced");return;}
+document.querySelectorAll(".row").forEach(r=>{
+let acc=r.children[0].value;
+let d=+r.children[1].value||0;
+let c=+r.children[2].value||0;
+
+if(d>0){list.push({acc,type:"dr",amt:d});dr+=d;}
+if(c>0){list.push({acc,type:"cr",amt:c});cr+=c;}
+});
+
+if(dr!==cr){alert("Debit and Credit not equal");return;}
 
 db.collection("entries").add({
 user,company,
-lines:[
-{acc,type:"dr",amt:dr},
-{acc,type:"cr",amt:cr}
-]
+date:new Date().toLocaleDateString(),
+narration:narration.value,
+lines:list
 });
 
 journalPopup.style.display="none";
+narration.value="";
 loadData();
 }
 
-/* INVOICE */
+/* DATA */
+function loadData(){
+db.collection("entries").where("company","==",company).get()
+.then(s=>{
+
+ledger.innerHTML="";
+let inc=0,exp=0;
+
+s.forEach(d=>{
+d.data().lines.forEach(l=>{
+
+ledger.innerHTML+=`
+<tr>
+<td>${d.data().date}</td>
+<td>${l.acc}</td>
+<td>${l.type==="dr"?l.amt:""}</td>
+<td>${l.type==="cr"?l.amt:""}</td>
+<td>${d.data().narration||""}</td>
+</tr>`;
+
+if(l.type==="cr") inc+=l.amt;
+if(l.type==="dr") exp+=l.amt;
+
+});
+});
+
+pl.innerText="₹ "+(inc-exp);
+bs.innerText="Assets ₹ "+inc+" | Liabilities ₹ "+exp;
+
+});
+}
+
+/* GST */
 function openInvoice(){invoicePopup.style.display="block"}
 
 function saveInvoice(){
@@ -196,34 +228,15 @@ let total=amount+gst;
 
 db.collection("invoices").add({user,company,amount,gst,total});
 invoicePopup.style.display="none";
-loadReports();
+loadGST();
 }
 
-/* DATA */
-function loadData(){
-db.collection("entries").where("company","==",company).get()
-.then(s=>{
-let inc=0,exp=0;
-
-s.forEach(d=>{
-d.data().lines.forEach(l=>{
-if(l.type==="cr") inc+=l.amt;
-if(l.type==="dr") exp+=l.amt;
-});
-});
-
-pl.innerText="₹"+(inc-exp);
-bs.innerText="Assets ₹"+inc+" | Liabilities ₹"+exp;
-});
-}
-
-/* GST */
-function loadReports(){
+function loadGST(){
 db.collection("invoices").where("company","==",company).get()
 .then(s=>{
 let total=0;
 s.forEach(d=>total+=d.data().gst);
-gst.innerText="GST Collected ₹"+total;
+gst.innerText="GST ₹ "+total;
 });
 }
 
@@ -231,7 +244,6 @@ gst.innerText="GST Collected ₹"+total;
 document.addEventListener("keydown",e=>{
 if(e.key==="F2") openJournal();
 if(e.key==="F3") openInvoice();
-if(e.key==="F4") loadReports();
 });
 </script>
 </head>
@@ -269,29 +281,26 @@ if(e.key==="F4") loadReports();
 
 <!-- LEFT -->
 <div class="sidebar">
-<div>Masters</div>
-<div class="tally-btn">Create Ledger</div>
-
 <div>Transactions</div>
 <div class="tally-btn" onclick="openJournal()">F2 Journal</div>
-<div class="tally-btn" onclick="openInvoice()">F3 Sales</div>
-
-<div>Reports</div>
-<div class="tally-btn" onclick="loadReports()">F4 GST</div>
+<div class="tally-btn" onclick="openInvoice()">F3 Invoice</div>
 </div>
 
 <!-- CENTER -->
 <div class="center">
 <div class="gateway">
+
 <h2 style="text-align:center">Gateway of Pratham</h2>
 
-<div class="gateway-option" onclick="openJournal()">
-Journal Voucher <span>F2</span>
-</div>
+<div class="gateway-option" onclick="openJournal()">Journal <span>F2</span></div>
+<div class="gateway-option" onclick="openInvoice()">Invoice <span>F3</span></div>
 
-<div class="gateway-option" onclick="openInvoice()">
-Sales Voucher <span>F3</span>
-</div>
+<table class="main-table">
+<tr>
+<th>Date</th><th>Account</th><th>Dr</th><th>Cr</th><th>Narration</th>
+</tr>
+<tbody id="ledger"></tbody>
+</table>
 
 </div>
 </div>
@@ -306,15 +315,25 @@ Sales Voucher <span>F3</span>
 </div>
 </div>
 
-<!-- POPUPS -->
+<!-- JOURNAL POPUP -->
 <div id="journalPopup" class="popup">
-<h3>Journal</h3>
-<input id="accName" placeholder="Account">
-<input id="drAmt" placeholder="Debit">
-<input id="crAmt" placeholder="Credit">
-<button onclick="saveJournal()">Save</button>
+<h3>Journal Entry</h3>
+
+<div id="rows"></div>
+
+<button onclick="addRow()">+ Add Line</button>
+
+<hr>
+
+<div>Total Debit: ₹ <span id="totalDr">0</span></div>
+<div>Total Credit: ₹ <span id="totalCr">0</span></div>
+
+<textarea id="narration" placeholder="Narration"></textarea>
+
+<button onclick="saveJournal()">Save Entry</button>
 </div>
 
+<!-- INVOICE -->
 <div id="invoicePopup" class="popup">
 <h3>Invoice</h3>
 <input id="amt" placeholder="Amount">
