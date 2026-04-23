@@ -1,41 +1,109 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Tally SaaS Pro</title>
+<title>Tally Prime SaaS UI</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
 
-body{display:flex;height:100vh;background:#0f172a}
+body{
+display:flex;
+height:100vh;
+background:#0b1220;
+color:white;
+}
 
+/* AUTH */
 .auth{
-position:fixed;width:100%;height:100%;
-display:flex;justify-content:center;align-items:center;
-background:#0f172a;color:white;
+position:fixed;
+width:100%;
+height:100%;
+display:flex;
+justify-content:center;
+align-items:center;
+background:#0b1220;
 }
 
-.box{background:#111c33;padding:20px;border-radius:10px}
+.box{
+background:#111c33;
+padding:20px;
+border-radius:10px;
+}
 
-input,button{padding:8px;margin:5px}
-
+/* LEFT PANEL (TALLY STYLE) */
 .sidebar{
-width:260px;background:#020617;color:white;padding:15px
+width:280px;
+background:#020617;
+padding:15px;
+border-right:2px solid #1e293b;
 }
 
-.sidebar button{
-width:100%;margin:5px 0;padding:10px;
-background:#0f172a;color:white;border:none;border-radius:6px;
+.title{
+color:#38bdf8;
+font-size:18px;
+margin-bottom:10px;
 }
 
-.main{flex:1;background:#f1f5f9;padding:20px;overflow:auto}
+.menu button{
+width:100%;
+padding:10px;
+margin:5px 0;
+background:#0f172a;
+border:none;
+color:white;
+text-align:left;
+cursor:pointer;
+border-radius:4px;
+}
 
-.card{background:white;padding:15px;border-radius:10px;margin-bottom:15px}
+.menu button:hover{
+background:#1e3a8a;
+}
 
-.row{display:grid;grid-template-columns:1fr 120px 1fr 120px;gap:10px;margin:5px 0}
+/* MAIN SCREEN */
+.main{
+flex:1;
+background:#f1f5f9;
+color:black;
+padding:20px;
+overflow:auto;
+}
 
-table{width:100%;border-collapse:collapse}
-th,td{border:1px solid #ddd;padding:8px}
-th{background:#1e3a8a;color:white}
+.card{
+background:white;
+padding:15px;
+margin-bottom:15px;
+border-radius:10px;
+}
+
+/* TABLE STYLE (TALLY LOOK) */
+table{
+width:100%;
+border-collapse:collapse;
+font-size:14px;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:8px;
+}
+
+th{
+background:#1e3a8a;
+color:white;
+}
+
+/* JOURNAL GRID */
+.row{
+display:grid;
+grid-template-columns:1fr 100px 1fr 100px;
+gap:10px;
+margin:5px 0;
+}
+
+input,button{
+padding:8px;
+}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -58,19 +126,19 @@ firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
 
-let user=null,company=null;
+let user=null;
+let company=null;
 
-/* AUTH FIX */
+/* AUTH */
 auth.onAuthStateChanged(u=>{
 if(u){
 user=u.uid;
-document.getElementById("authBox").style.display="none";
-document.getElementById("companyBox").style.display="flex";
+authBox.style.display="none";
+companyBox.style.display="flex";
 loadCompanies();
 }
 });
 
-/* LOGIN */
 function login(){
 let e=email.value;
 let p=password.value;
@@ -107,7 +175,7 @@ function openCompany(id,name){
 company=name;
 companyBox.style.display="none";
 app.style.display="flex";
-companyName.innerText=name;
+companyTitle.innerText=name;
 loadData();
 }
 
@@ -117,16 +185,15 @@ let div=document.createElement("div");
 div.className="row";
 
 div.innerHTML=`
-<input class="da">
+<input class="da" placeholder="Dr">
 <input class="dv" type="number">
-<input class="ca">
+<input class="ca" placeholder="Cr">
 <input class="cv" type="number">
 `;
 
 rows.appendChild(div);
 }
 
-/* SAVE ENTRY */
 function saveEntry(){
 let list=[];
 let dr=0,cr=0;
@@ -157,24 +224,24 @@ rows.innerHTML="";
 loadData();
 }
 
-/* LOAD DATA + ACCOUNTING ENGINE */
+/* REPORT ENGINE (TALLY STYLE) */
 function loadData(){
 db.collection("entries")
 .where("user","==",user)
 .where("company","==",company)
 .get()
 .then(s=>{
-ledger.innerHTML="";
 
-let accounts={};
-let income=0,expense=0,asset=0,liab=0;
+ledger.innerHTML="";
+let accMap={};
+let income=0,expense=0;
 
 s.forEach(d=>{
 d.data().lines.forEach(l=>{
 
-if(!accounts[l.acc]) accounts[l.acc]={dr:0,cr:0};
-if(l.type==="dr") accounts[l.acc].dr+=l.amt;
-if(l.type==="cr") accounts[l.acc].cr+=l.amt;
+if(!accMap[l.acc]) accMap[l.acc]={dr:0,cr:0};
+if(l.type==="dr") accMap[l.acc].dr+=l.amt;
+if(l.type==="cr") accMap[l.acc].cr+=l.amt;
 
 ledger.innerHTML+=`
 <tr>
@@ -183,37 +250,44 @@ ledger.innerHTML+=`
 <td>${l.type==="cr"?l.amt:""}</td>
 </tr>`;
 
-/* SIMPLE CLASSIFICATION */
+/* simple classification */
 if(l.type==="cr") income+=l.amt;
 if(l.type==="dr") expense+=l.amt;
 
 });
 });
 
-/* DASHBOARD */
+/* DASH */
 dash.innerHTML=`
+<b>Gateway of Accounts</b><br><br>
 Income: ₹${income}<br>
 Expense: ₹${expense}<br>
 Profit: ₹${income-expense}
 `;
 
 /* TRIAL BALANCE */
-trial.innerHTML="<h3>Trial Balance</h3><table><tr><th>Acc</th><th>Dr</th><th>Cr</th></tr>";
+trial.innerHTML="<h3>Trial Balance</h3><table><tr><th>Account</th><th>Dr</th><th>Cr</th></tr>";
 
-for(let a in accounts){
+for(let a in accMap){
 trial.innerHTML+=`
-<tr><td>${a}</td><td>${accounts[a].dr}</td><td>${accounts[a].cr}</td></tr>`;
+<tr>
+<td>${a}</td>
+<td>${accMap[a].dr}</td>
+<td>${accMap[a].cr}</td>
+</tr>`;
 }
+
 trial.innerHTML+="</table>";
 
 /* P&L */
-pl.innerHTML=`<h3>P&L</h3>Profit = ₹${income-expense}`;
+pl.innerHTML=`<h3>Profit & Loss</h3>Profit = ₹${income-expense}`;
 
-/* BALANCE SHEET (simple model) */
+/* BALANCE SHEET */
 bs.innerHTML=`<h3>Balance Sheet</h3>
-Assets ≈ ₹${income}<br>
-Liabilities ≈ ₹${expense}`;
+Assets: ₹${income}<br>
+Liabilities: ₹${expense}`;
 });
+
 }
 
 </script>
@@ -245,15 +319,18 @@ Liabilities ≈ ₹${expense}`;
 <div id="app" style="display:none;width:100%;display:flex">
 
 <div class="sidebar">
-<h3 id="companyName"></h3>
-<button onclick="addRow()">Add</button>
-<button onclick="saveEntry()">Save</button>
+<div class="title" id="companyTitle">Tally SaaS</div>
+
+<div class="menu">
+<button onclick="addRow()">➕ Journal Entry</button>
+<button onclick="saveEntry()">💾 Save Entry</button>
+</div>
 </div>
 
 <div class="main">
 
 <div class="card">
-<h2>Dashboard</h2>
+<h2>Gateway of Accounts</h2>
 <div id="dash"></div>
 </div>
 
@@ -262,7 +339,7 @@ Liabilities ≈ ₹${expense}`;
 <div id="rows"></div>
 
 <table>
-<tr><th>Acc</th><th>Dr</th><th>Cr</th></tr>
+<tr><th>Account</th><th>Dr</th><th>Cr</th></tr>
 <tbody id="ledger"></tbody>
 </table>
 </div>
