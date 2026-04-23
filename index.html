@@ -1,114 +1,86 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>ERP Accounting System</title>
+<title>Mini ERP</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{height:100vh;display:flex;background:#0b1220}
+body{background:#0b1220;color:white}
 
 /* AUTH */
 .auth{
 position:fixed;width:100%;height:100%;
 display:flex;justify-content:center;align-items:center;
-background:linear-gradient(135deg,#0b1220,#111827);
-color:white;
+background:#0b1220;
 }
 
-.loginBox{
+.box{
 background:#111827;
-padding:28px;
-border-radius:14px;
-min-width:340px;
+padding:25px;
+border-radius:12px;
+width:320px;
 }
 
-input{
+input,select{
 width:100%;
 padding:10px;
-margin:8px 0;
-border-radius:8px;
-border:1px solid #374151;
+margin:6px 0;
+border-radius:6px;
+border:1px solid #333;
 background:#0f172a;
 color:white;
 }
 
-/* APP */
-#app{display:flex;width:100%;height:100vh}
-
-/* SIDEBAR */
-.sidebar{
-width:270px;
-background:#050a18;
-color:white;
-padding:15px;
-border-right:1px solid #1f2937;
-}
-
-.sidebar h2{color:#38bdf8;margin-bottom:10px}
-
-.sidebar button{
-width:100%;
+button{
 padding:10px;
-margin:6px 0;
-background:#111827;
-border:none;
+width:100%;
+margin-top:6px;
+background:#2563eb;
 color:white;
-border-radius:8px;
+border:none;
+border-radius:6px;
 cursor:pointer;
 }
 
-.sidebar button:hover{background:#1d4ed8}
+/* APP */
+#app{display:flex;height:100vh}
+
+/* SIDEBAR */
+.sidebar{
+width:250px;
+background:#020617;
+padding:15px;
+}
+
+.sidebar button{margin-bottom:6px}
 
 /* MAIN */
 .main{
 flex:1;
-background:#f4f6fb;
-padding:18px;
+background:#f1f5f9;
+color:black;
+padding:15px;
 overflow:auto;
 }
 
 .card{
 background:white;
-padding:16px;
-border-radius:12px;
-margin-bottom:12px;
-box-shadow:0 4px 12px rgba(0,0,0,0.08);
+padding:15px;
+border-radius:10px;
+margin-bottom:10px;
 }
 
-/* TABLE */
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:10px;
-}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid #ccc}
 
-th,td{
-border:1px solid #e5e7eb;
-padding:8px;
-font-size:13px;
-}
-
-th{
-background:#1e3a8a;
-color:white;
-}
-
-/* JOURNAL */
-#journalPopup{
+/* POPUP */
+#popup{
 display:none;
 position:fixed;
-top:0;left:0;
-width:100%;height:100%;
+top:0;left:0;width:100%;height:100%;
 background:rgba(0,0,0,0.6);
 justify-content:center;
 align-items:center;
-}
-
-.popup{
-background:white;
-width:650px;
-padding:20px;
-border-radius:12px;
 }
 </style>
 
@@ -127,13 +99,10 @@ appId:"1:261436280247:web:5af8a0f36ff722dce62c32"
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const auth=firebase.auth();
 const db=firebase.firestore();
 
-let user=null;
-let company=null;
-let currentCompanyId=null;
+let user=null,company=null;
 
 /* LOGIN */
 function login(){
@@ -150,111 +119,100 @@ loadCompanies();
 }
 });
 
-/* COMPANY SYSTEM */
+/* COMPANY */
 function loadCompanies(){
-db.collection("companies")
-.where("user","==",user)
-.get()
+db.collection("companies").where("user","==",user).get()
 .then(s=>{
 companyList.innerHTML="";
-
 s.forEach(d=>{
 companyList.innerHTML+=`
-<div style="background:#111827;color:white;padding:10px;margin:6px 0;border-radius:8px">
-${d.data().name}<br><br>
-
-<button onclick="openCompany('${d.id}','${d.data().name}')">Open</button>
-
-<button style="background:red;margin-left:5px"
-onclick="deleteCompany('${d.id}','${d.data().name}')">
-Delete
-</button>
-
+<div style="margin:5px 0">
+${d.data().name}
+<button onclick="openCompany('${d.data().name}')">Open</button>
 </div>`;
 });
 });
 }
 
 function createCompany(){
-db.collection("companies").add({
-name:newCompany.value,
-user:user
-});
+db.collection("companies").add({name:newCompany.value,user:user});
 newCompany.value="";
 loadCompanies();
 }
 
-function openCompany(id,name){
+function openCompany(name){
 company=name;
-currentCompanyId=id;
-
 companyBox.style.display="none";
 app.style.display="flex";
 companyTitle.innerText=name;
-
 loadData();
 }
 
-/* DELETE COMPANY */
-async function deleteCompany(id,name){
+/* LEDGER SYSTEM */
+function createLedger(){
+let name=prompt("Ledger Name");
+let type=prompt("Type: Asset / Liability / Income / Expense");
 
-let confirmDelete=confirm("Delete '"+name+"'?\nAll data will be lost.");
-if(!confirmDelete) return;
+if(!name||!type)return;
 
-// delete entries
-let snap=await db.collection("entries")
+db.collection("ledgers").add({
+user:user,
+company:company,
+name:name,
+type:type
+});
+
+alert("Ledger Created");
+}
+
+/* LOAD LEDGERS */
+async function getLedgers(){
+let snap=await db.collection("ledgers")
 .where("user","==",user)
-.where("company","==",name)
+.where("company","==",company)
 .get();
 
-snap.forEach(doc=>doc.ref.delete());
-
-// delete company
-await db.collection("companies").doc(id).delete();
-
-alert("Company deleted");
-loadCompanies();
+let arr=[];
+snap.forEach(d=>arr.push(d.data().name));
+return arr;
 }
 
 /* JOURNAL */
 function openJournal(){
-journalPopup.style.display="flex";
-journalRows.innerHTML="";
+popup.style.display="flex";
+rows.innerHTML="";
 addRow();
 }
 
-function closeJournal(){
-journalPopup.style.display="none";
-}
+function closePopup(){popup.style.display="none"}
 
-function addRow(){
+async function addRow(){
+let ledgers=await getLedgers();
+
+let options=ledgers.map(l=>`<option>${l}</option>`).join("");
+
 let div=document.createElement("div");
-div.style.display="grid";
-div.style.gridTemplateColumns="2fr 1fr 2fr 1fr";
-div.style.gap="8px";
-div.style.margin="8px 0";
-
 div.innerHTML=`
-<input placeholder="Dr Account">
-<input type="number">
-<input placeholder="Cr Account">
-<input type="number">
+<select>${options}</select>
+<input type="number" placeholder="Debit">
+<select>${options}</select>
+<input type="number" placeholder="Credit">
 `;
 
-journalRows.appendChild(div);
+rows.appendChild(div);
 }
 
-function saveJournal(){
+function saveEntry(){
 let list=[],dr=0,cr=0;
 
-document.querySelectorAll("#journalRows div").forEach(r=>{
-let da=r.children[0].value;
-let dv=+r.children[1].value||0;
-let ca=r.children[2].value;
-let cv=+r.children[3].value||0;
+rows.querySelectorAll("div").forEach(r=>{
+let acc1=r.children[0].value;
+let d=+r.children[1].value||0;
+let acc2=r.children[2].value;
+let c=+r.children[3].value||0;
 
-if(dv){list.push({acc:da,type:"dr",amt:dv});dr+=dv;}
-if(cv){list.push({acc:ca,type:"cr",amt:cv});cr+=cv;}
+if(d){list.push({acc:acc1,type:"dr",amt:d});dr+=d;}
+if(c){list.push({acc:acc2,type:"cr",amt:c});cr+=c;}
 });
 
 if(dr!==cr){alert("Not Balanced");return;}
@@ -266,29 +224,26 @@ lines:list,
 date:new Date().toLocaleDateString()
 });
 
-closeJournal();
+closePopup();
 loadData();
 }
 
 /* LOAD DATA */
 function loadData(){
-
 db.collection("entries")
 .where("user","==",user)
 .where("company","==",company)
 .get()
 .then(s=>{
 
+let inc=0,exp=0;
 ledger.innerHTML="";
-let acc={},income=0,expense=0;
 
 s.forEach(d=>{
 d.data().lines.forEach(l=>{
 
-if(!acc[l.acc]) acc[l.acc]={dr:0,cr:0};
-
-if(l.type==="dr"){acc[l.acc].dr+=l.amt;expense+=l.amt;}
-if(l.type==="cr"){acc[l.acc].cr+=l.amt;income+=l.amt;}
+if(l.type==="cr") inc+=l.amt;
+if(l.type==="dr") exp+=l.amt;
 
 ledger.innerHTML+=`
 <tr>
@@ -300,19 +255,9 @@ ledger.innerHTML+=`
 });
 
 dash.innerHTML=`
-<div class="card">Income: ₹${income}</div>
-<div class="card">Expense: ₹${expense}</div>
-<div class="card"><b>Profit: ₹${income-expense}</b></div>
-`;
-
-pl.innerHTML=`Profit: ₹${income-expense}`;
-
-bs.innerHTML=`
-<div class="card">
-<h3>Balance Sheet</h3>
-Assets: ₹${income}<br>
-Liabilities: ₹${expense}
-</div>
+<div class="card">Income ₹${inc}</div>
+<div class="card">Expense ₹${exp}</div>
+<div class="card">Profit ₹${inc-exp}</div>
 `;
 
 });
@@ -324,17 +269,17 @@ Liabilities: ₹${expense}
 
 <!-- LOGIN -->
 <div id="authBox" class="auth">
-<div class="loginBox">
+<div class="box">
 <h2>Login</h2>
 <input id="email">
 <input id="password" type="password">
-<button onclick="login()">Login</button>
+<button onclick="login()">Continue</button>
 </div>
 </div>
 
 <!-- COMPANY -->
 <div id="companyBox" class="auth" style="display:none">
-<div class="loginBox">
+<div class="box">
 <h2>Companies</h2>
 <input id="newCompany">
 <button onclick="createCompany()">Create</button>
@@ -347,6 +292,7 @@ Liabilities: ₹${expense}
 
 <div class="sidebar">
 <h2 id="companyTitle"></h2>
+<button onclick="createLedger()">Create Ledger</button>
 <button onclick="openJournal()">Journal</button>
 <button onclick="loadData()">Refresh</button>
 </div>
@@ -356,27 +302,21 @@ Liabilities: ₹${expense}
 <div id="dash"></div>
 
 <table>
-<tr><th>Acc</th><th>Dr</th><th>Cr</th></tr>
+<tr><th>Account</th><th>Dr</th><th>Cr</th></tr>
 <tbody id="ledger"></tbody>
 </table>
 
-<div id="pl"></div>
-<div id="bs"></div>
-
 </div>
 </div>
 
-<!-- JOURNAL -->
-<div id="journalPopup">
-<div class="popup">
-
+<!-- POPUP -->
+<div id="popup">
+<div class="box">
 <h3>Journal Entry</h3>
-<div id="journalRows"></div>
-
-<button onclick="addRow()">Add</button>
-<button onclick="saveJournal()">Save</button>
-<button onclick="closeJournal()">Close</button>
-
+<div id="rows"></div>
+<button onclick="addRow()">Add Line</button>
+<button onclick="saveEntry()">Save</button>
+<button onclick="closePopup()">Close</button>
 </div>
 </div>
 
