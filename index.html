@@ -1,10 +1,69 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Mini ERP - Tally Style</title>
+<title>Pratham Accounting Solution</title>
 
 <style>
 body{margin:0;font-family:Arial;background:#cfd8dc}
+
+/* PREMIUM LOGIN */
+.auth{
+position:fixed;
+width:100%;
+height:100%;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#0f172a,#020617);
+}
+
+.login-container{text-align:center;color:white}
+
+.brand h1{
+font-size:28px;
+margin-bottom:5px;
+color:#38bdf8;
+}
+
+.brand p{
+font-size:14px;
+color:#94a3b8;
+margin-bottom:25px;
+}
+
+.login-box{
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(12px);
+padding:30px;
+border-radius:16px;
+width:320px;
+box-shadow:0 20px 60px rgba(0,0,0,0.5);
+border:1px solid rgba(255,255,255,0.1);
+}
+
+.login-box h2{margin-bottom:15px}
+
+.login-box input{
+width:100%;
+padding:12px;
+margin:8px 0;
+border-radius:8px;
+border:1px solid rgba(255,255,255,0.2);
+background:rgba(255,255,255,0.05);
+color:white;
+}
+
+.login-box button{
+width:100%;
+padding:12px;
+margin-top:10px;
+background:linear-gradient(135deg,#2563eb,#1d4ed8);
+border:none;
+border-radius:8px;
+color:white;
+font-weight:600;
+cursor:pointer;
+}
 
 /* TOP BAR */
 .topbar{
@@ -38,9 +97,7 @@ padding:6px;
 cursor:pointer;
 }
 
-.menu-item:hover{
-background:#bbdefb;
-}
+.menu-item:hover{background:#bbdefb}
 
 /* MAIN */
 .main{
@@ -80,25 +137,6 @@ display:grid;
 grid-template-columns:1fr 100px 1fr 100px;
 gap:10px;
 margin-bottom:8px;
-}
-
-/* AUTH */
-.auth{
-position:fixed;width:100%;height:100%;
-display:flex;justify-content:center;align-items:center;
-background:#0b1220;color:white;
-}
-
-.box{
-background:#111827;
-padding:20px;
-border-radius:10px;
-}
-
-input{
-width:100%;
-padding:8px;
-margin:5px 0;
 }
 </style>
 
@@ -166,7 +204,7 @@ companyTitle.innerText=name;
 loadData();
 }
 
-/* NAVIGATION */
+/* NAV */
 function navigate(page){
 dash.style.display="none";
 ledgerPage.style.display="none";
@@ -188,6 +226,7 @@ db.collection("ledgers").add({user:user,company:company,name,type});
 alert("Ledger Created");
 }
 
+/* JOURNAL + DATA (same as before) */
 async function getLedgers(){
 let snap=await db.collection("ledgers")
 .where("user","==",user)
@@ -199,47 +238,6 @@ snap.forEach(d=>arr.push(d.data().name));
 return arr;
 }
 
-/* LEDGER PAGE */
-async function loadLedgerPage(){
-ledgerPage.style.display="block";
-
-let snap=await db.collection("ledgers")
-.where("user","==",user)
-.where("company","==",company)
-.get();
-
-let html="<div class='card'><h3>Ledgers</h3>";
-
-snap.forEach(d=>{
-html+=`<div onclick="openLedger('${d.data().name}')" style="cursor:pointer">${d.data().name}</div>`;
-});
-
-html+="</div>";
-ledgerPage.innerHTML=html;
-}
-
-/* DRILL */
-async function openLedger(name){
-let snap=await db.collection("entries")
-.where("user","==",user)
-.where("company","==",company)
-.get();
-
-let html=`<div class="card"><h3>${name}</h3>`;
-
-snap.forEach(d=>{
-d.data().lines.forEach(l=>{
-if(l.acc===name){
-html+=`<div>₹${l.amt} (${l.type})</div>`;
-}
-});
-});
-
-html+="</div>";
-ledgerPage.innerHTML=html;
-}
-
-/* JOURNAL */
 function openJournal(){
 popup.style.display="block";
 rows.innerHTML="";
@@ -289,7 +287,7 @@ closePopup();
 loadData();
 }
 
-/* LOAD DATA */
+/* DATA LOAD */
 function loadData(){
 db.collection("entries")
 .where("user","==",user)
@@ -324,33 +322,39 @@ pl.innerHTML=`Profit ₹${inc-exp}`;
 bs.innerHTML=`Assets ₹${inc}<br>Liabilities ₹${exp}`;
 });
 }
-
-/* KEYBOARD */
-document.addEventListener("keydown",e=>{
-if(e.key==="d"||e.key==="D") navigate('dash');
-if(e.key==="l"||e.key==="L") navigate('ledgerPage');
-if(e.key==="j"||e.key==="J") openJournal();
-if(e.key==="r"||e.key==="R") navigate('reports');
-if(e.key==="Escape") closePopup();
-});
 </script>
 </head>
 
 <body>
 
-<!-- LOGIN -->
+<!-- PREMIUM LOGIN -->
 <div id="authBox" class="auth">
-<div class="box">
-<h2>Login</h2>
-<input id="email">
-<input id="password" type="password">
+<div class="login-container">
+
+<div class="brand">
+<h1>Pratham Accounting Solution</h1>
+<p>Smart Accounting for Modern Businesses</p>
+</div>
+
+<div class="login-box">
+<h2>Welcome Back</h2>
+
+<input id="email" placeholder="Email Address">
+<input id="password" type="password" placeholder="Password">
+
 <button onclick="login()">Continue</button>
+
+<div style="margin-top:10px;font-size:12px;color:#94a3b8">
+Secure • Fast • Cloud-Based
+</div>
+</div>
+
 </div>
 </div>
 
 <!-- COMPANY -->
 <div id="companyBox" class="auth" style="display:none">
-<div class="box">
+<div class="login-box">
 <h2>Companies</h2>
 <input id="newCompany">
 <button onclick="createCompany()">Create</button>
@@ -362,19 +366,18 @@ if(e.key==="Escape") closePopup();
 <div id="app" style="display:none">
 
 <div class="topbar">
-<div>Mini ERP (Tally Style)</div>
+<div>Pratham Accounting Solution</div>
 <div id="companyTitle"></div>
 </div>
 
 <div class="container">
 
 <div class="sidebar">
-<div class="menu-title">Gateway of Tally</div>
+<div class="menu-title">Gateway of Pratham</div>
 
-<div class="menu-item" onclick="navigate('dash')">D: Dashboard</div>
-<div class="menu-item" onclick="navigate('ledgerPage')">L: Ledgers</div>
-<div class="menu-item" onclick="openJournal()">J: Journal</div>
-<div class="menu-item" onclick="navigate('reports')">R: Reports</div>
+<div class="menu-item" onclick="navigate('dash')">Dashboard</div>
+<div class="menu-item" onclick="openJournal()">Journal</div>
+<div class="menu-item" onclick="navigate('reports')">Reports</div>
 
 <hr>
 
@@ -385,7 +388,6 @@ if(e.key==="Escape") closePopup();
 <div class="main">
 
 <div id="dash"></div>
-<div id="ledgerPage" style="display:none"></div>
 
 <div id="reports" style="display:none">
 <div class="card"><h3>P&L</h3><div id="pl"></div></div>
@@ -398,11 +400,9 @@ if(e.key==="Escape") closePopup();
 </table>
 
 </div>
-
 </div>
 </div>
 
-<!-- POPUP -->
 <div id="popup">
 <h3>Journal Voucher</h3>
 <div id="rows"></div>
