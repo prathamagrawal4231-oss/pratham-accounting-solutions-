@@ -1,238 +1,440 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>SaaS Accounting Fix</title>
+<title>Accounting Pro - Company System</title>
 
 <style>
-body{margin:0;font-family:Arial;background:#0b1220;color:white;display:flex;height:100vh}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
 
-.auth,.company{
-position:fixed;width:100%;height:100%;
-display:flex;justify-content:center;align-items:center;
-background:#0b1220;
+body{display:flex;height:100vh;background:#0f172a;color:#0f172a}
+
+/* SIDEBAR */
+.sidebar{
+  width:260px;
+  background:#020617;
+  color:white;
+  padding:20px;
 }
 
-.box{background:#111c33;padding:20px;border-radius:10px}
+.sidebar h2{color:#60a5fa;margin-bottom:20px}
 
-input{padding:8px;margin:5px}
-
-button{padding:8px;margin:5px;cursor:pointer}
-
-.sidebar{width:240px;background:#020617;padding:15px}
-.main{flex:1;background:#f1f5f9;color:black;padding:20px;overflow:auto}
-
-.card{background:white;padding:15px;border-radius:10px;margin-bottom:15px}
-
-.row{display:grid;grid-template-columns:1fr 100px 1fr 100px;gap:8px;margin:5px 0}
-
-table{width:100%;border-collapse:collapse}
-th,td{border:1px solid #ddd;padding:8px}
-th{background:#1e3a8a;color:white}
-</style>
-
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-
-<script>
-const firebaseConfig={
-apiKey:"AIzaSyB38hscdHXDbQ3Bw6ZGLIgk8ci323KFAg4",
-authDomain:"pratham-accounting-solution.firebaseapp.com",
-projectId:"pratham-accounting-solution",
-storageBucket:"pratham-accounting-solution.firebasestorage.app",
-messagingSenderId:"261436280247",
-appId:"1:261436280247:web:5af8a0f36ff722dce62c32"
-};
-
-firebase.initializeApp(firebaseConfig);
-
-const auth=firebase.auth();
-const db=firebase.firestore();
-
-let user=null;
-let company=null;
-let entries=[];
-
-/* LOGIN */
-function login(){
-let e=email.value;
-let p=password.value;
-
-auth.signInWithEmailAndPassword(e,p)
-.then(u=>init(u.user.uid))
-.catch(()=>auth.createUserWithEmailAndPassword(e,p)
-.then(u=>init(u.user.uid))
-);
+.sidebar button{
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+  background:#0f172a;
+  color:white;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
 }
 
-function init(uid){
-user=uid;
-authBox.style.display="none";
-loadCompanies();
+.sidebar button:hover{background:#2563eb}
+
+/* MAIN */
+.main{flex:1;padding:20px;background:#f1f5f9;overflow:auto}
+
+.box{
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  margin-bottom:20px;
 }
 
-/* COMPANIES */
-function loadCompanies(){
-companyBox.style.display="flex";
-
-db.collection("companies")
-.where("user","==",user)
-.get()
-.then(s=>{
-companyList.innerHTML="";
-s.forEach(d=>{
-companyList.innerHTML+=`
-<div>
-${d.data().name}
-<button onclick="openCompany('${d.id}','${d.data().name}')">Open</button>
-</div>`;
-});
-});
+input,select{
+  padding:8px;
+  margin:5px;
+  border-radius:6px;
+  border:1px solid #ccc;
 }
 
-function createCompany(){
-db.collection("companies").add({
-name:newCompany.value,
-user:user
-});
-newCompany.value="";
-loadCompanies();
-}
-
-function openCompany(id,name){
-company=name;
-companyBox.style.display="none";
-app.style.display="flex";
-companyName.innerText=name;
-loadData();
+button{
+  padding:8px 12px;
+  border:none;
+  background:#2563eb;
+  color:white;
+  border-radius:6px;
+  cursor:pointer;
 }
 
 /* JOURNAL */
-function addRow(){
-let div=document.createElement("div");
-div.className="row";
-div.innerHTML=`
-<input class="drA" placeholder="Dr">
-<input class="drV" type="number">
-<input class="crA" placeholder="Cr">
-<input class="crV" type="number">
-`;
-rows.appendChild(div);
+.journal-row{
+  display:grid;
+  grid-template-columns:1fr 120px 1fr 120px;
+  gap:10px;
+  margin:8px 0;
 }
 
-function saveEntry(){
-let list=[];
-let dr=0,cr=0;
+table{width:100%;border-collapse:collapse}
+th{background:#1e293b;color:white}
+th,td{padding:10px;border-bottom:1px solid #ddd}
 
-document.querySelectorAll(".row").forEach(r=>{
-let da=r.querySelector(".drA").value;
-let dv=+r.querySelector(".drV").value||0;
-let ca=r.querySelector(".crA").value;
-let cv=+r.querySelector(".crV").value||0;
-
-if(dv){list.push({acc:da,type:"dr",amt:dv});dr+=dv;}
-if(cv){list.push({acc:ca,type:"cr",amt:cv});cr+=cv;}
-});
-
-if(Math.abs(dr-cr)>0.01){alert("Not balanced");return;}
-
-db.collection("entries").add({
-user:user,
-company:company,
-lines:list,
-date:new Date().toLocaleDateString()
-});
-
-rows.innerHTML="";
-loadData();
+/* AUTH */
+.auth{
+  position:fixed;
+  width:100%;
+  height:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#0f172a;
 }
-
-/* LOAD */
-function loadData(){
-db.collection("entries")
-.where("user","==",user)
-.where("company","==",company)
-.get()
-.then(s=>{
-ledger.innerHTML="";
-entries=[];
-
-let inc=0,exp=0;
-
-s.forEach(d=>{
-let e=d.data();
-entries.push(e);
-
-e.lines.forEach(l=>{
-ledger.innerHTML+=`
-<tr>
-<td>${l.acc}</td>
-<td>${l.type==="dr"?l.amt:""}</td>
-<td>${l.type==="cr"?l.amt:""}</td>
-</tr>`;
-
-if(l.type==="dr") exp+=l.amt;
-if(l.type==="cr") inc+=l.amt;
-});
-});
-
-dash.innerHTML=
-`Income ₹${inc}<br>
-Expense ₹${exp}<br>
-Profit ₹${inc-exp}`;
-});
-}
-</script>
+</style>
 </head>
 
 <body>
 
-<div id="authBox" class="auth">
+<!-- LOGIN -->
+<div id="auth" class="auth">
 <div class="box">
-<h2>Login</h2>
-<input id="email"><br>
-<input id="password" type="password"><br>
-<button onclick="login()">Login</button>
+<h2 id="authTitle">Login</h2>
+<input id="email" placeholder="Email"><br>
+<input id="password" type="password" placeholder="Password"><br>
+<button onclick="submitAuth()">Continue</button>
+<p onclick="toggleMode()" style="cursor:pointer;color:blue">Switch</p>
 </div>
 </div>
 
-<div id="companyBox" class="company" style="display:none">
+<!-- COMPANY SELECT -->
+<div id="companySelect" class="auth" style="display:none">
 <div class="box">
-<h2>Companies</h2>
-<input id="newCompany">
+<h2>Select Company</h2>
+
+<input id="newCompany" placeholder="New Company Name">
 <button onclick="createCompany()">Create</button>
-<div id="companyList"></div>
+
+<div id="companyList" style="margin-top:10px"></div>
+
+<button onclick="logout()">Logout</button>
 </div>
 </div>
 
+<!-- APP -->
 <div id="app" style="display:none;width:100%;display:flex">
 
 <div class="sidebar">
-<h3 id="companyName"></h3>
-<button onclick="addRow()">Add Row</button>
-<button onclick="saveEntry()">Save</button>
+<h2 id="companyName">Company</h2>
+
+<button onclick="switchCompany()">Switch Company</button>
+<button onclick="show('dash')">Dashboard</button>
+<button onclick="show('accounts')">Accounts</button>
+<button onclick="show('journal')">Journal</button>
+<button onclick="show('trial')">Trial Balance</button>
+<button onclick="show('pl')">P&L</button>
+<button onclick="show('bs')">Balance Sheet</button>
+<button onclick="exportData()">Export</button>
+<button onclick="logout()">Logout</button>
 </div>
 
 <div class="main">
 
-<div class="card">
-<h2>Dashboard</h2>
-<div id="dash"></div>
+<div id="dashPage" class="box"></div>
+
+<div id="accountsPage" class="box" style="display:none">
+<h2>Create Account</h2>
+<input id="accName" placeholder="Account Name">
+<select id="accType">
+<option>Asset</option>
+<option>Liability</option>
+<option>Income</option>
+<option>Expense</option>
+</select>
+<button onclick="addAccount()">Add</button>
+<div id="accList"></div>
 </div>
 
-<div class="card">
-<h2>Journal</h2>
-<div id="rows"></div>
+<div id="journalPage" class="box" style="display:none">
+<h2>Journal Entry</h2>
+
+<div id="lines"></div>
+
+<button onclick="addLine()">+ Add Line</button>
+<button onclick="saveEntry()">Save Entry</button>
 
 <table>
-<tr><th>Acc</th><th>Dr</th><th>Cr</th></tr>
+<tr><th>Date</th><th>Account</th><th>Dr</th><th>Cr</th></tr>
 <tbody id="ledger"></tbody>
 </table>
-
 </div>
 
+<div id="trialPage" class="box" style="display:none"></div>
+<div id="plPage" class="box" style="display:none"></div>
+<div id="bsPage" class="box" style="display:none"></div>
+
 </div>
 </div>
+
+<script>
+
+// AUTH
+let mode="login";
+
+function toggleMode(){
+  mode=mode==="login"?"signup":"login";
+  authTitle.innerText=mode.toUpperCase();
+}
+
+function submitAuth(){
+  let email=document.getElementById("email").value.trim();
+  let pass=document.getElementById("password").value.trim();
+
+  if(!email||!pass){alert("Fill fields");return;}
+
+  let users=JSON.parse(localStorage.getItem("users")||"{}");
+
+  if(mode==="signup"){
+    if(users[email]){alert("User exists");return;}
+    users[email]=pass;
+    localStorage.setItem("users",JSON.stringify(users));
+    alert("Signup done");toggleMode();
+  }else{
+    if(users[email]!==pass){alert("Invalid");return;}
+    localStorage.setItem("logged",email);
+    loadCompanies();
+  }
+}
+
+function logout(){
+  localStorage.clear();
+  location.reload();
+}
+
+// COMPANY SYSTEM
+let user,company;
+
+function loadCompanies(){
+  user=localStorage.getItem("logged");
+  auth.style.display="none";
+  companySelect.style.display="flex";
+
+  let list=JSON.parse(localStorage.getItem("comp_"+user)||"[]");
+
+  companyList.innerHTML=list.map(c=>
+    `<div>
+      ${c}
+      <button onclick="openCompany('${c}')">Open</button>
+    </div>`
+  ).join("");
+}
+
+function createCompany(){
+  let name=newCompany.value.trim();
+  if(!name)return;
+
+  let list=JSON.parse(localStorage.getItem("comp_"+user)||"[]");
+  list.push(name);
+
+  localStorage.setItem("comp_"+user,JSON.stringify(list));
+  newCompany.value="";
+  loadCompanies();
+}
+
+function openCompany(c){
+  company=c;
+  localStorage.setItem("currentCompany",c);
+
+  companySelect.style.display="none";
+  app.style.display="flex";
+
+  companyName.innerText=c;
+
+  loadData();
+}
+
+function switchCompany(){
+  app.style.display="none";
+  loadCompanies();
+}
+
+// DATA
+let accounts=[],entries=[];
+
+function loadData(){
+  accounts=JSON.parse(localStorage.getItem(`acc_${user}_${company}`)||"[]");
+  entries=JSON.parse(localStorage.getItem(`ent_${user}_${company}`)||"[]");
+
+  renderAccounts();
+  renderLedger();
+  renderDash();
+}
+
+// NAV
+function show(p){
+  dashPage.style.display=p==="dash"?"block":"none";
+  accountsPage.style.display=p==="accounts"?"block":"none";
+  journalPage.style.display=p==="journal"?"block":"none";
+  trialPage.style.display=p==="trial"?"block":"none";
+  plPage.style.display=p==="pl"?"block":"none";
+  bsPage.style.display=p==="bs"?"block":"none";
+
+  if(p==="trial") renderTrial();
+  if(p==="pl") renderPL();
+  if(p==="bs") renderBS();
+}
+
+// ACCOUNTS
+function addAccount(){
+  let name=accName.value.trim();
+  let type=accType.value;
+
+  if(!name)return;
+
+  accounts.push({name,type});
+  localStorage.setItem(`acc_${user}_${company}`,JSON.stringify(accounts));
+
+  accName.value="";
+  renderAccounts();
+}
+
+function renderAccounts(){
+  accList.innerHTML=accounts.map(a=>`${a.name} (${a.type})`).join("<br>");
+}
+
+// JOURNAL
+function addLine(){
+  let opts=accounts.map(a=>`<option>${a.name}</option>`).join("");
+
+  let div=document.createElement("div");
+  div.className="journal-row";
+
+  div.innerHTML=`
+  <select class="acc">${opts}</select>
+  <input type="number" class="dr" placeholder="Debit">
+  <select class="acc2">${opts}</select>
+  <input type="number" class="cr" placeholder="Credit">`;
+
+  lines.appendChild(div);
+}
+
+function saveEntry(){
+  let dr=0,cr=0,list=[];
+
+  document.querySelectorAll(".journal-row").forEach(d=>{
+    let a1=d.querySelector(".acc").value;
+    let d1=parseFloat(d.querySelector(".dr").value||0);
+
+    let a2=d.querySelector(".acc2").value;
+    let c1=parseFloat(d.querySelector(".cr").value||0);
+
+    if(d1>0){list.push({acc:a1,type:"debit",amt:d1});dr+=d1;}
+    if(c1>0){list.push({acc:a2,type:"credit",amt:c1});cr+=c1;}
+  });
+
+  if(Math.abs(dr-cr)>0.01){alert("Not balanced");return;}
+
+  entries.push({date:new Date().toLocaleDateString(),lines:list});
+
+  localStorage.setItem(`ent_${user}_${company}`,JSON.stringify(entries));
+
+  lines.innerHTML="";
+  renderLedger();
+  renderDash();
+}
+
+// LEDGER
+function renderLedger(){
+  ledger.innerHTML="";
+  entries.forEach(e=>{
+    e.lines.forEach(l=>{
+      let tr=document.createElement("tr");
+      tr.innerHTML=`<td>${e.date}</td><td>${l.acc}</td>
+      <td>${l.type==="debit"?l.amt:""}</td>
+      <td>${l.type==="credit"?l.amt:""}</td>`;
+      ledger.appendChild(tr);
+    });
+  });
+}
+
+// DASH
+function renderDash(){
+  let inc=0,exp=0;
+
+  entries.forEach(e=>{
+    e.lines.forEach(l=>{
+      let acc=accounts.find(a=>a.name===l.acc);
+      if(!acc)return;
+
+      if(acc.type==="Income") inc+=l.amt;
+      if(acc.type==="Expense") exp+=l.amt;
+    });
+  });
+
+  dashPage.innerHTML=`Income ₹${inc}<br>Expense ₹${exp}<br>Profit ₹${inc-exp}`;
+}
+
+// TRIAL
+function renderTrial(){
+  let b={};
+  accounts.forEach(a=>b[a.name]={dr:0,cr:0});
+
+  entries.forEach(e=>{
+    e.lines.forEach(l=>{
+      if(l.type==="debit") b[l.acc].dr+=l.amt;
+      else b[l.acc].cr+=l.amt;
+    });
+  });
+
+  let html="<table><tr><th>Acc</th><th>Dr</th><th>Cr</th></tr>";
+  for(let a in b){
+    html+=`<tr><td>${a}</td><td>${b[a].dr}</td><td>${b[a].cr}</td></tr>`;
+  }
+  html+="</table>";
+
+  trialPage.innerHTML=html;
+}
+
+// P&L
+function renderPL(){
+  let inc=0,exp=0;
+
+  entries.forEach(e=>{
+    e.lines.forEach(l=>{
+      let acc=accounts.find(a=>a.name===l.acc);
+      if(!acc)return;
+
+      if(acc.type==="Income") inc+=l.amt;
+      if(acc.type==="Expense") exp+=l.amt;
+    });
+  });
+
+  plPage.innerHTML=`Profit ₹${inc-exp}`;
+}
+
+// BS
+function renderBS(){
+  let asset=0,liab=0;
+
+  entries.forEach(e=>{
+    e.lines.forEach(l=>{
+      let acc=accounts.find(a=>a.name===l.acc);
+      if(!acc)return;
+
+      if(acc.type==="Asset"){
+        if(l.type==="debit") asset+=l.amt;
+        else asset-=l.amt;
+      }
+
+      if(acc.type==="Liability"){
+        if(l.type==="credit") liab+=l.amt;
+        else liab-=l.amt;
+      }
+    });
+  });
+
+  bsPage.innerHTML=`Assets ₹${asset}<br>Liabilities ₹${liab}`;
+}
+
+// EXPORT
+function exportData(){
+  let data={accounts,entries};
+  let blob=new Blob([JSON.stringify(data)],{type:"application/json"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="backup.json";
+  a.click();
+}
+
+</script>
 
 </body>
 </html>
