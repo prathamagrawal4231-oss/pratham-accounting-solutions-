@@ -4,12 +4,12 @@
 <title>Pratham Accounting Solution</title>
 
 <style>
-body{margin:0;font-family:Arial;background:#0b1e3a;color:white}
+body{margin:0;font-family:Arial;background:#0f2a44;color:white}
 
-/* TOP BAR */
+/* TOP */
 .topbar{
 background:#0b3d91;
-padding:10px;
+padding:8px;
 display:flex;
 justify-content:space-between;
 }
@@ -17,64 +17,62 @@ justify-content:space-between;
 /* LAYOUT */
 .container{display:flex;height:calc(100vh - 40px)}
 
-/* SIDEBAR */
+/* LEFT */
 .sidebar{
+width:220px;
+background:#0b3d91;
+padding:10px;
+}
+
+/* RIGHT */
+.rightbar{
 width:260px;
-background:#102a54;
+background:#0b3d91;
 padding:10px;
 }
 
-.menu-title{margin:10px 0;color:#60a5fa}
-
-.menu-item{
-padding:8px;
-cursor:pointer;
-border-radius:6px;
-}
-
-.menu-item:hover{background:#1d4ed8}
-
-/* MAIN */
-.main{
+/* CENTER */
+.center{
 flex:1;
-background:#f1f5f9;
-color:black;
-padding:15px;
-overflow:auto;
-}
-
-.card{
-background:white;
-padding:10px;
-margin-bottom:10px;
-border-radius:8px;
-}
-
-/* TABLE */
-table{width:100%;border-collapse:collapse}
-th{background:#1e3a8a;color:white}
-td{padding:6px;border-bottom:1px solid #ddd}
-
-/* POPUP */
-.popup{
-display:none;
-position:fixed;
-top:50%;left:50%;
-transform:translate(-50%,-50%);
-background:white;
-color:black;
-padding:20px;
-width:600px;
-border-radius:10px;
-}
-
-/* LOGIN */
-.auth{
-position:fixed;
-width:100%;height:100%;
 display:flex;
 justify-content:center;
 align-items:center;
+}
+
+/* BOX */
+.gateway{
+width:500px;
+background:#102a54;
+padding:20px;
+border-radius:6px;
+}
+
+/* BUTTONS */
+.tally-btn{
+background:#1d4ed8;
+padding:8px;
+margin:5px 0;
+cursor:pointer;
+border-radius:4px;
+}
+
+.tally-btn:hover{background:#2563eb}
+
+.gateway-option{
+display:flex;
+justify-content:space-between;
+padding:8px;
+margin:5px 0;
+background:#1e3a8a;
+cursor:pointer;
+}
+
+.gateway-option:hover{background:#2563eb}
+
+/* LOGIN */
+.auth{
+position:fixed;width:100%;height:100%;
+display:flex;justify-content:center;align-items:center;
 background:#020617;
 }
 
@@ -85,15 +83,18 @@ border-radius:10px;
 width:300px;
 }
 
-input,select{
-width:100%;
-padding:10px;
-margin:5px 0;
-}
-button{
-padding:10px;
-margin-top:5px;
-cursor:pointer;
+input{width:100%;padding:10px;margin:5px 0}
+button{padding:10px;width:100%;margin-top:5px}
+
+/* POPUP */
+.popup{
+display:none;
+position:fixed;
+top:50%;left:50%;
+transform:translate(-50%,-50%);
+background:white;color:black;
+padding:20px;width:400px;
+border-radius:10px;
 }
 </style>
 
@@ -117,21 +118,15 @@ let user,company;
 /* LOGIN */
 function login(){
 auth.signInWithEmailAndPassword(email.value,password.value)
-.then(()=>{
+.then(()=>init())
+.catch(()=>auth.createUserWithEmailAndPassword(email.value,password.value).then(()=>init()));
+}
+
+function init(){
 user=auth.currentUser.uid;
 authBox.style.display="none";
 companyBox.style.display="flex";
 loadCompanies();
-})
-.catch(()=>{
-auth.createUserWithEmailAndPassword(email.value,password.value)
-.then(()=>{
-user=auth.currentUser.uid;
-authBox.style.display="none";
-companyBox.style.display="flex";
-loadCompanies();
-});
-});
 }
 
 /* COMPANY */
@@ -141,7 +136,7 @@ db.collection("companies").where("user","==",user).get()
 companyList.innerHTML="";
 s.forEach(d=>{
 companyList.innerHTML+=`
-<div style="background:#1e293b;padding:10px;margin:5px;color:white;border-radius:6px">
+<div style="background:#1e293b;padding:10px;margin:5px">
 ${d.data().name}
 <button onclick="openCompany('${d.data().name}')">Open</button>
 <button onclick="deleteCompany('${d.id}')">Delete</button>
@@ -169,119 +164,75 @@ companyTitle.innerText=name;
 loadData();
 }
 
-/* LEDGER */
-function createLedger(){
-let name=prompt("Ledger Name");
-let type=prompt("Type");
-
-db.collection("ledgers").add({user:user,company:company,name,type});
-}
-
-function editLedger(){
-let oldName=prompt("Existing Ledger Name");
-let newName=prompt("New Name");
-
-db.collection("ledgers")
-.where("name","==",oldName)
-.get()
-.then(s=>{
-s.forEach(d=>db.collection("ledgers").doc(d.id).update({name:newName}));
-});
-}
-
 /* JOURNAL */
-async function getLedgers(){
-let snap=await db.collection("ledgers")
-.where("user","==",user)
-.where("company","==",company)
-.get();
+function openJournal(){journalPopup.style.display="block"}
 
-let arr=[];
-snap.forEach(d=>arr.push(d.data().name));
-return arr;
-}
-
-function openJournal(){
-popup.style.display="block";
-rows.innerHTML="";
-addRow();
-}
-
-async function addRow(){
-let ledgers=await getLedgers();
-let opts=ledgers.map(l=>`<option>${l}</option>`).join("");
-
-let div=document.createElement("div");
-div.innerHTML=`
-<select>${opts}</select>
-<input type="number">
-<select>${opts}</select>
-<input type="number">`;
-
-rows.appendChild(div);
-}
-
-function saveEntry(){
-let list=[],dr=0,cr=0;
-
-rows.querySelectorAll("div").forEach(r=>{
-let acc1=r.children[0].value;
-let d=+r.children[1].value||0;
-let acc2=r.children[2].value;
-let c=+r.children[3].value||0;
-
-if(d){list.push({acc:acc1,type:"dr",amt:d});dr+=d;}
-if(c){list.push({acc:acc2,type:"cr",amt:c});cr+=c;}
-});
+function saveJournal(){
+let acc=accName.value;
+let dr=+drAmt.value||0;
+let cr=+crAmt.value||0;
 
 if(dr!==cr){alert("Not Balanced");return;}
 
 db.collection("entries").add({
-user,company,lines:list,date:new Date().toLocaleDateString()
+user,company,
+lines:[
+{acc,type:"dr",amt:dr},
+{acc,type:"cr",amt:cr}
+]
 });
 
-popup.style.display="none";
+journalPopup.style.display="none";
 loadData();
 }
 
-/* GST INVOICE */
-function createInvoice(){
-let name=prompt("Customer Name");
-let amount=prompt("Amount");
+/* INVOICE */
+function openInvoice(){invoicePopup.style.display="block"}
 
+function saveInvoice(){
+let amount=+amt.value;
 let gst=amount*0.18;
-let total=+amount+gst;
+let total=amount+gst;
 
-db.collection("invoices").add({
-user,company,name,amount,gst,total,date:new Date().toLocaleDateString()
-});
-
-alert("Invoice Created");
+db.collection("invoices").add({user,company,amount,gst,total});
+invoicePopup.style.display="none";
+loadReports();
 }
 
 /* DATA */
 function loadData(){
-db.collection("entries")
-.where("company","==",company)
-.get()
+db.collection("entries").where("company","==",company).get()
 .then(s=>{
-ledger.innerHTML="";
 let inc=0,exp=0;
 
 s.forEach(d=>{
 d.data().lines.forEach(l=>{
-ledger.innerHTML+=`
-<tr><td>${l.acc}</td><td>${l.type}</td><td>${l.amt}</td></tr>`;
-
 if(l.type==="cr") inc+=l.amt;
 if(l.type==="dr") exp+=l.amt;
 });
 });
 
-pl.innerHTML="Profit ₹"+(inc-exp);
-bs.innerHTML="Assets ₹"+inc+" | Liabilities ₹"+exp;
+pl.innerText="₹"+(inc-exp);
+bs.innerText="Assets ₹"+inc+" | Liabilities ₹"+exp;
 });
 }
+
+/* GST */
+function loadReports(){
+db.collection("invoices").where("company","==",company).get()
+.then(s=>{
+let total=0;
+s.forEach(d=>total+=d.data().gst);
+gst.innerText="GST Collected ₹"+total;
+});
+}
+
+/* KEYBOARD */
+document.addEventListener("keydown",e=>{
+if(e.key==="F2") openJournal();
+if(e.key==="F3") openInvoice();
+if(e.key==="F4") loadReports();
+});
 </script>
 </head>
 
@@ -293,14 +244,14 @@ bs.innerHTML="Assets ₹"+inc+" | Liabilities ₹"+exp;
 <h2>Pratham Accounting Solution</h2>
 <input id="email" placeholder="Email">
 <input id="password" type="password">
-<button onclick="login()">Login / Signup</button>
+<button onclick="login()">Login</button>
 </div>
 </div>
 
 <!-- COMPANY -->
 <div id="companyBox" class="auth" style="display:none">
 <div class="login-box">
-<input id="newCompany" placeholder="Company Name">
+<input id="newCompany" placeholder="Company">
 <button onclick="createCompany()">Create</button>
 <div id="companyList"></div>
 </div>
@@ -316,41 +267,58 @@ bs.innerHTML="Assets ₹"+inc+" | Liabilities ₹"+exp;
 
 <div class="container">
 
+<!-- LEFT -->
 <div class="sidebar">
-<div class="menu-title">Gateway</div>
-<div class="menu-item" onclick="openJournal()">Journal</div>
-<div class="menu-item" onclick="createLedger()">Create Ledger</div>
-<div class="menu-item" onclick="editLedger()">Edit Ledger</div>
-<div class="menu-item" onclick="createInvoice()">Create Invoice</div>
+<div>Masters</div>
+<div class="tally-btn">Create Ledger</div>
+
+<div>Transactions</div>
+<div class="tally-btn" onclick="openJournal()">F2 Journal</div>
+<div class="tally-btn" onclick="openInvoice()">F3 Sales</div>
+
+<div>Reports</div>
+<div class="tally-btn" onclick="loadReports()">F4 GST</div>
 </div>
 
-<div class="main">
+<!-- CENTER -->
+<div class="center">
+<div class="gateway">
+<h2 style="text-align:center">Gateway of Pratham</h2>
 
-<div class="card">
-<h3>P&L</h3>
-<div id="pl"></div>
+<div class="gateway-option" onclick="openJournal()">
+Journal Voucher <span>F2</span>
 </div>
 
-<div class="card">
-<h3>Balance Sheet</h3>
-<div id="bs"></div>
+<div class="gateway-option" onclick="openInvoice()">
+Sales Voucher <span>F3</span>
 </div>
-
-<table>
-<tr><th>Account</th><th>Type</th><th>Amount</th></tr>
-<tbody id="ledger"></tbody>
-</table>
 
 </div>
 </div>
+
+<!-- RIGHT -->
+<div class="rightbar">
+<div>P&L: <span id="pl"></span></div>
+<div>Balance Sheet: <span id="bs"></span></div>
+<div id="gst"></div>
 </div>
 
-<div id="popup" class="popup">
-<h3>Journal Entry</h3>
-<div id="rows"></div>
-<button onclick="addRow()">Add Line</button>
-<button onclick="saveEntry()">Save</button>
-<button onclick="popup.style.display='none'">Close</button>
+</div>
+</div>
+
+<!-- POPUPS -->
+<div id="journalPopup" class="popup">
+<h3>Journal</h3>
+<input id="accName" placeholder="Account">
+<input id="drAmt" placeholder="Debit">
+<input id="crAmt" placeholder="Credit">
+<button onclick="saveJournal()">Save</button>
+</div>
+
+<div id="invoicePopup" class="popup">
+<h3>Invoice</h3>
+<input id="amt" placeholder="Amount">
+<button onclick="saveInvoice()">Save</button>
 </div>
 
 </body>
