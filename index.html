@@ -1,26 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Tally Prime SaaS UI</title>
+<title>Tally Prime SaaS Ultimate</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
 
-body{
-display:flex;
-height:100vh;
-background:#0b1220;
-color:white;
-}
+body{display:flex;height:100vh;background:#0b1220;color:white}
 
 /* AUTH */
 .auth{
-position:fixed;
-width:100%;
-height:100%;
-display:flex;
-justify-content:center;
-align-items:center;
+position:fixed;width:100%;height:100%;
+display:flex;justify-content:center;align-items:center;
 background:#0b1220;
 }
 
@@ -30,7 +21,7 @@ padding:20px;
 border-radius:10px;
 }
 
-/* LEFT PANEL (TALLY STYLE) */
+/* LEFT MENU (TALLY STYLE) */
 .sidebar{
 width:280px;
 background:#020617;
@@ -38,29 +29,29 @@ padding:15px;
 border-right:2px solid #1e293b;
 }
 
-.title{
+.sidebar h2{
 color:#38bdf8;
 font-size:18px;
 margin-bottom:10px;
 }
 
-.menu button{
+.sidebar button{
 width:100%;
 padding:10px;
 margin:5px 0;
 background:#0f172a;
-border:none;
 color:white;
+border:none;
 text-align:left;
+border-radius:5px;
 cursor:pointer;
-border-radius:4px;
 }
 
-.menu button:hover{
+.sidebar button:hover{
 background:#1e3a8a;
 }
 
-/* MAIN SCREEN */
+/* MAIN AREA */
 .main{
 flex:1;
 background:#f1f5f9;
@@ -72,25 +63,8 @@ overflow:auto;
 .card{
 background:white;
 padding:15px;
-margin-bottom:15px;
 border-radius:10px;
-}
-
-/* TABLE STYLE (TALLY LOOK) */
-table{
-width:100%;
-border-collapse:collapse;
-font-size:14px;
-}
-
-th,td{
-border:1px solid #ddd;
-padding:8px;
-}
-
-th{
-background:#1e3a8a;
-color:white;
+margin-bottom:15px;
 }
 
 /* JOURNAL GRID */
@@ -104,14 +78,32 @@ margin:5px 0;
 input,button{
 padding:8px;
 }
+
+/* TABLE */
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:8px;
+}
+
+th{
+background:#1e3a8a;
+color:white;
+}
 </style>
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <script>
 
+/* FIREBASE CONFIG */
 const firebaseConfig={
 apiKey:"AIzaSyB38hscdHXDbQ3Bw6ZGLIgk8ci323KFAg4",
 authDomain:"pratham-accounting-solution.firebaseapp.com",
@@ -129,7 +121,7 @@ const db=firebase.firestore();
 let user=null;
 let company=null;
 
-/* AUTH */
+/* AUTH STATE FIX */
 auth.onAuthStateChanged(u=>{
 if(u){
 user=u.uid;
@@ -139,6 +131,7 @@ loadCompanies();
 }
 });
 
+/* LOGIN */
 function login(){
 let e=email.value;
 let p=password.value;
@@ -185,15 +178,16 @@ let div=document.createElement("div");
 div.className="row";
 
 div.innerHTML=`
-<input class="da" placeholder="Dr">
+<input class="da" placeholder="Dr Account">
 <input class="dv" type="number">
-<input class="ca" placeholder="Cr">
+<input class="ca" placeholder="Cr Account">
 <input class="cv" type="number">
 `;
 
 rows.appendChild(div);
 }
 
+/* SAVE ENTRY */
 function saveEntry(){
 let list=[];
 let dr=0,cr=0;
@@ -224,7 +218,7 @@ rows.innerHTML="";
 loadData();
 }
 
-/* REPORT ENGINE (TALLY STYLE) */
+/* FULL ACCOUNTING ENGINE */
 function loadData(){
 db.collection("entries")
 .where("user","==",user)
@@ -233,6 +227,7 @@ db.collection("entries")
 .then(s=>{
 
 ledger.innerHTML="";
+
 let accMap={};
 let income=0,expense=0;
 
@@ -240,8 +235,16 @@ s.forEach(d=>{
 d.data().lines.forEach(l=>{
 
 if(!accMap[l.acc]) accMap[l.acc]={dr:0,cr:0};
-if(l.type==="dr") accMap[l.acc].dr+=l.amt;
-if(l.type==="cr") accMap[l.acc].cr+=l.amt;
+
+if(l.type==="dr"){
+accMap[l.acc].dr+=l.amt;
+expense+=l.amt;
+}
+
+if(l.type==="cr"){
+accMap[l.acc].cr+=l.amt;
+income+=l.amt;
+}
 
 ledger.innerHTML+=`
 <tr>
@@ -249,15 +252,10 @@ ledger.innerHTML+=`
 <td>${l.type==="dr"?l.amt:""}</td>
 <td>${l.type==="cr"?l.amt:""}</td>
 </tr>`;
-
-/* simple classification */
-if(l.type==="cr") income+=l.amt;
-if(l.type==="dr") expense+=l.amt;
-
 });
 });
 
-/* DASH */
+/* DASHBOARD */
 dash.innerHTML=`
 <b>Gateway of Accounts</b><br><br>
 Income: ₹${income}<br>
@@ -280,14 +278,20 @@ trial.innerHTML+=`
 trial.innerHTML+="</table>";
 
 /* P&L */
-pl.innerHTML=`<h3>Profit & Loss</h3>Profit = ₹${income-expense}`;
+pl.innerHTML=`
+<h3>Profit & Loss</h3>
+Revenue: ₹${income}<br>
+Expenses: ₹${expense}<br>
+<b>Profit: ₹${income-expense}</b>
+`;
 
 /* BALANCE SHEET */
-bs.innerHTML=`<h3>Balance Sheet</h3>
+bs.innerHTML=`
+<h3>Balance Sheet</h3>
 Assets: ₹${income}<br>
-Liabilities: ₹${expense}`;
+Liabilities: ₹${expense}
+`;
 });
-
 }
 
 </script>
@@ -319,12 +323,10 @@ Liabilities: ₹${expense}`;
 <div id="app" style="display:none;width:100%;display:flex">
 
 <div class="sidebar">
-<div class="title" id="companyTitle">Tally SaaS</div>
+<h2 id="companyTitle">Tally SaaS</h2>
 
-<div class="menu">
 <button onclick="addRow()">➕ Journal Entry</button>
 <button onclick="saveEntry()">💾 Save Entry</button>
-</div>
 </div>
 
 <div class="main">
