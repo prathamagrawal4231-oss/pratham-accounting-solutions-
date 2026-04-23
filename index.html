@@ -5,12 +5,7 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-
-body{
-height:100vh;
-display:flex;
-background:#0b1220;
-}
+body{height:100vh;display:flex;background:#0b1220}
 
 /* AUTH */
 .auth{
@@ -49,10 +44,7 @@ padding:15px;
 border-right:1px solid #1f2937;
 }
 
-.sidebar h2{
-color:#38bdf8;
-margin-bottom:10px;
-}
+.sidebar h2{color:#38bdf8;margin-bottom:10px}
 
 .sidebar button{
 width:100%;
@@ -141,6 +133,7 @@ const db=firebase.firestore();
 
 let user=null;
 let company=null;
+let currentCompanyId=null;
 
 /* LOGIN */
 function login(){
@@ -157,33 +150,70 @@ loadCompanies();
 }
 });
 
-/* COMPANY */
+/* COMPANY SYSTEM */
 function loadCompanies(){
-db.collection("companies").where("user","==",user).get()
+db.collection("companies")
+.where("user","==",user)
+.get()
 .then(s=>{
 companyList.innerHTML="";
+
 s.forEach(d=>{
 companyList.innerHTML+=`
 <div style="background:#111827;color:white;padding:10px;margin:6px 0;border-radius:8px">
 ${d.data().name}<br><br>
-<button onclick="openCompany('${d.data().name}')">Open</button>
+
+<button onclick="openCompany('${d.id}','${d.data().name}')">Open</button>
+
+<button style="background:red;margin-left:5px"
+onclick="deleteCompany('${d.id}','${d.data().name}')">
+Delete
+</button>
+
 </div>`;
 });
 });
 }
 
 function createCompany(){
-db.collection("companies").add({name:newCompany.value,user:user});
+db.collection("companies").add({
+name:newCompany.value,
+user:user
+});
 newCompany.value="";
 loadCompanies();
 }
 
-function openCompany(name){
+function openCompany(id,name){
 company=name;
+currentCompanyId=id;
+
 companyBox.style.display="none";
 app.style.display="flex";
 companyTitle.innerText=name;
+
 loadData();
+}
+
+/* DELETE COMPANY */
+async function deleteCompany(id,name){
+
+let confirmDelete=confirm("Delete '"+name+"'?\nAll data will be lost.");
+if(!confirmDelete) return;
+
+// delete entries
+let snap=await db.collection("entries")
+.where("user","==",user)
+.where("company","==",name)
+.get();
+
+snap.forEach(doc=>doc.ref.delete());
+
+// delete company
+await db.collection("companies").doc(id).delete();
+
+alert("Company deleted");
+loadCompanies();
 }
 
 /* JOURNAL */
@@ -215,8 +245,7 @@ journalRows.appendChild(div);
 }
 
 function saveJournal(){
-let list=[];
-let dr=0,cr=0;
+let list=[],dr=0,cr=0;
 
 document.querySelectorAll("#journalRows div").forEach(r=>{
 let da=r.children[0].value;
@@ -241,7 +270,7 @@ closeJournal();
 loadData();
 }
 
-/* LOAD DATA + FIXED UI SYSTEM */
+/* LOAD DATA */
 function loadData(){
 
 db.collection("entries")
@@ -251,8 +280,7 @@ db.collection("entries")
 .then(s=>{
 
 ledger.innerHTML="";
-let acc={};
-let income=0,expense=0;
+let acc={},income=0,expense=0;
 
 s.forEach(d=>{
 d.data().lines.forEach(l=>{
@@ -271,39 +299,24 @@ ledger.innerHTML+=`
 });
 });
 
-/* DASHBOARD */
 dash.innerHTML=`
 <div class="card">Income: ₹${income}</div>
 <div class="card">Expense: ₹${expense}</div>
 <div class="card"><b>Profit: ₹${income-expense}</b></div>
 `;
 
-/* LEDGER FIX */
-ledgerView.innerHTML=Object.keys(acc).map(a=>
-`<tr><td>${a}</td><td>${acc[a].dr}</td><td>${acc[a].cr}</td></tr>`
-).join("");
+pl.innerHTML=`Profit: ₹${income-expense}`;
 
-/* P&L */
-pl.innerHTML=`
-<div class="card">
-<h3>Profit & Loss</h3>
-<p>Income: ₹${income}</p>
-<p>Expense: ₹${expense}</p>
-<p><b>Profit: ₹${income-expense}</b></p>
-</div>`;
-
-/* BALANCE SHEET FIXED */
 bs.innerHTML=`
 <div class="card">
 <h3>Balance Sheet</h3>
-<div style="display:flex;gap:20px">
-<div><b>Assets</b><br>₹${income}</div>
-<div><b>Liabilities</b><br>₹${expense}</div>
+Assets: ₹${income}<br>
+Liabilities: ₹${expense}
 </div>
-</div>`;
+`;
+
 });
 }
-
 </script>
 </head>
 
@@ -345,7 +358,6 @@ bs.innerHTML=`
 <table>
 <tr><th>Acc</th><th>Dr</th><th>Cr</th></tr>
 <tbody id="ledger"></tbody>
-<tbody id="ledgerView"></tbody>
 </table>
 
 <div id="pl"></div>
