@@ -5,45 +5,19 @@
 
 <style>
 body{margin:0;font-family:Arial;background:#0f2a44;color:white}
-.topbar{background:#0b3d91;padding:8px;display:flex;justify-content:space-between}
+.topbar{background:#0b3d91;padding:10px;display:flex;justify-content:space-between}
 .container{display:flex;height:calc(100vh - 40px)}
 .sidebar{width:240px;background:#0b3d91;padding:10px}
 .center{flex:1;padding:20px}
-
-.tally-btn{background:#1d4ed8;padding:8px;margin:5px 0;cursor:pointer;border-radius:4px}
-.tally-btn:hover{background:#2563eb}
-
+.btn{background:#1d4ed8;padding:8px;margin:5px 0;cursor:pointer;border-radius:4px}
 .gateway{background:#102a54;padding:20px;border-radius:6px}
 
 table{width:100%;border-collapse:collapse;margin-top:10px;background:white;color:black}
 th{background:#1e3a8a;color:white}
 td{padding:6px;border-bottom:1px solid #ddd}
 
-.auth{position:fixed;width:100%;height:100%;display:flex;justify-content:center;align-items:center;background:#020617}
-.login-box{background:#111827;padding:30px;border-radius:10px;width:300px}
-
-input,select,textarea{width:100%;padding:8px;margin:5px 0}
-button{padding:8px;width:100%;margin-top:5px}
-
-.popup{
-display:none;
-position:fixed;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-background:white;
-color:black;
-padding:20px;
-width:520px;
-border-radius:10px;
-}
-
-.row{
-display:grid;
-grid-template-columns:1fr 100px 100px;
-gap:10px;
-margin:5px 0;
-}
+input,select{width:100%;padding:6px;margin:4px 0}
+.popup{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;color:black;padding:20px;width:520px}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -53,108 +27,56 @@ margin:5px 0;
 
 <body>
 
-<!-- LOGIN -->
-<div id="authBox" class="auth">
-<div class="login-box">
-<h2>Pratham Accounting Solution</h2>
+<div id="authBox">
 <input id="email" placeholder="Email">
 <input id="password" type="password">
-<button onclick="login()">Login / Signup</button>
-</div>
-</div>
-
-<!-- COMPANY -->
-<div id="companyBox" class="auth" style="display:none">
-<div class="login-box">
-<input id="newCompany" placeholder="Company Name">
-<button onclick="createCompany()">Create</button>
-<div id="companyList"></div>
-</div>
+<button onclick="login()">Login</button>
 </div>
 
-<!-- APP -->
 <div id="app" style="display:none">
 
 <div class="topbar">
 <div>Pratham Accounting Solution</div>
-<div id="companyTitle"></div>
 </div>
 
 <div class="container">
 
-<!-- SIDEBAR -->
 <div class="sidebar">
-<div class="tally-btn" onclick="showPage('dashboard')">Dashboard</div>
-<div class="tally-btn" onclick="openJournal()">Journal</div>
-<div class="tally-btn" onclick="showPage('pl')">P&L</div>
-<div class="tally-btn" onclick="showPage('bs')">Balance Sheet</div>
-<div class="tally-btn" onclick="showPage('stock')">Stock</div>
-
-<hr>
-
-<h4>Ledger</h4>
-<input id="ledgerName" placeholder="Ledger Name">
-<select id="ledgerType">
-<option>Asset</option>
-<option>Liability</option>
-<option>Income</option>
-<option>Expense</option>
-</select>
-<button onclick="addLedger()">Add Ledger</button>
-
-<hr>
-
-<h4>Stock Item</h4>
-<input id="itemName" placeholder="Item Name">
-<input id="itemQty" placeholder="Opening Qty">
-<button onclick="addItem()">Add Item</button>
+<div class="btn" onclick="showPage('stock')">Stock</div>
+<div class="btn" onclick="showPage('invoice')">Sales Invoice</div>
+<div class="btn" onclick="showPage('pl')">P&L</div>
 </div>
 
-<!-- MAIN -->
 <div class="center">
 
-<div id="dashboard" class="gateway">
-<h2>Entries</h2>
-<table>
-<tr><th>Date</th><th>Account</th><th>Dr</th><th>Cr</th></tr>
-<tbody id="ledger"></tbody>
-</table>
-</div>
+<div id="stockPage" class="gateway">
+<h3>Stock</h3>
+<input id="itemName" placeholder="Item">
+<button onclick="addItem()">Add</button>
 
-<div id="plPage" class="gateway" style="display:none"></div>
-<div id="bsPage" class="gateway" style="display:none"></div>
-
-<div id="stockPage" class="gateway" style="display:none">
-<h2>Stock Report</h2>
 <table>
-<tr><th>Item</th><th>Qty</th></tr>
+<tr><th>Item</th><th>Qty</th><th>Value</th></tr>
 <tbody id="stockTable"></tbody>
 </table>
 </div>
 
-</div>
-</div>
-</div>
+<div id="invoicePage" class="gateway" style="display:none">
+<h3>Sales Invoice</h3>
 
-<!-- JOURNAL -->
-<div id="journalPopup" class="popup">
-<h3>Journal Entry</h3>
+<select id="invItem"></select>
+<input id="invQty" placeholder="Qty">
+<input id="invRate" placeholder="Selling Rate">
+<input id="gst" placeholder="GST % (e.g. 18)">
 
-<div id="rows"></div>
-<button onclick="addRow()">Add Line</button>
+<button onclick="createInvoice()">Create Invoice</button>
 
-<h4>Stock (Optional)</h4>
-<select id="stockItem"></select>
-<input id="stockQty" placeholder="Quantity">
-
-<div id="totals">
-Dr: <span id="totalDr">0</span> | Cr: <span id="totalCr">0</span>
+<div id="invoiceResult"></div>
 </div>
 
-<textarea id="narration" placeholder="Narration"></textarea>
+<div id="plPage" class="gateway" style="display:none"></div>
 
-<button onclick="saveJournal()">Save</button>
-<button onclick="cancelJournal()">Cancel</button>
+</div>
+</div>
 </div>
 
 <script>
@@ -168,17 +90,18 @@ firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
 
-let user,company,ledgerMap={},stockMap={},plData={},bsData={};
+let user;
 
-/* AUTH */
+/* LOGIN */
 auth.onAuthStateChanged(u=>{
 if(u){
 user=u.uid;
 authBox.style.display="none";
-companyBox.style.display="flex";
-loadCompanies();
+app.style.display="block";
+loadItems();
+loadPL();
 }else{
-authBox.style.display="flex";
+authBox.style.display="block";
 }
 });
 
@@ -187,238 +110,136 @@ auth.signInWithEmailAndPassword(email.value,password.value)
 .catch(()=>auth.createUserWithEmailAndPassword(email.value,password.value));
 }
 
-/* COMPANY */
-function loadCompanies(){
-db.collection("companies").where("user","==",user).get().then(s=>{
-companyList.innerHTML="";
-s.forEach(d=>{
-companyList.innerHTML+=`
-<div>${d.data().name}
-<button onclick="openCompany('${d.data().name}')">Open</button></div>`;
-});
-});
-}
-
-function createCompany(){
-db.collection("companies").add({name:newCompany.value,user:user});
-newCompany.value="";
-loadCompanies();
-}
-
-function openCompany(name){
-company=name;
-companyBox.style.display="none";
-app.style.display="block";
-companyTitle.innerText=name;
-loadData();
-}
-
-/* LEDGER */
-function addLedger(){
-db.collection("ledgers").add({
-name:ledgerName.value,
-type:ledgerType.value,
-company
-});
-}
-
-/* STOCK */
+/* ITEMS */
 function addItem(){
-db.collection("items").add({
-name:itemName.value,
-qty:parseFloat(itemQty.value)||0,
-company
-});
-itemName.value="";itemQty.value="";
-loadData();
+db.collection("items").add({name:itemName.value,user});
+itemName.value="";
+loadItems();
 }
 
-/* JOURNAL */
-async function openJournal(){
-journalPopup.style.display="block";
-rows.innerHTML="";
-addRow();
+async function loadItems(){
+let snap=await db.collection("items").where("user","==",user).get();
 
-/* load stock dropdown */
-let snap=await db.collection("items").where("company","==",company).get();
-let list=[];
-snap.forEach(d=>list.push(d.data().name));
-stockItem.innerHTML=list.map(i=>`<option>${i}</option>`).join("");
-}
-
-function cancelJournal(){
-journalPopup.style.display="none";
-rows.innerHTML="";
-narration.value="";
-stockQty.value="";
-}
-
-/* ROW */
-async function addRow(){
-let list=[];
-let snap=await db.collection("ledgers").where("company","==",company).get();
-snap.forEach(d=>list.push(d.data().name));
-
-let options=list.map(l=>`<option>${l}</option>`).join("");
-
-let div=document.createElement("div");
-div.className="row";
-div.innerHTML=`
-<select>${options}</select>
-<input type="number" oninput="calcTotal()" placeholder="Debit">
-<input type="number" oninput="calcTotal()" placeholder="Credit">`;
-rows.appendChild(div);
-}
-
-function calcTotal(){
-let dr=0,cr=0;
-document.querySelectorAll(".row").forEach(r=>{
-dr+=+r.children[1].value||0;
-cr+=+r.children[2].value||0;
-});
-totalDr.innerText=dr;
-totalCr.innerText=cr;
-}
-
-/* SAVE JOURNAL */
-async function saveJournal(){
-
-let list=[],dr=0,cr=0;
-
-document.querySelectorAll(".row").forEach(r=>{
-let acc=r.children[0].value;
-let d=+r.children[1].value||0;
-let c=+r.children[2].value||0;
-
-if(d){list.push({acc,type:"dr",amt:d});dr+=d;}
-if(c){list.push({acc,type:"cr",amt:c});cr+=c;}
+invItem.innerHTML="";
+snap.forEach(d=>{
+invItem.innerHTML+=`<option>${d.data().name}</option>`;
 });
 
-if(dr!==cr){alert("Not balanced");return;}
-
-/* STOCK LOGIC */
-let item=stockItem.value;
-let qty=parseFloat(stockQty.value)||0;
-
-if(item && qty){
-
-let snap=await db.collection("items")
-.where("company","==",company)
-.where("name","==",item).get();
-
-snap.forEach(async d=>{
-let current=d.data().qty;
-
-/* detect purchase or sales */
-let isPurchase=list.some(l=>l.acc.toLowerCase().includes("purchase"));
-let isSales=list.some(l=>l.acc.toLowerCase().includes("sales"));
-
-if(isPurchase) current+=qty;
-if(isSales) current-=qty;
-
-await db.collection("items").doc(d.id).update({qty:current});
-});
-
+loadStock();
 }
 
-/* SAVE ENTRY */
-await db.collection("entries").add({
-company,
-date:new Date().toLocaleDateString(),
-lines:list,
-narration:narration.value
-});
+/* FIFO STOCK */
+async function loadStock(){
+let snap=await db.collection("batches").where("user","==",user).get();
 
-cancelJournal();
-loadData();
-}
-
-/* LOAD DATA */
-async function loadData(){
-
-ledgerMap={};
-stockMap={};
-
-let led=await db.collection("ledgers").where("company","==",company).get();
-led.forEach(d=>ledgerMap[d.data().name]=d.data().type);
-
-let items=await db.collection("items").where("company","==",company).get();
-items.forEach(d=>stockMap[d.data().name]=d.data().qty);
-
-let snap=await db.collection("entries").where("company","==",company).get();
-
-ledger.innerHTML="";
-let income=0,expense=0,asset=0,liability=0;
+let map={};
 
 snap.forEach(d=>{
-d.data().lines.forEach(l=>{
-ledger.innerHTML+=`<tr>
-<td>${d.data().date}</td>
-<td>${l.acc}</td>
-<td>${l.type==="dr"?l.amt:""}</td>
-<td>${l.type==="cr"?l.amt:""}</td>
-</tr>`;
-
-let type=ledgerMap[l.acc];
-
-if(type==="Income") income+=l.amt;
-if(type==="Expense") expense+=l.amt;
-
-if(type==="Asset"){
-if(l.type==="dr") asset+=l.amt;
-else asset-=l.amt;
-}
-
-if(type==="Liability"){
-if(l.type==="cr") liability+=l.amt;
-else liability-=l.amt;
-}
-});
+let {item,qty,rate}=d.data();
+if(!map[item]) map[item]={qty:0,val:0};
+map[item].qty+=qty;
+map[item].val+=qty*rate;
 });
 
-/* STOCK TABLE */
 stockTable.innerHTML="";
-for(let k in stockMap){
-stockTable.innerHTML+=`<tr><td>${k}</td><td>${stockMap[k]}</td></tr>`;
+for(let k in map){
+stockTable.innerHTML+=`<tr><td>${k}</td><td>${map[k].qty}</td><td>${map[k].val}</td></tr>`;
+}
 }
 
-plData={income,expense};
-bsData={asset,liability};
+/* INVOICE (FIFO + GST + PROFIT) */
+async function createInvoice(){
+
+let item=invItem.value;
+let qty=parseFloat(invQty.value);
+let rate=parseFloat(invRate.value);
+let gstRate=parseFloat(gst.value)||0;
+
+let saleAmount=qty*rate;
+let gstAmt=saleAmount*gstRate/100;
+let total=saleAmount+gstAmt;
+
+/* FIFO COGS */
+let snap=await db.collection("batches")
+.where("user","==",user)
+.where("item","==",item)
+.orderBy("time").get();
+
+let remaining=qty;
+let cogs=0;
+
+for(let doc of snap.docs){
+let data=doc.data();
+
+if(remaining<=0) break;
+
+let take=Math.min(data.qty,remaining);
+cogs+=take*data.rate;
+
+if(data.qty<=remaining){
+await doc.ref.delete();
+}else{
+await doc.ref.update({qty:data.qty-take});
+}
+
+remaining-=take;
+}
+
+/* SAVE INVOICE */
+await db.collection("invoices").add({
+user,item,qty,rate,gst:gstAmt,total,cogs,profit:saleAmount-cogs
+});
+
+/* P&L SAVE */
+await db.collection("pl").add({
+user,
+sales:saleAmount,
+cogs:cogs,
+profit:saleAmount-cogs
+});
+
+/* SHOW */
+invoiceResult.innerHTML=`
+Sales: ₹${saleAmount}<br>
+GST: ₹${gstAmt}<br>
+COGS: ₹${cogs}<br>
+Profit: ₹${saleAmount-cogs}
+`;
+
+loadStock();
+loadPL();
+}
+
+/* P&L */
+async function loadPL(){
+let snap=await db.collection("pl").where("user","==",user).get();
+
+let sales=0,cogs=0,profit=0;
+
+snap.forEach(d=>{
+sales+=d.data().sales;
+cogs+=d.data().cogs;
+profit+=d.data().profit;
+});
+
+plPage.innerHTML=`
+<table>
+<tr><th>Particular</th><th>Amount</th></tr>
+<tr><td>Sales</td><td>${sales}</td></tr>
+<tr><td>COGS</td><td>${cogs}</td></tr>
+<tr><td>Profit</td><td>${profit}</td></tr>
+</table>`;
 }
 
 /* PAGE */
 function showPage(p){
-
-dashboard.style.display="none";
-plPage.style.display="none";
-bsPage.style.display="none";
 stockPage.style.display="none";
+invoicePage.style.display="none";
+plPage.style.display="none";
 
-if(p==="dashboard") dashboard.style.display="block";
-
-if(p==="pl"){
-plPage.style.display="block";
-plPage.innerHTML=`
-<table>
-<tr><th>Type</th><th>Amount</th></tr>
-<tr><td>Income</td><td>${plData.income}</td></tr>
-<tr><td>Expense</td><td>${plData.expense}</td></tr>
-<tr><td>Profit</td><td>${plData.income-plData.expense}</td></tr>
-</table>`;
-}
-
-if(p==="bs"){
-bsPage.style.display="block";
-bsPage.innerHTML=`
-<table>
-<tr><th>Assets</th><th>Liabilities</th></tr>
-<tr><td>${bsData.asset}</td><td>${bsData.liability}</td></tr>
-</table>`;
-}
-
-if(p==="stock"){
-stockPage.style.display="block";
-}
+if(p==="stock") stockPage.style.display="block";
+if(p==="invoice") invoicePage.style.display="block";
+if(p==="pl") plPage.style.display="block";
 }
 </script>
 
