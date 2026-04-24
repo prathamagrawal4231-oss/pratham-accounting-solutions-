@@ -39,6 +39,9 @@ box-shadow:0 18px 40px rgba(2,8,20,.5);
 .card h2,.card h3{margin:0 0 10px;color:var(--accent-2)}
 
 .topbar{
+position:sticky;
+top:0;
+z-index:5;
 border-bottom:2px solid rgba(255,210,0,.65);
 background:linear-gradient(180deg,#0f4a7d,#082c4a);
 }
@@ -179,6 +182,8 @@ input,select,textarea{border:1px solid #9db5cc;background:white;color:#0f172a}
 button{border:none;background:linear-gradient(180deg,#ffe066,#ffd200);color:#111827;font-weight:700;cursor:pointer}
 button:hover{filter:brightness(1.02)}
 
+input:focus,select:focus,textarea:focus,button:focus,.btn:focus{outline:2px solid rgba(255,210,0,.65);outline-offset:1px}
+
 hr{border:none;border-top:1px solid rgba(255,255,255,.18);margin:10px 0}
 
 @media (max-width:920px){
@@ -219,19 +224,19 @@ hr{border:none;border-top:1px solid rgba(255,255,255,.18);margin:10px 0}
 
 <div class="topbar">
   <div class="topbar-main">
-    <div class="brand">Pratham Accounting Solution • Gateway</div>
+    <div class="brand">Accounting Software • Gateway</div>
     <div id="companyName" class="company-pill">No company selected</div>
   </div>
   <div class="topbar-sub">
-    <div>F2: Date • F3: Company • V: Voucher</div>
-    <div id="statusHint">Educational Tally-style layout</div>
+    <div>F2: Date • F3: Company • V: Voucher Entry</div>
+    <div id="statusHint">Professional accounting software layout</div>
   </div>
 </div>
 
 <div class="container">
 
 <div class="sidebar">
-<div class="gateway-title">Gateway of Pratham</div>
+<div class="gateway-title">Gateway of Accounting</div>
 <div class="section-label">Daily Activities</div>
 <div class="btn" onclick="showPage('ledger')">Display Ledger</div>
 <div class="btn" onclick="openJournal()">Create Voucher (Journal)</div>
