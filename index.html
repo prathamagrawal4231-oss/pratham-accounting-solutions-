@@ -4,20 +4,97 @@
 <title>Pratham Accounting Solution</title>
 
 <style>
-body{margin:0;font-family:Arial;background:#0f2a44;color:white}
-.topbar{background:#0b3d91;padding:10px;display:flex;justify-content:space-between}
+body{
+margin:0;
+font-family:Arial;
+background:#0f172a;
+color:white;
+overflow:hidden;
+}
+
+/* BACKGROUND DESIGN */
+.bg{
+position:fixed;
+width:100%;
+height:100%;
+background:
+radial-gradient(circle at 20% 20%, rgba(37,99,235,0.2), transparent 40%),
+radial-gradient(circle at 80% 60%, rgba(16,185,129,0.2), transparent 40%);
+z-index:-1;
+}
+
+/* AUTH */
+.auth{
+position:fixed;
+width:100%;
+height:100%;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.card{
+background:#111827;
+padding:30px;
+border-radius:12px;
+width:320px;
+box-shadow:0 0 20px rgba(0,0,0,0.5);
+}
+
+/* APP */
+.topbar{background:#1e293b;padding:10px;display:flex;justify-content:space-between}
 .container{display:flex;height:calc(100vh - 40px)}
-.sidebar{width:240px;background:#0b3d91;padding:10px}
-.center{flex:1;padding:20px}
-.btn{background:#1d4ed8;padding:8px;margin:5px 0;cursor:pointer;border-radius:4px}
-.gateway{background:#102a54;padding:20px;border-radius:6px}
 
-table{width:100%;border-collapse:collapse;margin-top:10px;background:white;color:black}
-th{background:#1e3a8a;color:white}
-td{padding:6px;border-bottom:1px solid #ddd}
+.sidebar{
+width:240px;
+background:#020617;
+padding:10px;
+}
 
-input,select{width:100%;padding:6px;margin:4px 0}
-.popup{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;color:black;padding:20px;width:520px}
+.btn{
+background:#1e3a8a;
+padding:10px;
+margin:5px 0;
+cursor:pointer;
+border-radius:6px;
+}
+
+.btn:hover{background:#2563eb}
+
+.main{
+flex:1;
+padding:20px;
+overflow:auto;
+}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;background:white;color:black}
+th{background:#1e293b;color:white}
+td{padding:8px;border-bottom:1px solid #ddd}
+
+/* JOURNAL */
+.popup{
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:white;
+color:black;
+padding:20px;
+width:500px;
+border-radius:10px;
+}
+
+.row{
+display:grid;
+grid-template-columns:1fr 100px 100px;
+gap:10px;
+margin:5px 0;
+}
+
+input,select,textarea{width:100%;padding:8px;margin:5px 0}
+button{padding:8px;width:100%}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -27,56 +104,79 @@ input,select{width:100%;padding:6px;margin:4px 0}
 
 <body>
 
-<div id="authBox">
+<div class="bg"></div>
+
+<!-- LOGIN -->
+<div id="authBox" class="auth">
+<div class="card">
+<h2>Pratham Accounting Solution</h2>
 <input id="email" placeholder="Email">
 <input id="password" type="password">
-<button onclick="login()">Login</button>
+<button onclick="login()">Login / Signup</button>
+</div>
 </div>
 
+<!-- COMPANY -->
+<div id="companyBox" class="auth" style="display:none">
+<div class="card">
+<h3>Select Company</h3>
+<input id="newCompany" placeholder="Company Name">
+<button onclick="createCompany()">Create</button>
+<div id="companyList"></div>
+</div>
+</div>
+
+<!-- APP -->
 <div id="app" style="display:none">
 
 <div class="topbar">
 <div>Pratham Accounting Solution</div>
+<div id="companyName"></div>
 </div>
 
 <div class="container">
 
 <div class="sidebar">
-<div class="btn" onclick="showPage('stock')">Stock</div>
-<div class="btn" onclick="showPage('invoice')">Sales Invoice</div>
-<div class="btn" onclick="showPage('pl')">P&L</div>
+<div class="btn" onclick="show('dashboard')">Dashboard</div>
+<div class="btn" onclick="openJournal()">Journal</div>
+<div class="btn" onclick="show('ledger')">Ledger</div>
+<div class="btn" onclick="show('pl')">P&L</div>
+<div class="btn" onclick="show('bs')">Balance Sheet</div>
+
+<hr>
+
+<input id="accName" placeholder="Ledger Name">
+<select id="accType">
+<option>Asset</option>
+<option>Liability</option>
+<option>Income</option>
+<option>Expense</option>
+</select>
+<button onclick="addAccount()">Add Ledger</button>
 </div>
 
-<div class="center">
+<div class="main">
 
-<div id="stockPage" class="gateway">
-<h3>Stock</h3>
-<input id="itemName" placeholder="Item">
-<button onclick="addItem()">Add</button>
-
-<table>
-<tr><th>Item</th><th>Qty</th><th>Value</th></tr>
-<tbody id="stockTable"></tbody>
-</table>
-</div>
-
-<div id="invoicePage" class="gateway" style="display:none">
-<h3>Sales Invoice</h3>
-
-<select id="invItem"></select>
-<input id="invQty" placeholder="Qty">
-<input id="invRate" placeholder="Selling Rate">
-<input id="gst" placeholder="GST % (e.g. 18)">
-
-<button onclick="createInvoice()">Create Invoice</button>
-
-<div id="invoiceResult"></div>
-</div>
-
-<div id="plPage" class="gateway" style="display:none"></div>
+<div id="dashboard"></div>
+<div id="ledgerPage" style="display:none"></div>
+<div id="plPage" style="display:none"></div>
+<div id="bsPage" style="display:none"></div>
 
 </div>
 </div>
+</div>
+
+<!-- JOURNAL -->
+<div id="popup" class="popup">
+<h3>Journal Entry</h3>
+
+<div id="rows"></div>
+<button onclick="addRow()">Add Line</button>
+
+<textarea id="narration" placeholder="Narration"></textarea>
+
+<button onclick="saveEntry()">Save</button>
+<button onclick="closePopup()">Cancel</button>
 </div>
 
 <script>
@@ -90,18 +190,17 @@ firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
 
-let user;
+let user,company,accounts={},entries=[];
 
-/* LOGIN */
+/* AUTH */
 auth.onAuthStateChanged(u=>{
 if(u){
 user=u.uid;
 authBox.style.display="none";
-app.style.display="block";
-loadItems();
-loadPL();
+companyBox.style.display="flex";
+loadCompanies();
 }else{
-authBox.style.display="block";
+authBox.style.display="flex";
 }
 });
 
@@ -110,136 +209,167 @@ auth.signInWithEmailAndPassword(email.value,password.value)
 .catch(()=>auth.createUserWithEmailAndPassword(email.value,password.value));
 }
 
-/* ITEMS */
-function addItem(){
-db.collection("items").add({name:itemName.value,user});
-itemName.value="";
-loadItems();
+/* COMPANY */
+function loadCompanies(){
+db.collection("companies").where("user","==",user).get().then(s=>{
+companyList.innerHTML="";
+s.forEach(d=>{
+companyList.innerHTML+=`
+<div style="background:#1e293b;margin:5px;padding:5px">
+${d.data().name}
+<button onclick="openCompany('${d.data().name}')">Open</button>
+</div>`;
+});
+});
 }
 
-async function loadItems(){
-let snap=await db.collection("items").where("user","==",user).get();
+function createCompany(){
+db.collection("companies").add({name:newCompany.value,user});
+newCompany.value="";
+loadCompanies();
+}
 
-invItem.innerHTML="";
-snap.forEach(d=>{
-invItem.innerHTML+=`<option>${d.data().name}</option>`;
+function openCompany(name){
+company=name;
+companyBox.style.display="none";
+app.style.display="block";
+companyName.innerText=name;
+loadData();
+}
+
+/* ACCOUNT */
+function addAccount(){
+db.collection("accounts").add({
+name:accName.value,
+type:accType.value,
+company
+});
+accName.value="";
+}
+
+/* JOURNAL */
+function openJournal(){
+popup.style.display="block";
+rows.innerHTML="";
+addRow();
+}
+
+function closePopup(){
+popup.style.display="none";
+}
+
+async function addRow(){
+let list=[];
+let snap=await db.collection("accounts").where("company","==",company).get();
+snap.forEach(d=>list.push(d.data().name));
+
+let opt=list.map(l=>`<option>${l}</option>`).join("");
+
+let div=document.createElement("div");
+div.className="row";
+div.innerHTML=`
+<select>${opt}</select>
+<input type="number" placeholder="Debit">
+<input type="number" placeholder="Credit">`;
+
+rows.appendChild(div);
+}
+
+function saveEntry(){
+let list=[],dr=0,cr=0;
+
+document.querySelectorAll(".row").forEach(r=>{
+let acc=r.children[0].value;
+let d=+r.children[1].value||0;
+let c=+r.children[2].value||0;
+
+if(d){list.push({acc,type:"dr",amt:d});dr+=d;}
+if(c){list.push({acc,type:"cr",amt:c});cr+=c;}
 });
 
-loadStock();
-}
+if(dr!==cr){alert("Not balanced");return;}
 
-/* FIFO STOCK */
-async function loadStock(){
-let snap=await db.collection("batches").where("user","==",user).get();
-
-let map={};
-
-snap.forEach(d=>{
-let {item,qty,rate}=d.data();
-if(!map[item]) map[item]={qty:0,val:0};
-map[item].qty+=qty;
-map[item].val+=qty*rate;
+db.collection("entries").add({
+company,date:new Date().toLocaleDateString(),
+lines:list,narration:narration.value
 });
 
-stockTable.innerHTML="";
-for(let k in map){
-stockTable.innerHTML+=`<tr><td>${k}</td><td>${map[k].qty}</td><td>${map[k].val}</td></tr>`;
-}
+closePopup();
+loadData();
 }
 
-/* INVOICE (FIFO + GST + PROFIT) */
-async function createInvoice(){
+/* LOAD */
+async function loadData(){
 
-let item=invItem.value;
-let qty=parseFloat(invQty.value);
-let rate=parseFloat(invRate.value);
-let gstRate=parseFloat(gst.value)||0;
+accounts={};
+entries=[];
 
-let saleAmount=qty*rate;
-let gstAmt=saleAmount*gstRate/100;
-let total=saleAmount+gstAmt;
+let a=await db.collection("accounts").where("company","==",company).get();
+a.forEach(d=>accounts[d.data().name]=d.data().type);
 
-/* FIFO COGS */
-let snap=await db.collection("batches")
-.where("user","==",user)
-.where("item","==",item)
-.orderBy("time").get();
+let e=await db.collection("entries").where("company","==",company).get();
 
-let remaining=qty;
-let cogs=0;
+ledgerPage.innerHTML="<table><tr><th>Date</th><th>Acc</th><th>Dr</th><th>Cr</th></tr>";
 
-for(let doc of snap.docs){
-let data=doc.data();
+let inc=0,exp=0,asset=0,liab=0;
 
-if(remaining<=0) break;
+e.forEach(d=>{
+d.data().lines.forEach(l=>{
 
-let take=Math.min(data.qty,remaining);
-cogs+=take*data.rate;
+ledgerPage.innerHTML+=`
+<tr>
+<td>${d.data().date}</td>
+<td>${l.acc}</td>
+<td>${l.type==="dr"?l.amt:""}</td>
+<td>${l.type==="cr"?l.amt:""}</td>
+</tr>`;
 
-if(data.qty<=remaining){
-await doc.ref.delete();
-}else{
-await doc.ref.update({qty:data.qty-take});
+let type=accounts[l.acc];
+
+if(type==="Income") inc+=l.amt;
+if(type==="Expense") exp+=l.amt;
+
+if(type==="Asset"){
+if(l.type==="dr") asset+=l.amt;
+else asset-=l.amt;
 }
 
-remaining-=take;
+if(type==="Liability"){
+if(l.type==="cr") liab+=l.amt;
+else liab-=l.amt;
 }
 
-/* SAVE INVOICE */
-await db.collection("invoices").add({
-user,item,qty,rate,gst:gstAmt,total,cogs,profit:saleAmount-cogs
+});
 });
 
-/* P&L SAVE */
-await db.collection("pl").add({
-user,
-sales:saleAmount,
-cogs:cogs,
-profit:saleAmount-cogs
-});
-
-/* SHOW */
-invoiceResult.innerHTML=`
-Sales: ₹${saleAmount}<br>
-GST: ₹${gstAmt}<br>
-COGS: ₹${cogs}<br>
-Profit: ₹${saleAmount-cogs}
-`;
-
-loadStock();
-loadPL();
-}
-
-/* P&L */
-async function loadPL(){
-let snap=await db.collection("pl").where("user","==",user).get();
-
-let sales=0,cogs=0,profit=0;
-
-snap.forEach(d=>{
-sales+=d.data().sales;
-cogs+=d.data().cogs;
-profit+=d.data().profit;
-});
+ledgerPage.innerHTML+="</table>";
 
 plPage.innerHTML=`
 <table>
 <tr><th>Particular</th><th>Amount</th></tr>
-<tr><td>Sales</td><td>${sales}</td></tr>
-<tr><td>COGS</td><td>${cogs}</td></tr>
-<tr><td>Profit</td><td>${profit}</td></tr>
+<tr><td>Income</td><td>${inc}</td></tr>
+<tr><td>Expense</td><td>${exp}</td></tr>
+<tr><td>Profit</td><td>${inc-exp}</td></tr>
+</table>`;
+
+bsPage.innerHTML=`
+<table>
+<tr><th>Assets</th><th>Liabilities</th></tr>
+<tr><td>${asset}</td><td>${liab}</td></tr>
 </table>`;
 }
 
-/* PAGE */
-function showPage(p){
-stockPage.style.display="none";
-invoicePage.style.display="none";
+/* NAV */
+function show(p){
+dashboard.style.display="none";
+ledgerPage.style.display="none";
 plPage.style.display="none";
+bsPage.style.display="none";
 
-if(p==="stock") stockPage.style.display="block";
-if(p==="invoice") invoicePage.style.display="block";
+if(p==="dashboard") dashboard.style.display="block";
+if(p==="ledger") ledgerPage.style.display="block";
 if(p==="pl") plPage.style.display="block";
+if(p==="bs") bsPage.style.display="block";
 }
 </script>
 
