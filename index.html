@@ -4,11 +4,25 @@
 <title>Pratham Accounting Solution</title>
 
 <style>
+:root{
+--bg:#0b1220;
+--panel:#111827;
+--panel-2:#1f2937;
+--surface:#0f172a;
+--gold:#facc15;
+--gold-soft:#fde68a;
+--text:#e5e7eb;
+--muted:#94a3b8;
+--danger:#ef4444;
+--ok:#22c55e;
+}
+
+*{box-sizing:border-box}
 body{
 margin:0;
-font-family:Arial;
-background:#111827;
-color:white;
+font-family:Inter,Arial,sans-serif;
+background:radial-gradient(circle at 10% 0%, #1e293b 0%, var(--bg) 45%);
+color:var(--text);
 overflow:hidden;
 }
 
@@ -16,150 +30,194 @@ overflow:hidden;
 body::before{
 content:"+ − × ÷ ₹ = % + − × ÷ ₹ = % + − × ÷ ₹ = % + − × ÷ ₹ = %";
 position:fixed;
-width:200%;
-height:200%;
-top:-50%;
-left:-50%;
+width:220%;
+height:220%;
+top:-60%;
+left:-60%;
 font-size:80px;
-color:rgba(255,215,0,0.08);
+color:rgba(250,204,21,0.08);
 line-height:120px;
-transform:rotate(-25deg);
+transform:rotate(-22deg);
 pointer-events:none;
 }
 
-/* AUTH */
 .auth{
 position:fixed;
-width:100%;
-height:100%;
+inset:0;
 display:flex;
 justify-content:center;
 align-items:center;
+padding:20px;
 }
 
 .card{
-background:#1f2937;
-padding:30px;
-border-radius:12px;
-width:320px;
-border:1px solid #facc15;
-box-shadow:0 0 25px rgba(250,204,21,0.2);
+background:linear-gradient(180deg,var(--panel-2),var(--panel));
+padding:26px;
+border-radius:16px;
+width:min(420px,95vw);
+border:1px solid rgba(250,204,21,0.45);
+box-shadow:0 20px 45px rgba(2,6,23,0.55);
+backdrop-filter:blur(6px);
 }
 
-/* APP */
+.card h2,.card h3{margin:0 0 12px}
+
 .topbar{
-background:#000;
-padding:12px;
+background:rgba(0,0,0,0.55);
+padding:14px 18px;
 display:flex;
 justify-content:space-between;
-border-bottom:2px solid #facc15;
+align-items:center;
+border-bottom:1px solid rgba(250,204,21,0.35);
+backdrop-filter:blur(6px);
 }
 
-.container{
-display:flex;
-height:calc(100vh - 50px);
+.topbar .brand{font-weight:700;letter-spacing:0.3px;color:var(--gold-soft)}
+.topbar .company-pill{
+background:rgba(250,204,21,0.15);
+color:var(--gold-soft);
+padding:6px 10px;
+border-radius:999px;
+font-size:12px;
+border:1px solid rgba(250,204,21,0.4);
 }
+
+.container{display:flex;height:calc(100vh - 56px)}
 
 .sidebar{
-width:230px;
-background:#020617;
-padding:10px;
-border-right:2px solid #facc15;
-}
-
-.btn{
-background:#facc15;
-color:black;
-padding:10px;
-margin:5px 0;
-cursor:pointer;
-border-radius:6px;
-font-weight:bold;
-}
-
-.btn:hover{background:#fde047}
-
-.main{
-flex:1;
-padding:20px;
+width:260px;
+background:linear-gradient(180deg,#020617,#0b1120);
+padding:14px;
+border-right:1px solid rgba(250,204,21,0.25);
 overflow:auto;
 }
 
-/* TABLE */
-table{
-width:100%;
-border-collapse:collapse;
-background:white;
-color:black;
+.section-label{
+color:var(--muted);
+font-size:12px;
+text-transform:uppercase;
+letter-spacing:1px;
+margin:10px 0 8px;
 }
 
-th{background:#facc15;color:black}
-td{padding:6px;border-bottom:1px solid #ddd}
+.btn{
+background:linear-gradient(180deg,var(--gold),#fbbf24);
+color:#111827;
+padding:10px 12px;
+margin:6px 0;
+cursor:pointer;
+border-radius:10px;
+font-weight:700;
+text-align:center;
+transition:transform .15s ease, box-shadow .15s ease;
+box-shadow:0 8px 16px rgba(250,204,21,.25);
+}
 
-/* 🔥 POPUP ANIMATION SYSTEM */
+.btn:hover{transform:translateY(-1px);box-shadow:0 10px 18px rgba(250,204,21,.35)}
+.btn:active{transform:translateY(0)}
+
+.main{flex:1;padding:20px;overflow:auto}
+
+.panel{
+background:rgba(15,23,42,0.75);
+border:1px solid rgba(148,163,184,.2);
+border-radius:14px;
+padding:14px;
+}
+
+table{
+width:100%;
+border-collapse:separate;
+border-spacing:0;
+background:#fff;
+color:#111827;
+border-radius:12px;
+overflow:hidden;
+box-shadow:0 14px 30px rgba(2,6,23,.14);
+}
+th{
+background:linear-gradient(180deg,#fde047,#facc15);
+color:#111827;
+font-size:13px;
+text-transform:uppercase;
+letter-spacing:.4px;
+}
+th,td{padding:9px 10px;border-bottom:1px solid #e5e7eb}
+tr:last-child td{border-bottom:none}
+
+.empty{
+padding:24px;
+text-align:center;
+color:var(--muted);
+background:rgba(15,23,42,.6);
+border:1px dashed rgba(148,163,184,.3);
+border-radius:12px;
+}
+
 .overlay{
 position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.6);
+inset:0;
+background:rgba(0,0,0,0.65);
 backdrop-filter:blur(4px);
 display:none;
 align-items:center;
 justify-content:center;
+padding:20px;
 }
 
-/* animation states */
 .popup{
 background:white;
-color:black;
+color:#111827;
 padding:20px;
-width:500px;
-border-radius:10px;
-border:2px solid #facc15;
-
+width:min(620px,95vw);
+max-height:85vh;
+overflow:auto;
+border-radius:14px;
+border:2px solid var(--gold);
 transform:translateY(-80px) scale(0.95);
 opacity:0;
-transition:all 0.35s ease;
+transition:all .28s ease;
 }
-
-.overlay.show{
-display:flex;
-}
-
-.overlay.show .popup{
-transform:translateY(0) scale(1);
-opacity:1;
-}
-
-/* close animation */
-.overlay.hide .popup{
-transform:translateY(-80px) scale(0.95);
-opacity:0;
-}
+.overlay.show{display:flex}
+.overlay.show .popup{transform:translateY(0) scale(1);opacity:1}
+.overlay.hide .popup{transform:translateY(-70px) scale(0.96);opacity:0}
 
 .row{
 display:grid;
-grid-template-columns:1fr 100px 100px;
+grid-template-columns:1fr 120px 120px;
 gap:10px;
+margin:8px 0;
+}
+
+input,select,textarea,button{
+width:100%;
+padding:10px;
 margin:5px 0;
+border-radius:10px;
+border:1px solid rgba(148,163,184,.35);
+font:inherit;
 }
 
 input,select,textarea{
-width:100%;
-padding:8px;
-margin:5px 0;
+background:#fff;
+color:#111827;
 }
 
 button{
-padding:8px;
-width:100%;
-margin-top:5px;
 cursor:pointer;
-background:#facc15;
+background:linear-gradient(180deg,var(--gold),#fbbf24);
+color:#111827;
 border:none;
-font-weight:bold;
+font-weight:700;
+}
+
+button:hover{filter:brightness(1.02)}
+
+hr{border:none;border-top:1px solid rgba(148,163,184,.25);margin:14px 0}
+
+@media (max-width:900px){
+.container{flex-direction:column;height:calc(100vh - 56px)}
+.sidebar{width:100%;border-right:none;border-bottom:1px solid rgba(250,204,21,.25)}
 }
 </style>
 
@@ -194,20 +252,21 @@ font-weight:bold;
 <div id="app" style="display:none">
 
 <div class="topbar">
-<div>Pratham Accounting Solution</div>
-<div id="companyName"></div>
+<div class="brand">Pratham Accounting Solution</div>
+<div id="companyName" class="company-pill">No company selected</div>
 </div>
 
 <div class="container">
 
 <div class="sidebar">
+<div class="section-label">Reports</div>
 <div class="btn" onclick="showPage('ledger')">Ledger</div>
-<div class="btn" onclick="openJournal()">Journal</div>
+<div class="btn" onclick="openJournal()">Journal Entry</div>
 <div class="btn" onclick="showPage('pl')">P&L</div>
 <div class="btn" onclick="showPage('bs')">Balance Sheet</div>
 
 <hr>
-
+<div class="section-label">Create Ledger</div>
 <input id="accName" placeholder="Ledger Name">
 <select id="accType">
 <option>Asset</option>
@@ -220,9 +279,9 @@ font-weight:bold;
 
 <div class="main">
 
-<div id="ledgerPage"></div>
-<div id="plPage" style="display:none"></div>
-<div id="bsPage" style="display:none"></div>
+<div id="ledgerPage" class="panel"></div>
+<div id="plPage" class="panel" style="display:none"></div>
+<div id="bsPage" class="panel" style="display:none"></div>
 
 </div>
 </div>
@@ -285,6 +344,10 @@ return String(str)
 .replaceAll(">","&gt;")
 .replaceAll('"',"&quot;")
 .replaceAll("'","&#39;");
+}
+
+function formatMoney(value){
+return Number(value||0).toFixed(2);
 }
 
 /* AUTH */
@@ -544,6 +607,13 @@ let liab=0;
 let html=`<table>
 <tr><th>Date</th><th>Account</th><th>Dr</th><th>Cr</th></tr>`;
 
+if(!entries.length){
+ledgerPage.innerHTML=`<div class="empty">No journal entries yet. Click <b>Journal Entry</b> to add your first transaction.</div>`;
+plPage.innerHTML=`<div class="empty">No data available for P&L.</div>`;
+bsPage.innerHTML=`<div class="empty">No data available for Balance Sheet.</div>`;
+return;
+}
+
 entries.forEach(entry=>{
 (entry.lines||[]).forEach(l=>{
 const amt=Number(l.amt)||0;
@@ -551,8 +621,8 @@ html+=`
 <tr>
 <td>${escapeHtml(entry.date||"")}</td>
 <td>${escapeHtml(l.acc||"")}</td>
-<td>${l.type==="dr"?amt.toFixed(2):""}</td>
-<td>${l.type==="cr"?amt.toFixed(2):""}</td>
+<td>${l.type==="dr"?formatMoney(amt):""}</td>
+<td>${l.type==="cr"?formatMoney(amt):""}</td>
 </tr>`;
 
 const type=accounts[l.acc];
@@ -582,15 +652,15 @@ ledgerPage.innerHTML=html;
 plPage.innerHTML=`
 <table>
 <tr><th>Particular</th><th>Amount</th></tr>
-<tr><td>Income</td><td>${inc.toFixed(2)}</td></tr>
-<tr><td>Expense</td><td>${exp.toFixed(2)}</td></tr>
-<tr><td>Profit</td><td>${(inc-exp).toFixed(2)}</td></tr>
+<tr><td>Income</td><td>${formatMoney(inc)}</td></tr>
+<tr><td>Expense</td><td>${formatMoney(exp)}</td></tr>
+<tr><td>Profit</td><td>${formatMoney(inc-exp)}</td></tr>
 </table>`;
 
 bsPage.innerHTML=`
 <table>
 <tr><th>Assets</th><th>Liabilities</th></tr>
-<tr><td>${asset.toFixed(2)}</td><td>${liab.toFixed(2)}</td></tr>
+<tr><td>${formatMoney(asset)}</td><td>${formatMoney(liab)}</td></tr>
 </table>`;
 }
 
