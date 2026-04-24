@@ -1,3 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Pratham Accounting Solution</title>
+
+<style>
+body{margin:0;font-family:Arial;background:#0f2a44;color:white}
+.topbar{background:#0b3d91;padding:8px;display:flex;justify-content:space-between}
+.container{display:flex;height:calc(100vh - 40px)}
+.sidebar{width:220px;background:#0b3d91;padding:10px}
+.center{flex:1;padding:20px}
+.tally-btn{background:#1d4ed8;padding:8px;margin:5px 0;cursor:pointer;border-radius:4px}
+.gateway{background:#102a54;padding:20px;border-radius:6px}
+table{width:100%;border-collapse:collapse;margin-top:10px;background:white;color:black}
+th{background:#1e3a8a;color:white}
+td{padding:6px;border-bottom:1px solid #ddd}
+.popup{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;color:black;padding:20px;width:500px;border-radius:10px}
+.row{display:grid;grid-template-columns:1fr 100px 100px;gap:10px;margin:5px 0}
+.auth{position:fixed;width:100%;height:100%;display:flex;justify-content:center;align-items:center;background:#020617}
+.login-box{background:#111827;padding:30px;border-radius:10px;width:300px}
+input,select,textarea{width:100%;padding:10px;margin:5px 0}
+button{padding:10px;width:100%;margin-top:5px}
+</style>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="authBox" class="auth">
+<div class="login-box">
+<h2>Pratham Accounting Solution</h2>
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login / Signup</button>
+</div>
+</div>
+
+<!-- COMPANY -->
+<div id="companyBox" class="auth" style="display:none">
+<div class="login-box">
+<input id="newCompany" placeholder="Company Name">
+<button onclick="createCompany()">Create</button>
+<div id="companyList"></div>
+</div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+
+<div class="topbar">
+<div>Pratham Accounting Solution</div>
+<div id="companyTitle"></div>
+</div>
+
+<div class="container">
+
+<div class="sidebar">
+<div class="tally-btn" onclick="showPage('dashboard')">Dashboard</div>
+<div class="tally-btn" onclick="openJournal()">Journal</div>
+<div class="tally-btn" onclick="showPage('pl')">P&L</div>
+<div class="tally-btn" onclick="showPage('bs')">Balance Sheet</div>
+
+<hr>
+
+<input id="ledgerName" placeholder="Ledger Name">
+<select id="ledgerType">
+<option>Asset</option>
+<option>Liability</option>
+<option>Income</option>
+<option>Expense</option>
+</select>
+<button onclick="addLedger()">Add Ledger</button>
+</div>
+
+<div class="center">
+
+<div id="dashboard" class="gateway">
+<h2>Gateway</h2>
+<table>
+<tr><th>Date</th><th>Account</th><th>Dr</th><th>Cr</th><th>Narration</th></tr>
+<tbody id="ledger"></tbody>
+</table>
+</div>
+
+<div id="plPage" class="gateway" style="display:none">
+<h2>Profit & Loss</h2>
+<div id="plDetails"></div>
+</div>
+
+<div id="bsPage" class="gateway" style="display:none">
+<h2>Balance Sheet</h2>
+<div id="bsDetails"></div>
+</div>
+
+</div>
+</div>
+</div>
+
+<!-- JOURNAL -->
+<div id="journalPopup" class="popup">
+<h3>Journal Entry</h3>
+
+<div id="rows"></div>
+<button onclick="addRow()">Add Line</button>
+
+<div>Debit: <span id="totalDr">0</span> | Credit: <span id="totalCr">0</span></div>
+
+<textarea id="narration" placeholder="Narration"></textarea>
+
+<button onclick="saveJournal()">Save</button>
+</div>
+
 <script>
 const firebaseConfig={
 apiKey:"AIzaSyB38hscdHXDbQ3Bw6ZGLIgk8ci323KFAg4",
@@ -9,9 +125,9 @@ firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
 
-let user,company;
+let user,company,plData={},bsData={};
 
-/* ✅ AUTH STATE FIX (MAIN FIX) */
+/* AUTH STATE */
 auth.onAuthStateChanged(u=>{
 if(u){
 user=u.uid;
@@ -31,9 +147,7 @@ let e=email.value;
 let p=password.value;
 
 auth.signInWithEmailAndPassword(e,p)
-.catch(()=>{
-auth.createUserWithEmailAndPassword(e,p);
-});
+.catch(()=>auth.createUserWithEmailAndPassword(e,p));
 }
 
 /* COMPANY */
@@ -44,7 +158,7 @@ companyList.innerHTML="";
 s.forEach(d=>{
 companyList.innerHTML+=`
 <div style="background:#1e293b;padding:10px;margin:5px">
-<span style="color:white">${d.data().name}</span>
+${d.data().name}
 <button onclick="openCompany('${d.data().name}')">Open</button>
 <button onclick="deleteCompany('${d.id}')">Delete</button>
 </div>`;
@@ -94,9 +208,7 @@ let list=[];
 let snap=await db.collection("ledgers").where("company","==",company).get();
 snap.forEach(d=>list.push(d.data().name));
 
-if(list.length===0){
-list=["Cash","Bank","Sales","Purchase"];
-}
+if(list.length===0) list=["Cash","Bank","Sales"];
 
 let options=list.map(l=>`<option>${l}</option>`).join("");
 
@@ -104,8 +216,8 @@ let div=document.createElement("div");
 div.className="row";
 div.innerHTML=`
 <select>${options}</select>
-<input type="number" oninput="calcTotal()" placeholder="Debit">
-<input type="number" oninput="calcTotal()" placeholder="Credit">`;
+<input type="number" placeholder="Debit" oninput="calcTotal()">
+<input type="number" placeholder="Credit" oninput="calcTotal()">`;
 rows.appendChild(div);
 }
 
@@ -144,14 +256,12 @@ journalPopup.style.display="none";
 loadData();
 }
 
-/* DATA */
+/* LOAD DATA */
 async function loadData(){
 
 let ledgerMap={};
-let snapLedgers=await db.collection("ledgers").where("company","==",company).get();
-snapLedgers.forEach(d=>{
-ledgerMap[d.data().name]=d.data().type;
-});
+let lSnap=await db.collection("ledgers").where("company","==",company).get();
+lSnap.forEach(d=>ledgerMap[d.data().name]=d.data().type);
 
 let snap=await db.collection("entries").where("company","==",company).get();
 
@@ -190,7 +300,6 @@ else liability-=l.amt;
 
 plData={income,expense};
 bsData={asset,liability};
-
 }
 
 /* PAGE */
@@ -200,22 +309,18 @@ plPage.style.display="none";
 bsPage.style.display="none";
 
 if(p==="dashboard") dashboard.style.display="block";
-if(p==="pl"){plPage.style.display="block";renderPL();}
-if(p==="bs"){bsPage.style.display="block";renderBS();}
+
+if(p==="pl"){
+plPage.style.display="block";
+plDetails.innerHTML=`Income ₹${plData.income}<br>Expense ₹${plData.expense}<hr>Profit ₹${plData.income-plData.expense}`;
 }
 
-/* P&L */
-function renderPL(){
-plDetails.innerHTML=`
-Income: ₹ ${plData.income}<br>
-Expense: ₹ ${plData.expense}<br>
-<hr>Profit: ₹ ${plData.income - plData.expense}`;
+if(p==="bs"){
+bsPage.style.display="block";
+bsDetails.innerHTML=`Assets ₹${bsData.asset}<br>Liabilities ₹${bsData.liability}`;
 }
-
-/* BS */
-function renderBS(){
-bsDetails.innerHTML=`
-Assets: ₹ ${bsData.asset}<br>
-Liabilities: ₹ ${bsData.liability}`;
 }
 </script>
+
+</body>
+</html>
