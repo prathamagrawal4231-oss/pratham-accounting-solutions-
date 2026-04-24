@@ -7,25 +7,43 @@
 body{margin:0;font-family:Arial;background:#0f2a44;color:white}
 .topbar{background:#0b3d91;padding:8px;display:flex;justify-content:space-between}
 .container{display:flex;height:calc(100vh - 40px)}
-.sidebar{width:220px;background:#0b3d91;padding:10px}
+.sidebar{width:240px;background:#0b3d91;padding:10px}
 .center{flex:1;padding:20px}
+
 .tally-btn{background:#1d4ed8;padding:8px;margin:5px 0;cursor:pointer;border-radius:4px}
+.tally-btn:hover{background:#2563eb}
+
 .gateway{background:#102a54;padding:20px;border-radius:6px}
 
 table{width:100%;border-collapse:collapse;margin-top:10px;background:white;color:black}
 th{background:#1e3a8a;color:white}
 td{padding:6px;border-bottom:1px solid #ddd}
 
-.popup{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;color:black;padding:20px;width:500px;border-radius:10px}
-.row{display:grid;grid-template-columns:1fr 100px 100px;gap:10px;margin:5px 0}
-
 .auth{position:fixed;width:100%;height:100%;display:flex;justify-content:center;align-items:center;background:#020617}
 .login-box{background:#111827;padding:30px;border-radius:10px;width:300px}
 
-input,select,textarea{width:100%;padding:10px;margin:5px 0}
-button{padding:10px;width:100%;margin-top:5px}
+input,select,textarea{width:100%;padding:8px;margin:5px 0}
+button{padding:8px;width:100%;margin-top:5px}
 
-.link{color:blue;cursor:pointer}
+.popup{
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:white;
+color:black;
+padding:20px;
+width:520px;
+border-radius:10px;
+}
+
+.row{
+display:grid;
+grid-template-columns:1fr 100px 100px;
+gap:10px;
+margin:5px 0;
+}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -64,14 +82,17 @@ button{padding:10px;width:100%;margin-top:5px}
 
 <div class="container">
 
+<!-- SIDEBAR -->
 <div class="sidebar">
 <div class="tally-btn" onclick="showPage('dashboard')">Dashboard</div>
 <div class="tally-btn" onclick="openJournal()">Journal</div>
 <div class="tally-btn" onclick="showPage('pl')">P&L</div>
 <div class="tally-btn" onclick="showPage('bs')">Balance Sheet</div>
+<div class="tally-btn" onclick="showPage('stock')">Stock</div>
 
 <hr>
 
+<h4>Ledger</h4>
 <input id="ledgerName" placeholder="Ledger Name">
 <select id="ledgerType">
 <option>Asset</option>
@@ -80,26 +101,35 @@ button{padding:10px;width:100%;margin-top:5px}
 <option>Expense</option>
 </select>
 <button onclick="addLedger()">Add Ledger</button>
+
+<hr>
+
+<h4>Stock Item</h4>
+<input id="itemName" placeholder="Item Name">
+<input id="itemQty" placeholder="Opening Qty">
+<button onclick="addItem()">Add Item</button>
 </div>
 
+<!-- MAIN -->
 <div class="center">
 
 <div id="dashboard" class="gateway">
-<h2>Gateway</h2>
+<h2>Entries</h2>
 <table>
-<tr><th>Date</th><th>Account</th><th>Dr</th><th>Cr</th><th>Narration</th></tr>
+<tr><th>Date</th><th>Account</th><th>Dr</th><th>Cr</th></tr>
 <tbody id="ledger"></tbody>
 </table>
 </div>
 
-<div id="plPage" class="gateway" style="display:none">
-<h2>Profit & Loss</h2>
-<div id="plDetails"></div>
-</div>
+<div id="plPage" class="gateway" style="display:none"></div>
+<div id="bsPage" class="gateway" style="display:none"></div>
 
-<div id="bsPage" class="gateway" style="display:none">
-<h2>Balance Sheet</h2>
-<div id="bsDetails"></div>
+<div id="stockPage" class="gateway" style="display:none">
+<h2>Stock Report</h2>
+<table>
+<tr><th>Item</th><th>Qty</th></tr>
+<tbody id="stockTable"></tbody>
+</table>
 </div>
 
 </div>
@@ -113,11 +143,18 @@ button{padding:10px;width:100%;margin-top:5px}
 <div id="rows"></div>
 <button onclick="addRow()">Add Line</button>
 
-<div>Debit: <span id="totalDr">0</span> | Credit: <span id="totalCr">0</span></div>
+<h4>Stock (Optional)</h4>
+<select id="stockItem"></select>
+<input id="stockQty" placeholder="Quantity">
+
+<div id="totals">
+Dr: <span id="totalDr">0</span> | Cr: <span id="totalCr">0</span>
+</div>
 
 <textarea id="narration" placeholder="Narration"></textarea>
 
 <button onclick="saveJournal()">Save</button>
+<button onclick="cancelJournal()">Cancel</button>
 </div>
 
 <script>
@@ -131,7 +168,7 @@ firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
 
-let user,company,plData={},bsData={},ledgerMap={};
+let user,company,ledgerMap={},stockMap={},plData={},bsData={};
 
 /* AUTH */
 auth.onAuthStateChanged(u=>{
@@ -142,8 +179,6 @@ companyBox.style.display="flex";
 loadCompanies();
 }else{
 authBox.style.display="flex";
-companyBox.style.display="none";
-app.style.display="none";
 }
 });
 
@@ -154,29 +189,19 @@ auth.signInWithEmailAndPassword(email.value,password.value)
 
 /* COMPANY */
 function loadCompanies(){
-db.collection("companies").where("user","==",user).get()
-.then(s=>{
+db.collection("companies").where("user","==",user).get().then(s=>{
 companyList.innerHTML="";
 s.forEach(d=>{
 companyList.innerHTML+=`
-<div style="background:#1e293b;padding:10px;margin:5px">
-${d.data().name}
-<button onclick="openCompany('${d.data().name}')">Open</button>
-<button onclick="deleteCompany('${d.id}')">Delete</button>
-</div>`;
+<div>${d.data().name}
+<button onclick="openCompany('${d.data().name}')">Open</button></div>`;
 });
 });
 }
 
 function createCompany(){
-if(!newCompany.value)return;
 db.collection("companies").add({name:newCompany.value,user:user});
 newCompany.value="";
-loadCompanies();
-}
-
-function deleteCompany(id){
-db.collection("companies").doc(id).delete();
 loadCompanies();
 }
 
@@ -195,22 +220,44 @@ name:ledgerName.value,
 type:ledgerType.value,
 company
 });
-ledgerName.value="";
+}
+
+/* STOCK */
+function addItem(){
+db.collection("items").add({
+name:itemName.value,
+qty:parseFloat(itemQty.value)||0,
+company
+});
+itemName.value="";itemQty.value="";
+loadData();
 }
 
 /* JOURNAL */
-function openJournal(){
+async function openJournal(){
 journalPopup.style.display="block";
 rows.innerHTML="";
 addRow();
+
+/* load stock dropdown */
+let snap=await db.collection("items").where("company","==",company).get();
+let list=[];
+snap.forEach(d=>list.push(d.data().name));
+stockItem.innerHTML=list.map(i=>`<option>${i}</option>`).join("");
 }
 
+function cancelJournal(){
+journalPopup.style.display="none";
+rows.innerHTML="";
+narration.value="";
+stockQty.value="";
+}
+
+/* ROW */
 async function addRow(){
 let list=[];
 let snap=await db.collection("ledgers").where("company","==",company).get();
 snap.forEach(d=>list.push(d.data().name));
-
-if(list.length===0) list=["Cash","Bank","Sales"];
 
 let options=list.map(l=>`<option>${l}</option>`).join("");
 
@@ -218,8 +265,8 @@ let div=document.createElement("div");
 div.className="row";
 div.innerHTML=`
 <select>${options}</select>
-<input type="number" placeholder="Debit" oninput="calcTotal()">
-<input type="number" placeholder="Credit" oninput="calcTotal()">`;
+<input type="number" oninput="calcTotal()" placeholder="Debit">
+<input type="number" oninput="calcTotal()" placeholder="Credit">`;
 rows.appendChild(div);
 }
 
@@ -233,7 +280,9 @@ totalDr.innerText=dr;
 totalCr.innerText=cr;
 }
 
-function saveJournal(){
+/* SAVE JOURNAL */
+async function saveJournal(){
+
 let list=[],dr=0,cr=0;
 
 document.querySelectorAll(".row").forEach(r=>{
@@ -247,14 +296,40 @@ if(c){list.push({acc,type:"cr",amt:c});cr+=c;}
 
 if(dr!==cr){alert("Not balanced");return;}
 
-db.collection("entries").add({
-company,
-date:new Date().toLocaleDateString(),
-narration:narration.value,
-lines:list
+/* STOCK LOGIC */
+let item=stockItem.value;
+let qty=parseFloat(stockQty.value)||0;
+
+if(item && qty){
+
+let snap=await db.collection("items")
+.where("company","==",company)
+.where("name","==",item).get();
+
+snap.forEach(async d=>{
+let current=d.data().qty;
+
+/* detect purchase or sales */
+let isPurchase=list.some(l=>l.acc.toLowerCase().includes("purchase"));
+let isSales=list.some(l=>l.acc.toLowerCase().includes("sales"));
+
+if(isPurchase) current+=qty;
+if(isSales) current-=qty;
+
+await db.collection("items").doc(d.id).update({qty:current});
 });
 
-journalPopup.style.display="none";
+}
+
+/* SAVE ENTRY */
+await db.collection("entries").add({
+company,
+date:new Date().toLocaleDateString(),
+lines:list,
+narration:narration.value
+});
+
+cancelJournal();
 loadData();
 }
 
@@ -262,58 +337,52 @@ loadData();
 async function loadData(){
 
 ledgerMap={};
+stockMap={};
 
-let lSnap=await db.collection("ledgers").where("company","==",company).get();
-lSnap.forEach(d=>ledgerMap[d.data().name]=d.data().type);
+let led=await db.collection("ledgers").where("company","==",company).get();
+led.forEach(d=>ledgerMap[d.data().name]=d.data().type);
+
+let items=await db.collection("items").where("company","==",company).get();
+items.forEach(d=>stockMap[d.data().name]=d.data().qty);
 
 let snap=await db.collection("entries").where("company","==",company).get();
 
 ledger.innerHTML="";
-
-plData={};
-let totalIncome=0,totalExpense=0;
-
-let asset=0,liability=0;
+let income=0,expense=0,asset=0,liability=0;
 
 snap.forEach(d=>{
 d.data().lines.forEach(l=>{
-
-ledger.innerHTML+=`
-<tr>
+ledger.innerHTML+=`<tr>
 <td>${d.data().date}</td>
 <td>${l.acc}</td>
 <td>${l.type==="dr"?l.amt:""}</td>
 <td>${l.type==="cr"?l.amt:""}</td>
-<td>${d.data().narration||""}</td>
 </tr>`;
 
 let type=ledgerMap[l.acc];
 
-/* P&L breakdown */
-if(type==="Income" || type==="Expense"){
-if(!plData[l.acc]) plData[l.acc]=0;
-plData[l.acc]+=l.amt;
+if(type==="Income") income+=l.amt;
+if(type==="Expense") expense+=l.amt;
 
-if(type==="Income") totalIncome+=l.amt;
-if(type==="Expense") totalExpense+=l.amt;
-}
-
-/* BS */
 if(type==="Asset"){
 if(l.type==="dr") asset+=l.amt;
 else asset-=l.amt;
 }
+
 if(type==="Liability"){
 if(l.type==="cr") liability+=l.amt;
 else liability-=l.amt;
 }
-
 });
 });
 
-plData.totalIncome=totalIncome;
-plData.totalExpense=totalExpense;
+/* STOCK TABLE */
+stockTable.innerHTML="";
+for(let k in stockMap){
+stockTable.innerHTML+=`<tr><td>${k}</td><td>${stockMap[k]}</td></tr>`;
+}
 
+plData={income,expense};
 bsData={asset,liability};
 }
 
@@ -323,72 +392,33 @@ function showPage(p){
 dashboard.style.display="none";
 plPage.style.display="none";
 bsPage.style.display="none";
+stockPage.style.display="none";
 
 if(p==="dashboard") dashboard.style.display="block";
 
-/* ✅ DETAILED P&L */
 if(p==="pl"){
 plPage.style.display="block";
-
-let html=`<table>
-<tr><th>Ledger</th><th>Amount (₹)</th></tr>`;
-
-for(let k in plData){
-if(k==="totalIncome" || k==="totalExpense") continue;
-
-html+=`<tr>
-<td class="link" onclick="drill('${k}')">${k}</td>
-<td>${plData[k]}</td>
-</tr>`;
-}
-
-html+=`
-<tr><td><b>Total Income</b></td><td>${plData.totalIncome}</td></tr>
-<tr><td><b>Total Expense</b></td><td>${plData.totalExpense}</td></tr>
-<tr><td><b>Profit</b></td><td>${plData.totalIncome - plData.totalExpense}</td></tr>
+plPage.innerHTML=`
+<table>
+<tr><th>Type</th><th>Amount</th></tr>
+<tr><td>Income</td><td>${plData.income}</td></tr>
+<tr><td>Expense</td><td>${plData.expense}</td></tr>
+<tr><td>Profit</td><td>${plData.income-plData.expense}</td></tr>
 </table>`;
-
-plDetails.innerHTML=html;
 }
 
-/* ✅ BALANCE SHEET TABLE */
 if(p==="bs"){
 bsPage.style.display="block";
-
-bsDetails.innerHTML=`
+bsPage.innerHTML=`
 <table>
-<tr>
-<th>Assets</th><th>Amount</th>
-<th>Liabilities</th><th>Amount</th>
-</tr>
-<tr>
-<td>Total Assets</td><td>${bsData.asset}</td>
-<td>Total Liabilities</td><td>${bsData.liability}</td>
-</tr>
+<tr><th>Assets</th><th>Liabilities</th></tr>
+<tr><td>${bsData.asset}</td><td>${bsData.liability}</td></tr>
 </table>`;
 }
+
+if(p==="stock"){
+stockPage.style.display="block";
 }
-
-/* DRILL DOWN */
-async function drill(name){
-let html=`<h3>${name} Entries</h3><table>
-<tr><th>Date</th><th>Amount</th></tr>`;
-
-let snap=await db.collection("entries").where("company","==",company).get();
-
-snap.forEach(d=>{
-d.data().lines.forEach(l=>{
-if(l.acc===name){
-html+=`<tr>
-<td>${d.data().date}</td>
-<td>${l.amt}</td>
-</tr>`;
-}
-});
-});
-
-html+="</table>";
-plDetails.innerHTML=html;
 }
 </script>
 
