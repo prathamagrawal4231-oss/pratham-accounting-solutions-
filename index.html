@@ -4,16 +4,13 @@
 <title>Pratham Accounting Solution</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-:root{
---bg:#0a2540;--bg-dark:#06162b;--panel:#07213b;--panel-2:#0e3257;--accent:#ffd200;--accent-2:#ffea87;
---text:#f8fbff;--muted:#b5c9df;--table-bg:#f8fbff;--table-border:#c8d8ea;--danger:#ef4444;--ok:#16a34a;
-}
+:root{--bg:#0a2540;--bg-dark:#06162b;--panel:#07213b;--panel-2:#0e3257;--accent:#ffd200;--accent-2:#ffea87;--text:#f8fbff;--muted:#b5c9df;--table-bg:#f8fbff;--table-border:#c8d8ea;--danger:#ef4444;--ok:#16a34a}
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(180deg,var(--bg),#10365f 60%,var(--bg-dark));color:var(--text);overflow:hidden}
 .hidden{display:none!important}
 label{font-size:12px;color:var(--muted);display:block;margin-top:4px}
 .auth{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;padding:20px}
-.card{background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid rgba(255,210,0,.55);border-radius:8px;padding:20px;width:min(460px,95vw);box-shadow:0 18px 40px rgba(2,8,20,.5)}
+.card{background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid rgba(255,210,0,.55);border-radius:8px;padding:20px;width:min(520px,95vw);box-shadow:0 18px 40px rgba(2,8,20,.5)}
 .card h2,.card h3{margin:0 0 10px;color:var(--accent-2)}
 .input-row{display:flex;gap:8px;align-items:end}
 .topbar{position:sticky;top:0;z-index:5;border-bottom:2px solid rgba(255,210,0,.65);background:linear-gradient(180deg,#0f4a7d,#082c4a)}
@@ -80,34 +77,29 @@ hr{border:none;border-top:1px solid rgba(255,255,255,.18);margin:10px 0}
     <h2>Pratham Accounting Solution</h2>
     <label>Email</label><input id="email" placeholder="name@example.com">
     <label>Password</label>
-    <div class="input-row">
-      <input id="password" type="password" placeholder="Password">
-      <button type="button" id="togglePass" class="secondary">Show</button>
-    </div>
+    <div class="input-row"><input id="password" type="password" placeholder="Password"><button type="button" id="togglePass" class="secondary">Show</button></div>
     <button id="authBtn" onclick="login()">Login / Signup</button>
   </div>
 </div>
 
-<div id="companyBox" class="auth hidden">
+<div id="profileBox" class="auth hidden">
   <div class="card">
-    <h3>Select Company</h3>
-    <label>New Company Name</label>
-    <div class="input-row">
-      <input id="newCompany" placeholder="Company Name">
-      <button id="createCompanyBtn" onclick="createCompany()">Create</button>
-    </div>
-    <div id="companyList"></div>
+    <h3>Sole Proprietorship Setup</h3>
+    <label>Business Name</label><input id="businessName" placeholder="e.g. ABC Traders">
+    <label>Proprietor Name</label><input id="proprietorName" placeholder="Your full name">
+    <label>Financial Year Label</label><input id="fyLabel" placeholder="FY 2026-27" value="FY 2026-27">
+    <button id="saveProfileBtn" onclick="saveProfile()">Save & Continue</button>
   </div>
 </div>
 
 <div id="app" class="hidden">
   <div class="topbar">
     <div class="topbar-main">
-      <div class="brand">Accounting Software • Gateway</div>
-      <div id="companyName" class="company-pill">No company selected</div>
+      <div class="brand">Accounting Software • Sole Proprietorship Mode</div>
+      <div id="companyName" class="company-pill">Business</div>
     </div>
     <div class="topbar-sub">
-      <div id="contextLine">Period: FY 2026 • User: -</div>
+      <div id="contextLine">Period: FY 2026 • Proprietor: -</div>
       <div id="syncLine">Last Sync: -</div>
     </div>
   </div>
@@ -132,13 +124,7 @@ hr{border:none;border-top:1px solid rgba(255,255,255,.18);margin:10px 0}
     </div>
 
     <div class="main">
-      <div class="page-header">
-        <div>
-          <div id="breadcrumb" class="breadcrumb">Gateway > Dashboard</div>
-          <div id="pageTitle" class="page-title">Dashboard</div>
-        </div>
-      </div>
-
+      <div class="page-header"><div><div id="breadcrumb" class="breadcrumb">Gateway > Dashboard</div><div id="pageTitle" class="page-title">Dashboard</div></div></div>
       <div id="dashPage" class="panel"></div>
       <div id="ledgerPage" class="panel hidden"></div>
       <div id="plPage" class="panel hidden"></div>
@@ -147,63 +133,31 @@ hr{border:none;border-top:1px solid rgba(255,255,255,.18);margin:10px 0}
   </div>
 </div>
 
-<div id="overlay" class="overlay">
-  <div class="popup">
-    <h3>Journal Voucher Entry</h3>
-    <div id="journalError" class="error-box hidden"></div>
+<div id="overlay" class="overlay"><div class="popup"><h3>Journal Voucher Entry</h3><div id="journalError" class="error-box hidden"></div>
+  <div class="input-row"><div style="flex:1"><label>Quick Create Ledger Name</label><input id="quickAccName" placeholder="Create ledger on the fly"></div><div style="width:170px"><label>Type</label><select id="quickAccType"><option>Asset</option><option>Liability</option><option>Income</option><option>Expense</option></select></div><button onclick="quickAddAccount()">Add</button></div>
+  <div id="rows"></div><button class="secondary" onclick="addRow()">+ Add Line</button>
+  <div class="journal-totals"><div>Debit Total: <b id="drTotal">0.00</b></div><div>Credit Total: <b id="crTotal">0.00</b></div><div>Difference: <b id="diffTotal">0.00</b></div></div>
+  <label>Narration</label><textarea id="narration" placeholder="Narration (optional)"></textarea>
+  <div class="input-row"><button onclick="saveEntry()">Save (Ctrl+S)</button><button class="secondary" onclick="closePopup()">Cancel (Esc)</button></div>
+</div></div>
 
-    <div class="input-row">
-      <div style="flex:1">
-        <label>Quick Create Ledger Name</label>
-        <input id="quickAccName" placeholder="Create ledger on the fly">
-      </div>
-      <div style="width:170px">
-        <label>Type</label>
-        <select id="quickAccType"><option>Asset</option><option>Liability</option><option>Income</option><option>Expense</option></select>
-      </div>
-      <button onclick="quickAddAccount()">Add</button>
-    </div>
-
-    <div id="rows"></div>
-    <button class="secondary" onclick="addRow()">+ Add Line</button>
-
-    <div class="journal-totals">
-      <div>Debit Total: <b id="drTotal">0.00</b></div>
-      <div>Credit Total: <b id="crTotal">0.00</b></div>
-      <div>Difference: <b id="diffTotal">0.00</b></div>
-    </div>
-
-    <label>Narration</label><textarea id="narration" placeholder="Narration (optional)"></textarea>
-
-    <div class="input-row">
-      <button onclick="saveEntry()">Save (Ctrl+S)</button>
-      <button class="secondary" onclick="closePopup()">Cancel (Esc)</button>
-    </div>
-  </div>
-</div>
-
-<div id="commandPalette" class="command" onclick="if(event.target===this)closeCommandPalette()">
-  <div class="command-box">
-    <input id="commandInput" placeholder="Type command... e.g. ledger, dashboard, journal" oninput="renderCommands()">
-    <div id="commandList"></div>
-  </div>
-</div>
+<div id="commandPalette" class="command" onclick="if(event.target===this)closeCommandPalette()"><div class="command-box"><input id="commandInput" placeholder="Type command... e.g. ledger, dashboard, journal" oninput="renderCommands()"><div id="commandList"></div></div></div>
 
 <script>
 const firebaseConfig={apiKey:"AIzaSyB38hscdHXDbQ3Bw6ZGLIgk8ci323KFAg4",authDomain:"pratham-accounting-solution.firebaseapp.com",projectId:"pratham-accounting-solution"};
 firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
-
 const $=id=>document.getElementById(id);
-const authBox=$("authBox"), companyBox=$("companyBox"), app=$("app"), email=$("email"), password=$("password"), newCompany=$("newCompany"), companyList=$("companyList");
-const companyName=$("companyName"), contextLine=$("contextLine"), syncLine=$("syncLine"), accName=$("accName"), accType=$("accType");
-const overlay=$("overlay"), rows=$("rows"), narration=$("narration"), journalError=$("journalError");
+
+const authBox=$("authBox"), profileBox=$("profileBox"), app=$("app"), email=$("email"), password=$("password");
+const companyName=$("companyName"), contextLine=$("contextLine"), syncLine=$("syncLine");
+const accName=$("accName"), accType=$("accType"), overlay=$("overlay"), rows=$("rows"), narration=$("narration"), journalError=$("journalError");
 const dashPage=$("dashPage"), ledgerPage=$("ledgerPage"), plPage=$("plPage"), bsPage=$("bsPage");
 const pageTitle=$("pageTitle"), breadcrumb=$("breadcrumb");
 
-let userId="", activeCompanyId="", activeCompanyName="", accounts={}, entries=[];
-let currentPage="dash", currentLedgerPage=1, ledgerPageSize=25;
+let userId="", activeCompanyId="", profile={businessName:"",proprietorName:"",fyLabel:""}, accounts={}, entries=[];
+let currentLedgerPage=1, ledgerPageSize=25;
 
 function escapeHtml(str){return String(str??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");}
 function formatMoney(v){return Number(v||0).toFixed(2);}
@@ -211,293 +165,143 @@ function toast(msg){const d=document.createElement('div');d.className='toast';d.
 function setLoading(v){$("loading").style.display=v?"flex":"none";}
 function showError(msg){journalError.textContent=msg;journalError.classList.remove('hidden');}
 function clearError(){journalError.classList.add('hidden');journalError.textContent='';}
-
 $("togglePass").onclick=()=>{password.type=password.type==='password'?'text':'password';$("togglePass").textContent=password.type==='password'?'Show':'Hide';};
 
 async function withLoading(fn){try{setLoading(true);await fn();}finally{setLoading(false);}}
 
+function applyProfileUI(){
+  companyName.textContent=profile.businessName||'Business';
+  contextLine.textContent=`Period: ${profile.fyLabel||'FY'} • Proprietor: ${profile.proprietorName||'-'}`;
+}
+
 auth.onAuthStateChanged(async u=>{
   if(u){
-    userId=u.uid;
-    contextLine.textContent=`Period: FY ${new Date().getFullYear()} • User: ${u.email||'Logged-in User'}`;
-    authBox.classList.add('hidden'); app.classList.add('hidden'); companyBox.classList.remove('hidden');
-    await loadCompanies();
+    userId=u.uid; activeCompanyId=u.uid;
+    authBox.classList.add('hidden');
+    await loadOrSetupProfile();
   }else{
-    userId="";activeCompanyId="";activeCompanyName="";
-    authBox.classList.remove('hidden'); companyBox.classList.add('hidden'); app.classList.add('hidden');
+    userId=''; activeCompanyId='';
+    authBox.classList.remove('hidden'); profileBox.classList.add('hidden'); app.classList.add('hidden');
   }
 });
 
 async function login(){
   const em=email.value.trim(), pw=password.value;
-  if(!em||!pw){toast('Please enter email and password.');return;}
+  if(!em||!pw) return toast('Please enter email and password.');
   await withLoading(async()=>{
     $("authBtn").disabled=true;
     try{await auth.signInWithEmailAndPassword(em,pw);}catch{await auth.createUserWithEmailAndPassword(em,pw);}finally{$("authBtn").disabled=false;}
   });
 }
 
-async function loadCompanies(){
-  const snapshot=await db.collection("companies").where("user","==",userId).get();
-  companyList.innerHTML="";
-  if(!snapshot.size){companyList.innerHTML='<div class="empty">No companies yet. Create one to continue.</div>';return;}
-  snapshot.forEach(doc=>{
-    const d=doc.data();
-    const box=document.createElement('div'); box.className='card'; box.style.padding='10px'; box.style.marginTop='8px';
-    box.innerHTML=`<b>${escapeHtml(d.name)}</b><div class="input-row"><button>Open</button><button class="secondary">Delete</button></div>`;
-    box.querySelector('button').onclick=()=>openCompany(doc.id,d.name);
-    box.querySelectorAll('button')[1].onclick=()=>deleteCompany(doc.id);
-    companyList.appendChild(box);
+async function loadOrSetupProfile(){
+  const doc=await db.collection('profiles').doc(userId).get();
+  if(!doc.exists){
+    profileBox.classList.remove('hidden'); app.classList.add('hidden');
+    return;
+  }
+  profile={...profile,...doc.data()};
+  profileBox.classList.add('hidden'); app.classList.remove('hidden');
+  applyProfileUI();
+  await loadData();
+  showPage('dash', document.querySelector('.btn[data-page="dash"]'));
+}
+
+async function saveProfile(){
+  const businessName=$("businessName").value.trim();
+  const proprietorName=$("proprietorName").value.trim();
+  const fyLabel=$("fyLabel").value.trim()||`FY ${new Date().getFullYear()}`;
+  if(!businessName||!proprietorName) return toast('Please fill business and proprietor name.');
+  await withLoading(async()=>{
+    $("saveProfileBtn").disabled=true;
+    await db.collection('profiles').doc(userId).set({businessName,proprietorName,fyLabel,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    $("saveProfileBtn").disabled=false;
   });
+  profile={businessName,proprietorName,fyLabel};
+  profileBox.classList.add('hidden'); app.classList.remove('hidden');
+  applyProfileUI(); toast('Profile saved.'); await loadData();
 }
 
-async function createCompany(){
-  const name=newCompany.value.trim(); if(!name) return toast('Enter company name.');
-  await withLoading(async()=>{ $("createCompanyBtn").disabled=true; await db.collection("companies").add({name,user:userId}); $("createCompanyBtn").disabled=false; });
-  newCompany.value=""; toast('Company created.'); await loadCompanies();
-}
-
-async function deleteCompany(id){ if(!confirm('Delete this company?')) return; await db.collection("companies").doc(id).delete(); toast('Company deleted.'); await loadCompanies(); }
-
-async function openCompany(id,name){
-  activeCompanyId=id; activeCompanyName=name; companyName.textContent=name;
-  companyBox.classList.add('hidden'); app.classList.remove('hidden');
-  await loadData(); showPage('dash', document.querySelector('.btn[data-page="dash"]'));
+function showPage(p,el){
+  [dashPage,ledgerPage,plPage,bsPage].forEach(x=>x.classList.add('hidden'));
+  if(p==='dash') dashPage.classList.remove('hidden'); if(p==='ledger') ledgerPage.classList.remove('hidden'); if(p==='pl') plPage.classList.remove('hidden'); if(p==='bs') bsPage.classList.remove('hidden');
+  document.querySelectorAll('.btn[data-page]').forEach(b=>b.classList.remove('active')); if(el) el.classList.add('active'); else document.querySelector(`.btn[data-page="${p}"]`)?.classList.add('active');
+  const names={dash:'Dashboard',ledger:'Ledger',pl:'Profit & Loss A/c',bs:'Balance Sheet'}; pageTitle.textContent=names[p]; breadcrumb.textContent=`Gateway > ${names[p]}`;
 }
 
 async function addAccount(){
-  if(!activeCompanyId) return toast('Open a company first.');
   const name=accName.value.trim(); if(!name) return toast('Enter ledger name.');
-  await db.collection("accounts").add({name,type:accType.value,companyId:activeCompanyId,company:activeCompanyName});
+  await db.collection('accounts').add({name,type:accType.value,owner:userId,businessName:profile.businessName});
   accName.value=''; toast('Ledger added.'); await loadData();
 }
 
 async function quickAddAccount(){
   const name=$("quickAccName").value.trim(); if(!name) return;
-  await db.collection("accounts").add({name,type:$("quickAccType").value,companyId:activeCompanyId,company:activeCompanyName});
+  await db.collection('accounts').add({name,type:$("quickAccType").value,owner:userId,businessName:profile.businessName});
   $("quickAccName").value=''; toast('Ledger created.'); await refreshAccountOptions();
 }
 
-function showPage(p,el){
-  currentPage=p;
-  [dashPage,ledgerPage,plPage,bsPage].forEach(x=>x.classList.add('hidden'));
-  if(p==='dash') dashPage.classList.remove('hidden');
-  if(p==='ledger') ledgerPage.classList.remove('hidden');
-  if(p==='pl') plPage.classList.remove('hidden');
-  if(p==='bs') bsPage.classList.remove('hidden');
-  document.querySelectorAll('.btn[data-page]').forEach(b=>b.classList.remove('active'));
-  if(el) el.classList.add('active'); else document.querySelector(`.btn[data-page="${p}"]`)?.classList.add('active');
-  const names={dash:'Dashboard',ledger:'Ledger',pl:'Profit & Loss A/c',bs:'Balance Sheet'};
-  pageTitle.textContent=names[p]; breadcrumb.textContent=`Gateway > ${names[p]}`;
-}
-
 function renderDashboard(summary){
-  dashPage.innerHTML=`<div class="kpi-grid">
-    <div class="kpi"><div class="k">Income</div><div class="v">₹${formatMoney(summary.inc)}</div></div>
-    <div class="kpi"><div class="k">Expense</div><div class="v">₹${formatMoney(summary.exp)}</div></div>
-    <div class="kpi"><div class="k">Profit</div><div class="v ${summary.inc-summary.exp>=0?'success':''}">₹${formatMoney(summary.inc-summary.exp)}</div></div>
-    <div class="kpi"><div class="k">Assets</div><div class="v">₹${formatMoney(summary.asset)}</div></div>
-    <div class="kpi"><div class="k">Liabilities</div><div class="v">₹${formatMoney(summary.liab)}</div></div>
-    <div class="kpi"><div class="k">Entries</div><div class="v">${entries.length}</div></div>
-  </div>
-  <div class="empty">Use Ctrl+K for quick navigation, or open Journal to create vouchers quickly.</div>`;
+  dashPage.innerHTML=`<div class="kpi-grid"><div class="kpi"><div class="k">Income</div><div class="v">₹${formatMoney(summary.inc)}</div></div><div class="kpi"><div class="k">Expense</div><div class="v">₹${formatMoney(summary.exp)}</div></div><div class="kpi"><div class="k">Profit</div><div class="v ${summary.inc-summary.exp>=0?'success':''}">₹${formatMoney(summary.inc-summary.exp)}</div></div><div class="kpi"><div class="k">Assets</div><div class="v">₹${formatMoney(summary.asset)}</div></div><div class="kpi"><div class="k">Liabilities</div><div class="v">₹${formatMoney(summary.liab)}</div></div><div class="kpi"><div class="k">Entries</div><div class="v">${entries.length}</div></div></div><div class="empty">Sole Proprietorship mode active. Use Ctrl+K for quick actions.</div>`;
 }
 
-function getLedgerFilters(){
-  return {
-    search:$("searchInput")?.value.trim().toLowerCase()||"",
-    from:$("fromDate")?.value||"",
-    to:$("toDate")?.value||"",
-    sort:$("sortDir")?.value||"desc"
-  };
-}
-
-function flattenEntries(){
-  const rows=[];
-  entries.forEach(e=>(e.lines||[]).forEach(l=>rows.push({date:e.date||"", narration:e.narration||"", acc:l.acc||"", type:l.type, amt:Number(l.amt)||0})));
-  return rows;
-}
-
-function applyLedgerFilters(rows){
-  const f=getLedgerFilters();
-  let out=rows.filter(r=>{
-    if(f.search && !(`${r.acc} ${r.narration}`.toLowerCase().includes(f.search))) return false;
-    if(f.from && r.date<f.from) return false;
-    if(f.to && r.date>f.to) return false;
-    return true;
-  });
-  out.sort((a,b)=>f.sort==='asc'?a.date.localeCompare(b.date):b.date.localeCompare(a.date));
-  return out;
-}
+function getLedgerFilters(){return {search:$("searchInput")?.value.trim().toLowerCase()||"",from:$("fromDate")?.value||"",to:$("toDate")?.value||"",sort:$("sortDir")?.value||"desc"};}
+function flattenEntries(){const out=[];entries.forEach(e=>(e.lines||[]).forEach(l=>out.push({date:e.date||"",narration:e.narration||"",acc:l.acc||"",type:l.type,amt:Number(l.amt)||0})));return out;}
+function applyLedgerFilters(rows){const f=getLedgerFilters();let out=rows.filter(r=>{if(f.search && !(`${r.acc} ${r.narration}`.toLowerCase().includes(f.search))) return false; if(f.from&&r.date<f.from) return false; if(f.to&&r.date>f.to) return false; return true;}); out.sort((a,b)=>f.sort==='asc'?a.date.localeCompare(b.date):b.date.localeCompare(a.date)); return out;}
 
 function renderLedger(){
-  const all=applyLedgerFilters(flattenEntries());
-  const totalPages=Math.max(1,Math.ceil(all.length/ledgerPageSize));
-  currentLedgerPage=Math.min(currentLedgerPage,totalPages);
-  const start=(currentLedgerPage-1)*ledgerPageSize;
-  const pageRows=all.slice(start,start+ledgerPageSize);
-
-  const controls=`<div class="toolbar">
-    <div class="field"><label>Search Account/Narration</label><input id="searchInput" placeholder="Search..." value="${escapeHtml($("searchInput")?.value||"")}"></div>
-    <div class="field"><label>From</label><input id="fromDate" type="date" value="${escapeHtml($("fromDate")?.value||"")}"></div>
-    <div class="field"><label>To</label><input id="toDate" type="date" value="${escapeHtml($("toDate")?.value||"")}"></div>
-    <div class="field"><label>Sort</label><select id="sortDir"><option value="desc">Newest First</option><option value="asc">Oldest First</option></select></div>
-    <div class="field"><label>Page Size</label><select id="pageSize"><option>10</option><option selected>25</option><option>50</option><option>100</option></select></div>
-    <button id="applyFilter">Apply</button>
-    <button id="resetFilter" class="secondary">Reset</button>
-    <button id="exportCsv" class="secondary">Export CSV</button>
-  </div>`;
-
-  let html=controls;
-  if(!all.length){ html+=`<div class="empty">No entries match current filters.</div>`; ledgerPage.innerHTML=html; wireLedgerControls(); return; }
+  const all=applyLedgerFilters(flattenEntries()); const totalPages=Math.max(1,Math.ceil(all.length/ledgerPageSize)); currentLedgerPage=Math.min(currentLedgerPage,totalPages);
+  const pageRows=all.slice((currentLedgerPage-1)*ledgerPageSize,(currentLedgerPage-1)*ledgerPageSize+ledgerPageSize);
+  let html=`<div class="toolbar"><div class="field"><label>Search</label><input id="searchInput" value="${escapeHtml($("searchInput")?.value||"")}"></div><div class="field"><label>From</label><input id="fromDate" type="date" value="${escapeHtml($("fromDate")?.value||"")}"></div><div class="field"><label>To</label><input id="toDate" type="date" value="${escapeHtml($("toDate")?.value||"")}"></div><div class="field"><label>Sort</label><select id="sortDir"><option value="desc">Newest First</option><option value="asc">Oldest First</option></select></div><div class="field"><label>Page Size</label><select id="pageSize"><option>10</option><option selected>25</option><option>50</option><option>100</option></select></div><button id="applyFilter">Apply</button><button id="resetFilter" class="secondary">Reset</button><button id="exportCsv" class="secondary">Export CSV</button></div>`;
+  if(!all.length){ledgerPage.innerHTML=html+`<div class="empty">No entries match current filters.</div>`;wireLedgerControls();return;}
   html+=`<div class="table-wrap"><table><tr><th>Date</th><th>Narration</th><th>Account</th><th>Dr</th><th>Cr</th></tr>`;
   pageRows.forEach(r=>html+=`<tr><td>${escapeHtml(r.date)}</td><td>${escapeHtml(r.narration)}</td><td>${escapeHtml(r.acc)}</td><td>${r.type==='dr'?formatMoney(r.amt):''}</td><td>${r.type==='cr'?formatMoney(r.amt):''}</td></tr>`);
-  html+=`</table></div><div class="pagination"><button class="secondary" id="prevPage">Prev</button><span>Page ${currentLedgerPage} / ${totalPages} • Rows ${all.length}</span><button class="secondary" id="nextPage">Next</button></div>`;
-  ledgerPage.innerHTML=html;
-  wireLedgerControls();
+  html+=`</table></div><div class="pagination"><button class="secondary" id="prevPage">Prev</button><span>Page ${currentLedgerPage}/${totalPages} • Rows ${all.length}</span><button class="secondary" id="nextPage">Next</button></div>`;
+  ledgerPage.innerHTML=html; wireLedgerControls();
 }
 
 function wireLedgerControls(){
-  $("sortDir") && ($("sortDir").value=getLedgerFilters().sort);
-  $("pageSize") && ($("pageSize").value=String(ledgerPageSize));
+  if($("sortDir")) $("sortDir").value=getLedgerFilters().sort; if($("pageSize")) $("pageSize").value=String(ledgerPageSize);
   $("applyFilter")?.addEventListener('click',()=>{currentLedgerPage=1;ledgerPageSize=Number($("pageSize").value||25);renderLedger();});
-  $("resetFilter")?.addEventListener('click',()=>{currentLedgerPage=1;ledgerPageSize=25;renderLedgerReset();});
+  $("resetFilter")?.addEventListener('click',()=>{currentLedgerPage=1;ledgerPageSize=25;["searchInput","fromDate","toDate"].forEach(id=>$(id)&&( $(id).value=''));renderLedger();});
   $("prevPage")?.addEventListener('click',()=>{if(currentLedgerPage>1){currentLedgerPage--;renderLedger();}});
   $("nextPage")?.addEventListener('click',()=>{currentLedgerPage++;renderLedger();});
   $("exportCsv")?.addEventListener('click',exportLedgerCsv);
 }
 
-function renderLedgerReset(){
-  ["searchInput","fromDate","toDate"].forEach(id=>{if($(id)) $(id).value='';});
-  if($("sortDir")) $("sortDir").value='desc';
-  renderLedger();
-}
-
-function exportLedgerCsv(){
-  const rows=applyLedgerFilters(flattenEntries());
-  const csv=["Date,Narration,Account,Dr,Cr",...rows.map(r=>`${r.date},"${String(r.narration).replaceAll('"','""')}","${String(r.acc).replaceAll('"','""')}",${r.type==='dr'?r.amt:''},${r.type==='cr'?r.amt:''}`)].join("\n");
-  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download='ledger.csv'; a.click();
-}
-
-function renderPL(summary){
-  plPage.innerHTML=`<table><tr><th>Particular</th><th>Amount</th></tr><tr><td>Income</td><td>${formatMoney(summary.inc)}</td></tr><tr><td>Expense</td><td>${formatMoney(summary.exp)}</td></tr><tr><td>Profit</td><td>${formatMoney(summary.inc-summary.exp)}</td></tr></table>`;
-}
-function renderBS(summary){
-  bsPage.innerHTML=`<table><tr><th>Assets</th><th>Liabilities</th></tr><tr><td>${formatMoney(summary.asset)}</td><td>${formatMoney(summary.liab)}</td></tr></table>`;
-}
+function exportLedgerCsv(){const rows=applyLedgerFilters(flattenEntries());const csv=["Date,Narration,Account,Dr,Cr",...rows.map(r=>`${r.date},"${String(r.narration).replaceAll('"','""')}","${String(r.acc).replaceAll('"','""')}",${r.type==='dr'?r.amt:''},${r.type==='cr'?r.amt:''}`)].join("\n");const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='ledger.csv';a.click();}
+function renderPL(s){plPage.innerHTML=`<table><tr><th>Particular</th><th>Amount</th></tr><tr><td>Income</td><td>${formatMoney(s.inc)}</td></tr><tr><td>Expense</td><td>${formatMoney(s.exp)}</td></tr><tr><td>Profit</td><td>${formatMoney(s.inc-s.exp)}</td></tr></table>`;}
+function renderBS(s){bsPage.innerHTML=`<table><tr><th>Assets</th><th>Liabilities</th></tr><tr><td>${formatMoney(s.asset)}</td><td>${formatMoney(s.liab)}</td></tr></table>`;}
 
 async function loadData(){
   await withLoading(async()=>{
     accounts={};
-    const [a1,a2]=await Promise.all([db.collection("accounts").where("companyId","==",activeCompanyId).get(),db.collection("accounts").where("company","==",activeCompanyName).get()]);
-    [...a1.docs,...a2.docs].forEach(d=>accounts[d.data().name]=d.data().type);
-
-    const [e1,e2]=await Promise.all([db.collection("entries").where("companyId","==",activeCompanyId).get(),db.collection("entries").where("company","==",activeCompanyName).get()]);
-    const m=new Map(); [...e1.docs,...e2.docs].forEach(d=>m.set(d.id,d.data()));
-    entries=[...m.values()].sort((a,b)=>{
-      const at=a.createdAt?.toMillis?.()||Date.parse(a.date||"")||0;
-      const bt=b.createdAt?.toMillis?.()||Date.parse(b.date||"")||0;
-      return bt-at;
-    });
-
-    let summary={inc:0,exp:0,asset:0,liab:0};
-    entries.forEach(e=>(e.lines||[]).forEach(l=>{
-      const amt=Number(l.amt)||0; const t=accounts[l.acc];
-      if(t==='Income') summary.inc+=l.type==='cr'?amt:-amt;
-      if(t==='Expense') summary.exp+=l.type==='dr'?amt:-amt;
-      if(t==='Asset') summary.asset+=l.type==='dr'?amt:-amt;
-      if(t==='Liability') summary.liab+=l.type==='cr'?amt:-amt;
-    }));
-
-    renderDashboard(summary); renderLedger(); renderPL(summary); renderBS(summary);
-    syncLine.textContent=`Last Sync: ${new Date().toLocaleString()}`;
+    const a=await db.collection('accounts').where('owner','==',userId).get(); a.forEach(d=>accounts[d.data().name]=d.data().type);
+    const e=await db.collection('entries').where('owner','==',userId).get();
+    entries=e.docs.map(d=>d.data()).sort((a,b)=>{const at=a.createdAt?.toMillis?.()||Date.parse(a.date||"")||0;const bt=b.createdAt?.toMillis?.()||Date.parse(b.date||"")||0;return bt-at;});
+    let s={inc:0,exp:0,asset:0,liab:0};
+    entries.forEach(en=>(en.lines||[]).forEach(l=>{const amt=Number(l.amt)||0;const t=accounts[l.acc];if(t==='Income') s.inc+=l.type==='cr'?amt:-amt; if(t==='Expense') s.exp+=l.type==='dr'?amt:-amt; if(t==='Asset') s.asset+=l.type==='dr'?amt:-amt; if(t==='Liability') s.liab+=l.type==='cr'?amt:-amt;}));
+    renderDashboard(s); renderLedger(); renderPL(s); renderBS(s); syncLine.textContent=`Last Sync: ${new Date().toLocaleString()}`;
   });
 }
 
-async function refreshAccountOptions(){
-  const [a1,a2]=await Promise.all([db.collection("accounts").where("companyId","==",activeCompanyId).get(),db.collection("accounts").where("company","==",activeCompanyName).get()]);
-  const list=[...new Set([...a1.docs,...a2.docs].map(d=>d.data().name))];
-  document.querySelectorAll('.row select').forEach(sel=>{
-    const val=sel.value;
-    sel.innerHTML=list.map(n=>`<option>${escapeHtml(n)}</option>`).join('');
-    if(list.includes(val)) sel.value=val;
-  });
-  return list;
-}
+async function refreshAccountOptions(){const snap=await db.collection('accounts').where('owner','==',userId).get();const list=[...new Set(snap.docs.map(d=>d.data().name))];document.querySelectorAll('.row select').forEach(sel=>{const val=sel.value;sel.innerHTML=list.map(n=>`<option>${escapeHtml(n)}</option>`).join('');if(list.includes(val)) sel.value=val;});return list;}
 
-async function addRow(){
-  const list=await refreshAccountOptions();
-  if(!list.length) return showError('Create at least one ledger before adding vouchers.');
-  clearError();
-  const div=document.createElement('div'); div.className='row';
-  div.innerHTML=`<select>${list.map(n=>`<option>${escapeHtml(n)}</option>`).join('')}</select><input type="number" min="0" step="0.01" placeholder="Debit"><input type="number" min="0" step="0.01" placeholder="Credit"><button class="secondary" title="Remove line">✕</button><div class="row-msg"></div>`;
-  div.querySelector('button').onclick=()=>{div.remove();recalcTotals();};
-  div.querySelectorAll('input').forEach(i=>i.addEventListener('input',()=>{validateRow(div);recalcTotals();}));
-  div.querySelectorAll('input')[1].addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addRow();}});
-  rows.appendChild(div);
-  recalcTotals();
-}
+async function addRow(){const list=await refreshAccountOptions();if(!list.length) return showError('Create at least one ledger before adding vouchers.');clearError();const div=document.createElement('div');div.className='row';div.innerHTML=`<select>${list.map(n=>`<option>${escapeHtml(n)}</option>`).join('')}</select><input type="number" min="0" step="0.01" placeholder="Debit"><input type="number" min="0" step="0.01" placeholder="Credit"><button class="secondary">✕</button><div class="row-msg"></div>`;div.querySelector('button').onclick=()=>{div.remove();recalcTotals();};div.querySelectorAll('input').forEach(i=>i.addEventListener('input',()=>{validateRow(div);recalcTotals();}));div.querySelectorAll('input')[1].addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addRow();}});rows.appendChild(div);recalcTotals();}
+function validateRow(r){const d=Number(r.children[1].value)||0,c=Number(r.children[2].value)||0;const m=r.querySelector('.row-msg');m.textContent=(d>0&&c>0)?'Line cannot have both debit and credit.':'';return !m.textContent;}
+function recalcTotals(){let dr=0,cr=0;document.querySelectorAll('#rows .row').forEach(r=>{dr+=Number(r.children[1].value)||0;cr+=Number(r.children[2].value)||0;});$("drTotal").textContent=formatMoney(dr);$("crTotal").textContent=formatMoney(cr);$("diffTotal").textContent=formatMoney(Math.abs(dr-cr));}
 
-function validateRow(row){
-  const d=Number(row.children[1].value)||0, c=Number(row.children[2].value)||0;
-  const msg=row.querySelector('.row-msg');
-  msg.textContent=(d>0&&c>0)?'Line cannot have both debit and credit.':'';
-  return !msg.textContent;
-}
-
-function recalcTotals(){
-  let dr=0,cr=0;
-  document.querySelectorAll('#rows .row').forEach(r=>{dr+=Number(r.children[1].value)||0;cr+=Number(r.children[2].value)||0;});
-  $("drTotal").textContent=formatMoney(dr); $("crTotal").textContent=formatMoney(cr); $("diffTotal").textContent=formatMoney(Math.abs(dr-cr));
-}
-
-function openJournal(){
-  if(!activeCompanyId) return toast('Open a company first.');
-  overlay.classList.remove('hide'); overlay.classList.add('show');
-  rows.innerHTML=''; narration.value=''; clearError(); addRow();
-}
+function openJournal(){overlay.classList.remove('hide');overlay.classList.add('show');rows.innerHTML='';narration.value='';clearError();addRow();}
 function closePopup(){overlay.classList.remove('show');overlay.classList.add('hide');setTimeout(()=>overlay.classList.remove('hide'),220);}
 
-async function saveEntry(){
-  clearError();
-  const lines=[]; let dr=0,cr=0; let invalid=false;
-  document.querySelectorAll('#rows .row').forEach(r=>{
-    if(!validateRow(r)) invalid=true;
-    const acc=r.children[0].value, d=Number(r.children[1].value)||0, c=Number(r.children[2].value)||0;
-    if(d>0){lines.push({acc,type:'dr',amt:d});dr+=d;}
-    if(c>0){lines.push({acc,type:'cr',amt:c});cr+=c;}
-  });
-  if(invalid) return showError('Please fix highlighted row errors.');
-  if(!lines.length) return showError('Add at least one amount.');
-  if(Math.abs(dr-cr)>0.001) return showError('Voucher is not balanced. Debit and Credit totals must match.');
+async function saveEntry(){clearError();const lines=[];let dr=0,cr=0,invalid=false;document.querySelectorAll('#rows .row').forEach(r=>{if(!validateRow(r)) invalid=true;const acc=r.children[0].value,d=Number(r.children[1].value)||0,c=Number(r.children[2].value)||0;if(d>0){lines.push({acc,type:'dr',amt:d});dr+=d;}if(c>0){lines.push({acc,type:'cr',amt:c});cr+=c;}});if(invalid) return showError('Please fix highlighted row errors.');if(!lines.length) return showError('Add at least one amount.');if(Math.abs(dr-cr)>0.001) return showError('Voucher is not balanced.');await db.collection('entries').add({owner:userId,businessName:profile.businessName,date:new Date().toISOString().slice(0,10),createdAt:firebase.firestore.FieldValue.serverTimestamp(),lines,narration:narration.value.trim()});toast('Voucher saved.');closePopup();await loadData();}
 
-  await db.collection('entries').add({companyId:activeCompanyId,company:activeCompanyName,date:new Date().toISOString().slice(0,10),createdAt:firebase.firestore.FieldValue.serverTimestamp(),lines,narration:narration.value.trim()});
-  toast('Voucher saved.'); closePopup(); await loadData();
-}
+const commandActions=[{name:'Go Dashboard',run:()=>showPage('dash')},{name:'Go Ledger',run:()=>showPage('ledger')},{name:'Go Profit & Loss',run:()=>showPage('pl')},{name:'Go Balance Sheet',run:()=>showPage('bs')},{name:'Open Journal Voucher',run:()=>openJournal()}];
+function openCommandPalette(){$("commandPalette").style.display='flex';$("commandInput").value='';renderCommands();$("commandInput").focus();}
+function closeCommandPalette(){$("commandPalette").style.display='none';}
+function renderCommands(){const q=$("commandInput").value.toLowerCase();const list=commandActions.filter(c=>c.name.toLowerCase().includes(q));$("commandList").innerHTML=list.map((c,i)=>`<div class='command-item' data-i='${i}'>${escapeHtml(c.name)}</div>`).join('')||'<div class="empty">No command found.</div>';$("commandList").querySelectorAll('.command-item').forEach(el=>el.onclick=()=>{const cmd=list[Number(el.dataset.i)];closeCommandPalette();cmd.run();});}
 
-const commandActions=[
-  {name:'Go Dashboard',run:()=>showPage('dash')},
-  {name:'Go Ledger',run:()=>showPage('ledger')},
-  {name:'Go Profit & Loss',run:()=>showPage('pl')},
-  {name:'Go Balance Sheet',run:()=>showPage('bs')},
-  {name:'Open Journal Voucher',run:()=>openJournal()}
-];
-function openCommandPalette(){ $("commandPalette").style.display='flex'; $("commandInput").value=''; renderCommands(); $("commandInput").focus(); }
-function closeCommandPalette(){ $("commandPalette").style.display='none'; }
-function renderCommands(){
-  const q=$("commandInput").value.toLowerCase();
-  const list=commandActions.filter(c=>c.name.toLowerCase().includes(q));
-  $("commandList").innerHTML=list.map((c,i)=>`<div class='command-item' data-i='${i}'>${escapeHtml(c.name)}</div>`).join('')||'<div class="empty">No command found.</div>';
-  $("commandList").querySelectorAll('.command-item').forEach(el=>el.onclick=()=>{const cmd=list[Number(el.dataset.i)];closeCommandPalette();cmd.run();});
-}
-
-document.addEventListener('keydown',e=>{
-  if(e.ctrlKey&&e.key.toLowerCase()==='k'){e.preventDefault();openCommandPalette();}
-  if(overlay.classList.contains('show')){
-    if(e.key==='Escape'){e.preventDefault();closePopup();}
-    if(e.ctrlKey&&e.key.toLowerCase()==='s'){e.preventDefault();saveEntry();}
-  }
-});
+document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key.toLowerCase()==='k'){e.preventDefault();openCommandPalette();}if(overlay.classList.contains('show')){if(e.key==='Escape'){e.preventDefault();closePopup();}if(e.ctrlKey&&e.key.toLowerCase()==='s'){e.preventDefault();saveEntry();}}});
 </script>
 </body>
 </html>
