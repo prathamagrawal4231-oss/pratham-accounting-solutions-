@@ -256,79 +256,165 @@ firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
 
-let user,company,accounts={};
+const authBox=document.getElementById("authBox");
+const companyBox=document.getElementById("companyBox");
+const app=document.getElementById("app");
+const email=document.getElementById("email");
+const password=document.getElementById("password");
+const newCompany=document.getElementById("newCompany");
+const companyList=document.getElementById("companyList");
+const companyName=document.getElementById("companyName");
+const accName=document.getElementById("accName");
+const accType=document.getElementById("accType");
+const overlay=document.getElementById("overlay");
+const rows=document.getElementById("rows");
+const narration=document.getElementById("narration");
+const ledgerPage=document.getElementById("ledgerPage");
+const plPage=document.getElementById("plPage");
+const bsPage=document.getElementById("bsPage");
+
+let userId="";
+let activeCompanyId="";
+let activeCompanyName="";
+let accounts={};
+
+function escapeHtml(str){
+return String(str)
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;")
+.replaceAll("'","&#39;");
+}
 
 /* AUTH */
-auth.onAuthStateChanged(u=>{
+auth.onAuthStateChanged(async u=>{
 if(u){
-user=u.uid;
+userId=u.uid;
 authBox.style.display="none";
+app.style.display="none";
 companyBox.style.display="flex";
-loadCompanies();
+await loadCompanies();
 }else{
+userId="";
+activeCompanyId="";
+activeCompanyName="";
 authBox.style.display="flex";
+companyBox.style.display="none";
+app.style.display="none";
 }
 });
 
-function login(){
-auth.signInWithEmailAndPassword(email.value,password.value)
-.catch(()=>auth.createUserWithEmailAndPassword(email.value,password.value));
+async function login(){
+const userEmail=email.value.trim();
+const userPassword=password.value;
+if(!userEmail||!userPassword){
+alert("Please enter both email and password.");
+return;
+}
+
+try{
+await auth.signInWithEmailAndPassword(userEmail,userPassword);
+}catch(_err){
+try{
+await auth.createUserWithEmailAndPassword(userEmail,userPassword);
+}catch(err){
+alert(err.message||"Authentication failed.");
+}
+}
 }
 
 /* COMPANY */
-function loadCompanies(){
-db.collection("companies").where("user","==",user).get().then(s=>{
+async function loadCompanies(){
+const snapshot=await db.collection("companies").where("user","==",userId).get();
 companyList.innerHTML="";
-s.forEach(d=>{
-companyList.innerHTML+=`
-<div style="background:#111827;margin:5px;padding:5px;border:1px solid #facc15">
-${d.data().name}
-<button onclick="openCompany('${d.data().name}')">Open</button>
-<button onclick="deleteCompany('${d.id}')">Delete</button>
-</div>`;
-});
+
+snapshot.forEach(doc=>{
+const data=doc.data();
+const wrapper=document.createElement("div");
+wrapper.style.cssText="background:#111827;margin:5px;padding:5px;border:1px solid #facc15";
+
+const nameText=document.createElement("span");
+nameText.textContent=data.name;
+
+const openBtn=document.createElement("button");
+openBtn.textContent="Open";
+openBtn.onclick=()=>openCompany(doc.id,data.name);
+
+const deleteBtn=document.createElement("button");
+deleteBtn.textContent="Delete";
+deleteBtn.onclick=()=>deleteCompany(doc.id);
+
+wrapper.appendChild(nameText);
+wrapper.appendChild(document.createElement("br"));
+wrapper.appendChild(openBtn);
+wrapper.appendChild(deleteBtn);
+companyList.appendChild(wrapper);
 });
 }
 
-function createCompany(){
-if(!newCompany.value)return;
-db.collection("companies").add({name:newCompany.value,user});
+async function createCompany(){
+const name=newCompany.value.trim();
+if(!name) return;
+
+await db.collection("companies").add({name,user:userId});
 newCompany.value="";
-loadCompanies();
+await loadCompanies();
 }
 
-function deleteCompany(id){
-if(confirm("Delete this company?")){
-db.collection("companies").doc(id).delete();
-loadCompanies();
-}
+async function deleteCompany(id){
+if(!confirm("Delete this company?")) return;
+
+await db.collection("companies").doc(id).delete();
+await loadCompanies();
 }
 
-function openCompany(name){
-company=name;
+async function openCompany(id,name){
+activeCompanyId=id;
+activeCompanyName=name;
 companyBox.style.display="none";
 app.style.display="block";
 companyName.innerText=name;
-loadData();
+await loadData();
+showPage("ledger");
 }
 
 /* ACCOUNT */
-function addAccount(){
-db.collection("accounts").add({
-name:accName.value,
+async function addAccount(){
+if(!activeCompanyId){
+alert("Open a company first.");
+return;
+}
+
+const name=accName.value.trim();
+if(!name){
+alert("Enter ledger name.");
+return;
+}
+
+await db.collection("accounts").add({
+name,
 type:accType.value,
-company
+companyId:activeCompanyId,
+company:activeCompanyName
 });
 accName.value="";
+await loadData();
 }
 
 /* 🔥 OPEN POPUP WITH ANIMATION */
-function openJournal(){
+async function openJournal(){
+if(!activeCompanyId){
+alert("Open a company first.");
+return;
+}
+
+overlay.style.display="";
 overlay.classList.remove("hide");
 overlay.classList.add("show");
-
 rows.innerHTML="";
-addRow();
+narration.value="";
+await addRow();
 }
 
 /* 🔥 CLOSE WITH ANIMATION */
@@ -338,95 +424,155 @@ overlay.classList.add("hide");
 
 setTimeout(()=>{
 overlay.classList.remove("hide");
-overlay.style.display="none";
+rows.innerHTML="";
 },300);
 }
 
 /* ROW */
 async function addRow(){
-let list=[];
-let snap=await db.collection("accounts").where("company","==",company).get();
-snap.forEach(d=>list.push(d.data().name));
+const list=[];
+const [accountsById,accountsByName]=await Promise.all([
+db.collection("accounts").where("companyId","==",activeCompanyId).get(),
+db.collection("accounts").where("company","==",activeCompanyName).get()
+]);
 
-let opt=list.map(l=>`<option>${l}</option>`).join("");
+[...accountsById.docs,...accountsByName.docs].forEach(d=>list.push(d.data().name));
 
-let div=document.createElement("div");
+if(!list.length){
+alert("Create at least one ledger before adding entries.");
+return;
+}
+
+const uniqueList=[...new Set(list)];
+const opt=uniqueList.map(l=>`<option>${escapeHtml(l)}</option>`).join("");
+
+const div=document.createElement("div");
 div.className="row";
 div.innerHTML=`
 <select>${opt}</select>
-<input type="number" placeholder="Debit">
-<input type="number" placeholder="Credit">`;
+<input type="number" min="0" step="0.01" placeholder="Debit">
+<input type="number" min="0" step="0.01" placeholder="Credit">`;
 
 rows.appendChild(div);
 }
 
 /* SAVE */
 async function saveEntry(){
-let list=[],dr=0,cr=0;
+const list=[];
+let dr=0;
+let cr=0;
+let invalidRow=false;
 
-document.querySelectorAll(".row").forEach(r=>{
-let acc=r.children[0].value;
-let d=+r.children[1].value||0;
-let c=+r.children[2].value||0;
+document.querySelectorAll("#rows .row").forEach(r=>{
+const acc=r.children[0].value;
+const d=Number(r.children[1].value)||0;
+const c=Number(r.children[2].value)||0;
 
-if(d){list.push({acc,type:"dr",amt:d});dr+=d;}
-if(c){list.push({acc,type:"cr",amt:c});cr+=c;}
+if(d>0&&c>0){
+invalidRow=true;
+return;
+}
+if(d>0){
+list.push({acc,type:"dr",amt:d});
+dr+=d;
+}
+if(c>0){
+list.push({acc,type:"cr",amt:c});
+cr+=c;
+}
 });
 
-if(dr!==cr){alert("Not balanced");return;}
+if(invalidRow){
+alert("A row cannot have both debit and credit.");
+return;
+}
+if(!list.length){
+alert("Add at least one amount.");
+return;
+}
+if(Math.abs(dr-cr)>0.001){
+alert("Not balanced");
+return;
+}
 
 await db.collection("entries").add({
-company,
-date:new Date().toLocaleDateString(),
+companyId:activeCompanyId,
+company:activeCompanyName,
+date:new Date().toISOString().slice(0,10),
+createdAt:firebase.firestore.FieldValue.serverTimestamp(),
 lines:list,
-narration:narration.value
+narration:narration.value.trim()
 });
 
 closePopup();
-loadData();
+narration.value="";
+await loadData();
 }
 
 /* LOAD */
 async function loadData(){
-
 accounts={};
 
-let a=await db.collection("accounts").where("company","==",company).get();
-a.forEach(d=>accounts[d.data().name]=d.data().type);
+const [accountsById,accountsByName]=await Promise.all([
+db.collection("accounts").where("companyId","==",activeCompanyId).get(),
+db.collection("accounts").where("company","==",activeCompanyName).get()
+]);
 
-let e=await db.collection("entries").where("company","==",company).get();
+[...accountsById.docs,...accountsByName.docs].forEach(d=>{
+const data=d.data();
+accounts[data.name]=data.type;
+});
 
-let inc=0,exp=0,asset=0,liab=0;
+const [entriesById,entriesByName]=await Promise.all([
+db.collection("entries").where("companyId","==",activeCompanyId).get(),
+db.collection("entries").where("company","==",activeCompanyName).get()
+]);
+
+const entriesMap=new Map();
+[...entriesById.docs,...entriesByName.docs].forEach(doc=>entriesMap.set(doc.id,doc.data()));
+const entries=[...entriesMap.values()].sort((a,b)=>{
+const aTime=a.createdAt?.toMillis?.()||Date.parse(a.date||"")||0;
+const bTime=b.createdAt?.toMillis?.()||Date.parse(b.date||"")||0;
+return aTime-bTime;
+});
+
+let inc=0;
+let exp=0;
+let asset=0;
+let liab=0;
 
 let html=`<table>
 <tr><th>Date</th><th>Account</th><th>Dr</th><th>Cr</th></tr>`;
 
-e.forEach(d=>{
-d.data().lines.forEach(l=>{
-
+entries.forEach(entry=>{
+(entry.lines||[]).forEach(l=>{
+const amt=Number(l.amt)||0;
 html+=`
 <tr>
-<td>${d.data().date}</td>
-<td>${l.acc}</td>
-<td>${l.type==="dr"?l.amt:""}</td>
-<td>${l.type==="cr"?l.amt:""}</td>
+<td>${escapeHtml(entry.date||"")}</td>
+<td>${escapeHtml(l.acc||"")}</td>
+<td>${l.type==="dr"?amt.toFixed(2):""}</td>
+<td>${l.type==="cr"?amt.toFixed(2):""}</td>
 </tr>`;
 
-let type=accounts[l.acc];
+const type=accounts[l.acc];
 
-if(type==="Income") inc+=l.amt;
-if(type==="Expense") exp+=l.amt;
-
+if(type==="Income"){
+if(l.type==="cr") inc+=amt;
+else inc-=amt;
+}
+if(type==="Expense"){
+if(l.type==="dr") exp+=amt;
+else exp-=amt;
+}
 if(type==="Asset"){
-if(l.type==="dr") asset+=l.amt;
-else asset-=l.amt;
+if(l.type==="dr") asset+=amt;
+else asset-=amt;
 }
-
 if(type==="Liability"){
-if(l.type==="cr") liab+=l.amt;
-else liab-=l.amt;
+if(l.type==="cr") liab+=amt;
+else liab-=amt;
 }
-
 });
 });
 
@@ -436,15 +582,15 @@ ledgerPage.innerHTML=html;
 plPage.innerHTML=`
 <table>
 <tr><th>Particular</th><th>Amount</th></tr>
-<tr><td>Income</td><td>${inc}</td></tr>
-<tr><td>Expense</td><td>${exp}</td></tr>
-<tr><td>Profit</td><td>${inc-exp}</td></tr>
+<tr><td>Income</td><td>${inc.toFixed(2)}</td></tr>
+<tr><td>Expense</td><td>${exp.toFixed(2)}</td></tr>
+<tr><td>Profit</td><td>${(inc-exp).toFixed(2)}</td></tr>
 </table>`;
 
 bsPage.innerHTML=`
 <table>
 <tr><th>Assets</th><th>Liabilities</th></tr>
-<tr><td>${asset}</td><td>${liab}</td></tr>
+<tr><td>${asset.toFixed(2)}</td><td>${liab.toFixed(2)}</td></tr>
 </table>`;
 }
 
