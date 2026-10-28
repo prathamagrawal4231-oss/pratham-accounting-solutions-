@@ -3,81 +3,84 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pratham Accounting Solution</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a2540">
+<title>Pratham Accounting Solution</title>
 <style>
-:root{--bg:#0a2540;--bg-dark:#06162b;--panel:#07213b;--panel-2:#0e3257;--accent:#ffd200;--accent-2:#ffea87;--text:#f8fbff;--muted:#b5c9df;--table-bg:#f8fbff;--table-border:#c8d8ea;--danger:#ef4444;--ok:#16a34a}
+:root{--bg:#0a2540;--panel:#07213b;--panel2:#0e3257;--accent:#ffd200;--text:#f8fbff;--muted:#b5c9df;--border:#c8d8ea;--danger:#991b1b}
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(180deg,var(--bg),#10365f 60%,var(--bg-dark));color:var(--text);overflow:hidden}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#0a2540,#10365f 60%,#06162b);color:var(--text)}
 .hidden{display:none!important}
-label{font-size:12px;color:var(--muted);display:block;margin-top:4px}
-.auth{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;padding:20px}
-.card{background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid rgba(255,210,0,.55);border-radius:8px;padding:20px;width:min(520px,95vw);box-shadow:0 18px 40px rgba(2,8,20,.5)}
-.card h2,.card h3{margin:0 0 10px;color:var(--accent-2)}
+label{font-size:12px;color:var(--muted);display:block;margin-top:8px}
+input,select,textarea,button{width:100%;padding:10px;margin:4px 0;font:inherit;border-radius:4px}
+input,select,textarea{border:1px solid #9db5cc;background:#fff;color:#0f172a}
+button{border:0;background:linear-gradient(180deg,#ffe066,#ffd200);color:#111827;font-weight:700;cursor:pointer}
+button:disabled{opacity:.55;cursor:wait}
+button.secondary{background:#dbeafe}
+button:focus,input:focus,select:focus,textarea:focus{outline:2px solid #ffd200;outline-offset:1px}
+.auth{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;padding:20px;overflow:auto}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid rgba(255,210,0,.6);border-radius:8px;padding:22px;width:min(520px,95vw);box-shadow:0 18px 40px #02081480}
+.card h2,.card h3{margin:0 0 12px;color:#ffea87}
 .input-row{display:flex;gap:8px;align-items:end}
-.topbar{position:sticky;top:0;z-index:5;border-bottom:2px solid rgba(255,210,0,.65);background:linear-gradient(180deg,#0f4a7d,#082c4a)}
-.topbar-main{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;font-weight:700}
+.input-row>*{flex:1;min-width:0}
+.error-box{padding:10px;border-radius:4px;background:#fee2e2;border:1px solid #fecaca;color:var(--danger);margin:8px 0;font-size:13px;overflow-wrap:anywhere}
+.topbar{position:sticky;top:0;z-index:5;border-bottom:2px solid #ffd200aa;background:linear-gradient(180deg,#0f4a7d,#082c4a)}
+.topbar-main{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px;font-weight:700}
 .brand{color:var(--accent);letter-spacing:.4px}
-.company-pill{background:rgba(255,210,0,.14);border:1px solid rgba(255,210,0,.55);color:var(--accent-2);padding:4px 10px;border-radius:4px;font-size:12px}
-.topbar-sub{display:flex;justify-content:space-between;padding:4px 14px;font-size:12px;color:var(--muted);border-top:1px solid rgba(255,255,255,.08);background:#082944;gap:8px;flex-wrap:wrap}
-.container{display:flex;height:calc(100vh - 96px)}
-.sidebar{width:310px;flex-shrink:0;background:linear-gradient(180deg,#001a30,#072540);border-right:2px solid rgba(255,210,0,.45);padding:10px;overflow:auto}
-.gateway-title{background:rgba(255,210,0,.12);border:1px solid rgba(255,210,0,.45);padding:8px;text-align:center;font-weight:700;color:var(--accent);margin-bottom:10px;border-radius:4px}
-.section-label{font-size:11px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin:10px 0 6px}
-.btn{background:linear-gradient(180deg,#0f4c80,#0a3a63);border:1px solid rgba(255,210,0,.45);color:#eaf4ff;padding:9px 10px;margin:5px 0;border-radius:4px;font-weight:700;cursor:pointer;text-align:left}
-.btn.active{border-color:#fff;background:linear-gradient(180deg,#1a629f,#135183)}
-.btn:hover{background:linear-gradient(180deg,#155c99,#0c4473)}
+.company-pill{background:#ffd20024;border:1px solid #ffd20088;color:#ffea87;padding:5px 10px;border-radius:4px;font-size:12px;overflow-wrap:anywhere}
+.topbar-sub{display:flex;justify-content:space-between;padding:6px 14px;font-size:12px;color:var(--muted);border-top:1px solid #ffffff14;background:#082944;gap:8px;flex-wrap:wrap}
+.container{display:flex;min-height:calc(100vh - 96px)}
+.sidebar{width:280px;flex-shrink:0;background:linear-gradient(180deg,#001a30,#072540);border-right:2px solid #ffd20066;padding:10px;overflow:auto}
+.gateway-title{background:#ffd2001f;border:1px solid #ffd20077;padding:9px;text-align:center;font-weight:700;color:var(--accent);margin-bottom:10px;border-radius:4px}
+.section-label{font-size:11px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin:12px 0 6px}
+.navbtn{display:block;width:100%;text-align:left;background:linear-gradient(180deg,#0f4c80,#0a3a63);border:1px solid #ffd20066;color:#eaf4ff;padding:10px;margin:5px 0;border-radius:4px;font-weight:700}
+.navbtn.active{border-color:#fff;background:#135183}
 .main{flex:1;min-width:0;padding:12px;overflow:auto;background:linear-gradient(180deg,#123f6d,#0a2a48)}
 .page-header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
 .breadcrumb{font-size:12px;color:var(--muted)}
-.page-title{font-size:20px;color:var(--accent-2);font-weight:700}
-.panel{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);padding:10px;border-radius:4px;min-height:82vh}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:10px}
-.kpi{background:rgba(2,8,20,.38);border:1px solid rgba(255,210,0,.5);border-radius:6px;padding:10px}
+.page-title{font-size:20px;color:#ffea87;font-weight:700}
+.panel{background:#ffffff14;border:1px solid #ffffff33;padding:10px;border-radius:4px;min-height:70vh}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:10px}
+.kpi{background:#02081466;border:1px solid #ffd20080;border-radius:6px;padding:12px;overflow-wrap:anywhere}
 .kpi .k{font-size:11px;color:var(--muted)}
-.kpi .v{font-size:22px;font-weight:700;color:#fff}
+.kpi .v{font-size:20px;font-weight:700;color:#fff;margin-top:5px}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-bottom:10px}
-.toolbar .field{min-width:140px;flex:1}
-.table-wrap{overflow:auto;max-height:56vh;border:1px solid rgba(255,255,255,.2)}
-table{width:100%;border-collapse:collapse;background:var(--table-bg);color:#071421;border:1px solid var(--table-border)}
+.toolbar .field{min-width:120px;flex:1}
+.table-wrap{overflow:auto;max-height:56vh;border:1px solid #ffffff33}
+table{width:100%;border-collapse:collapse;background:#f8fbff;color:#071421;border:1px solid var(--border)}
 th{position:sticky;top:0;background:linear-gradient(180deg,#ffe66f,#ffd200);color:#111827;font-size:12px;text-transform:uppercase;z-index:1}
-th,td{padding:8px;border:1px solid var(--table-border);text-align:left}
-.empty{padding:20px;background:rgba(2,8,20,.35);border:1px dashed rgba(255,210,0,.55);color:#dbeafe;text-align:center;border-radius:4px}
-.pagination{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:8px;font-size:12px}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:20px;z-index:10}
-.popup{background:#f7fbff;color:#0f172a;width:min(780px,95vw);max-height:88vh;overflow:auto;padding:16px;border-radius:6px;border:2px solid var(--accent);transform:translateY(-30px) scale(.98);opacity:0;transition:.2s ease}
+th,td{padding:8px;border:1px solid var(--border);text-align:left}
+.empty{padding:20px;background:#02081455;border:1px dashed #ffd20088;color:#dbeafe;text-align:center;border-radius:4px}
+.pagination{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:8px;font-size:12px;flex-wrap:wrap}
+.overlay{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;padding:12px;z-index:10}
 .overlay.show{display:flex}
-.overlay.show .popup{transform:translateY(0) scale(1);opacity:1}
-.overlay.hide .popup{transform:translateY(-20px) scale(.98);opacity:0}
-.row{display:grid;grid-template-columns:1fr 130px 130px 30px;gap:8px;margin:6px 0;align-items:center}
+.popup{background:#f7fbff;color:#0f172a;width:min(780px,98vw);max-height:92vh;overflow:auto;padding:16px;border-radius:6px;border:2px solid var(--accent)}
+.popup h3{margin-top:0}
+.row{display:grid;grid-template-columns:minmax(100px,1fr) minmax(80px,130px) minmax(80px,130px) 34px;gap:7px;margin:6px 0;align-items:center}
 .row-msg{grid-column:1/-1;color:var(--danger);font-size:12px}
-.journal-totals{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;background:#eef6ff;border:1px solid #cde0f5;padding:8px;border-radius:4px;margin:8px 0;color:#111827}
-.error-box{padding:8px;border-radius:4px;background:#fee2e2;border:1px solid #fecaca;color:#991b1b;margin:6px 0;font-size:13px}
-.success{color:#86efac!important}
-input,select,textarea,button{width:100%;padding:9px;margin:4px 0;font:inherit;border-radius:3px}
-input,select,textarea{border:1px solid #9db5cc;background:white;color:#0f172a}
-button{border:none;background:linear-gradient(180deg,#ffe066,#ffd200);color:#111827;font-weight:700;cursor:pointer}
-button:hover{filter:brightness(1.02)}
-button:disabled{opacity:.55;cursor:not-allowed}
-button.secondary{background:#dbeafe}
-input:focus,select:focus,textarea:focus,button:focus,.btn:focus{outline:2px solid rgba(255,210,0,.65);outline-offset:1px}
-hr{border:none;border-top:1px solid rgba(255,255,255,.18);margin:10px 0}
-#loading{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.45);z-index:20;font-weight:700}
-#toastContainer{position:fixed;right:14px;bottom:14px;display:flex;flex-direction:column;gap:8px;z-index:30}
-.toast{background:#111827;color:#fff;padding:10px 12px;border-radius:6px;border-left:4px solid var(--accent);min-width:220px}
-.command{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-start;justify-content:center;padding-top:80px;z-index:40}
+.journal-totals{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;background:#eef6ff;border:1px solid #cde0f5;padding:10px;border-radius:4px;margin:8px 0;color:#111827}
+#loading{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0007;z-index:20;font-weight:700}
+#toastContainer{position:fixed;right:12px;bottom:12px;display:flex;flex-direction:column;gap:8px;z-index:30;max-width:min(420px,95vw)}
+.toast{background:#111827;color:#fff;padding:12px;border-radius:6px;border-left:4px solid var(--accent);overflow-wrap:anywhere}
+.command{position:fixed;inset:0;background:#0007;display:none;align-items:flex-start;justify-content:center;padding-top:70px;z-index:40}
 .command-box{background:#fff;color:#111827;width:min(520px,95vw);border-radius:8px;padding:10px}
-.command-item{padding:8px;border-radius:4px;cursor:pointer}
+.command-item{padding:10px;border-radius:4px;cursor:pointer}
 .command-item:hover{background:#e2e8f0}
-@media(max-width:920px){
- body{overflow:auto}
- .container{flex-direction:column;height:auto;min-height:calc(100vh - 96px)}
- .sidebar{width:100%;max-height:42vh;border-right:none;border-bottom:2px solid rgba(255,210,0,.45)}
- .main{min-height:60vh;overflow:visible}
- .panel{min-height:50vh}
- .row{grid-template-columns:1fr 1fr 1fr 30px}
+hr{border:0;border-top:1px solid #ffffff30;margin:10px 0}
+@media(max-width:850px){
+ .container{flex-direction:column}
+ .sidebar{width:100%;max-height:none;border-right:0;border-bottom:2px solid #ffd20066}
+ .main{min-height:60vh}
+ .panel{min-height:45vh}
+ .row{grid-template-columns:minmax(80px,1fr) minmax(70px,1fr) minmax(70px,1fr) 32px}
+}
+@media(max-width:480px){
+ .topbar-main{align-items:flex-start;flex-direction:column}
  .input-row{flex-wrap:wrap}
- .input-row>*{min-width:120px}
+ .input-row>*{flex:1 1 130px}
+ .row{grid-template-columns:1fr 1fr}
+ .row select{grid-column:1/-1}
+ .row button{grid-column:2}
 }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -85,23 +88,25 @@ hr{border:none;border-top:1px solid rgba(255,255,255,.18);margin:10px 0}
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-<div id="loading">Loading...</div>
-<div id="toastContainer"></div>
+<div id="loading" role="status">Loading...</div>
+<div id="toastContainer" aria-live="polite"></div>
 
 <div id="authBox" class="auth">
  <div class="card">
   <h2>Pratham Accounting Solution</h2>
-  <label>Email</label>
-  <input id="email" type="email" placeholder="name@example.com" autocomplete="email">
-  <label>Password</label>
+  <p>Sign in to access your accounting workspace, or create an account to get started.</p>
+  <label for="email">Email</label>
+  <input id="email" type="email" placeholder="name@example.com" autocomplete="username">
+  <label for="password">Password</label>
   <div class="input-row">
-   <input id="password" type="password" placeholder="Password" autocomplete="current-password">
+   <input id="password" type="password" placeholder="At least 6 characters" autocomplete="current-password">
    <button type="button" id="togglePass" class="secondary">Show</button>
   </div>
   <div class="input-row">
-   <button id="authBtn" onclick="login()">Login</button>
-   <button id="signupBtn" class="secondary" onclick="signup()">Create Account</button>
+   <button id="authBtn" type="button">Login</button>
+   <button id="signupBtn" type="button" class="secondary">Create Account</button>
   </div>
+  <button id="resetBtn" type="button" class="secondary">Reset Password</button>
   <div id="authError" class="error-box hidden" role="alert"></div>
  </div>
 </div>
@@ -109,13 +114,14 @@ hr{border:none;border-top:1px solid rgba(255,255,255,.18);margin:10px 0}
 <div id="profileBox" class="auth hidden">
  <div class="card">
   <h3>Business Setup</h3>
-  <label>Business Name</label>
+  <label for="businessName">Business Name</label>
   <input id="businessName" placeholder="e.g. ABC Traders">
-  <label>Proprietor Name</label>
+  <label for="proprietorName">Proprietor Name</label>
   <input id="proprietorName" placeholder="Your full name">
-  <label>Financial Year Label</label>
+  <label for="fyLabel">Financial Year Label</label>
   <input id="fyLabel" placeholder="FY 2026-27" value="FY 2026-27">
-  <button id="saveProfileBtn" onclick="saveProfile()">Save &amp; Continue</button>
+  <button id="saveProfileBtn" type="button">Save &amp; Continue</button>
+  <div id="profileError" class="error-box hidden" role="alert"></div>
  </div>
 </div>
 
@@ -131,309 +137,408 @@ hr{border:none;border-top:1px solid rgba(255,255,255,.18);margin:10px 0}
   </div>
  </div>
  <div class="container">
-  <div class="sidebar">
+  <aside class="sidebar">
    <div class="gateway-title">Gateway of Accounting</div>
    <div class="section-label">Navigation</div>
-   <div class="btn active" data-page="dash" onclick="showPage('dash',this)">Dashboard</div>
-   <div class="btn" data-page="ledger" onclick="showPage('ledger',this)">Display Ledger</div>
-   <div class="btn" onclick="openJournal()">Create Voucher (Journal)</div>
-   <div class="btn" data-page="pl" onclick="showPage('pl',this)">Profit &amp; Loss A/c</div>
-   <div class="btn" data-page="bs" onclick="showPage('bs',this)">Balance Sheet</div>
-   <div class="btn" onclick="openCommandPalette()">Quick Command (Ctrl+K)</div>
+   <button class="navbtn active" data-page="dash">Dashboard</button>
+   <button class="navbtn" data-page="ledger">Display Ledger</button>
+   <button class="navbtn" id="journalBtn">Create Voucher (Journal)</button>
+   <button class="navbtn" data-page="pl">Profit &amp; Loss A/c</button>
+   <button class="navbtn" data-page="bs">Balance Sheet</button>
+   <button class="navbtn" id="commandBtn">Quick Command (Ctrl+K)</button>
    <hr>
    <div class="section-label">Masters</div>
-   <label>Ledger Name</label>
+   <label for="accName">Ledger Name</label>
    <input id="accName" placeholder="Ledger Name">
-   <label>Ledger Type</label>
+   <label for="accType">Ledger Type</label>
    <select id="accType">
     <option>Asset</option><option>Liability</option><option>Income</option><option>Expense</option>
    </select>
-   <button onclick="addAccount()">Add Ledger</button>
-  </div>
-  <div class="main">
+   <button id="addAccountBtn">Add Ledger</button>
+  </aside>
+  <main class="main">
    <div class="page-header">
     <div>
      <div id="breadcrumb" class="breadcrumb">Gateway &gt; Dashboard</div>
      <div id="pageTitle" class="page-title">Dashboard</div>
     </div>
-    <button class="secondary" style="max-width:120px" onclick="logout()">Logout</button>
+    <button id="logoutBtn" class="secondary" style="max-width:120px">Logout</button>
    </div>
-   <div id="dashPage" class="panel"></div>
-   <div id="ledgerPage" class="panel hidden"></div>
-   <div id="plPage" class="panel hidden"></div>
-   <div id="bsPage" class="panel hidden"></div>
-  </div>
+   <section id="dashPage" class="panel"></section>
+   <section id="ledgerPage" class="panel hidden"></section>
+   <section id="plPage" class="panel hidden"></section>
+   <section id="bsPage" class="panel hidden"></section>
+  </main>
  </div>
 </div>
 
-<div id="overlay" class="overlay" onclick="if(event.target===this)closePopup()">
- <div class="popup">
-  <h3>Journal Voucher Entry</h3>
-  <div id="journalError" class="error-box hidden"></div>
+<div id="overlay" class="overlay">
+ <div class="popup" role="dialog" aria-modal="true" aria-labelledby="journalTitle">
+  <h3 id="journalTitle">Journal Voucher Entry</h3>
+  <div id="journalError" class="error-box hidden" role="alert"></div>
   <div class="input-row">
    <div style="flex:1">
-    <label>Quick Create Ledger Name</label>
+    <label for="quickAccName">Quick Create Ledger Name</label>
     <input id="quickAccName" placeholder="Create ledger on the fly">
    </div>
    <div style="width:170px">
-    <label>Type</label>
+    <label for="quickAccType">Type</label>
     <select id="quickAccType"><option>Asset</option><option>Liability</option><option>Income</option><option>Expense</option></select>
    </div>
-   <button style="max-width:100px" onclick="quickAddAccount()">Add</button>
+   <button id="quickAddBtn" style="max-width:100px">Add</button>
   </div>
   <div id="rows"></div>
-  <button class="secondary" onclick="addRow()">+ Add Line</button>
+  <button id="addRowBtn" class="secondary">+ Add Line</button>
   <div class="journal-totals">
    <div>Debit Total: <b id="drTotal">0.00</b></div>
    <div>Credit Total: <b id="crTotal">0.00</b></div>
    <div>Difference: <b id="diffTotal">0.00</b></div>
   </div>
-  <label>Narration</label>
+  <label for="narration">Narration</label>
   <textarea id="narration" placeholder="Narration (optional)"></textarea>
   <div class="input-row">
-   <button onclick="saveEntry()">Save (Ctrl+S)</button>
-   <button class="secondary" onclick="closePopup()">Cancel (Esc)</button>
+   <button id="saveEntryBtn">Save Voucher (Ctrl+S)</button>
+   <button id="cancelJournalBtn" class="secondary">Cancel (Esc)</button>
   </div>
  </div>
 </div>
 
-<div id="commandPalette" class="command" onclick="if(event.target===this)closeCommandPalette()">
+<div id="commandPalette" class="command">
  <div class="command-box">
-  <input id="commandInput" placeholder="Type command... e.g. ledger, dashboard, journal" oninput="renderCommands()">
+  <input id="commandInput" placeholder="Type command... e.g. ledger, dashboard, journal">
   <div id="commandList"></div>
-  <button class="secondary" onclick="closeCommandPalette()">Close</button>
+  <button id="closeCommandBtn" class="secondary">Close</button>
  </div>
 </div>
 
 <script>
-if(!window.firebase||!window.firebase.initializeApp){
- const errorBox=document.getElementById("authError");
- if(errorBox){errorBox.textContent="Firebase could not load. Check your internet connection, disable script-blocking extensions for this site, and reload.";errorBox.classList.remove("hidden")}
- throw new Error("Firebase SDK unavailable.");
+"use strict";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB38hscdHXDbQ3Bw6ZGLIgk8ci323KFAg4",
+  authDomain: "pratham-accounting-solution.firebaseapp.com",
+  projectId: "pratham-accounting-solution",
+  storageBucket: "pratham-accounting-solution.firebasestorage.app",
+  messagingSenderId: "261436280247",
+  appId: "1:261436280247:web:5af8a0f36ff722dce62c32",
+  measurementId: "G-W2Y5J3JZ1X"
+};
+
+const $ = id => document.getElementById(id);
+const authBox = $("authBox"), profileBox = $("profileBox"), appBox = $("app");
+const emailInput = $("email"), passwordInput = $("password");
+const overlay = $("overlay"), rowsBox = $("rows");
+const journalError = $("journalError");
+const dashPage = $("dashPage"), ledgerPage = $("ledgerPage");
+const plPage = $("plPage"), bsPage = $("bsPage");
+
+let auth = null, db = null, userId = "";
+let profile = {businessName:"", proprietorName:"", fyLabel:""};
+let accounts = {};
+let entries = [];
+let currentLedgerPage = 1;
+let ledgerPageSize = 25;
+
+function escapeHtml(value) {
+ return String(value ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;")
+  .replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
+}
+function formatMoney(value) {
+ return Number(value || 0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function toast(message) {
+ const node = document.createElement("div");
+ node.className = "toast";
+ node.textContent = message;
+ $("toastContainer").appendChild(node);
+ setTimeout(() => node.remove(), 5000);
+}
+function setLoading(show) { $("loading").style.display = show ? "flex" : "none"; }
+function setError(id, message) {
+ const box = $(id);
+ box.textContent = message;
+ box.classList.remove("hidden");
+}
+function clearError(id) {
+ const box = $(id);
+ box.textContent = "";
+ box.classList.add("hidden");
+}
+function authErrorMessage(error) {
+ const code = error?.code || "";
+ const messages = {
+  "auth/invalid-email":"Please enter a valid email address.",
+  "auth/invalid-credential":"Email or password is incorrect. If you are new, choose Create Account.",
+  "auth/user-not-found":"No account exists for this email. Choose Create Account.",
+  "auth/wrong-password":"Incorrect password. Please try again.",
+  "auth/email-already-in-use":"This email already has an account. Please log in.",
+  "auth/weak-password":"Choose a stronger password with at least 6 characters.",
+  "auth/too-many-requests":"Too many attempts. Please wait and try again.",
+  "auth/network-request-failed":"Network error. Check your internet connection.",
+  "auth/operation-not-allowed":"Email/Password sign-in is disabled. Enable it in Firebase Console → Authentication → Sign-in method.",
+  "auth/unauthorized-domain":"This website domain is not authorized. Add its hostname in Firebase Console → Authentication → Settings → Authorized domains.",
+  "auth/configuration-not-found":"Firebase Authentication is not configured correctly. Check your Firebase project and enable Email/Password sign-in."
+ };
+ return messages[code] || `${error?.message || "Unknown Firebase error"}${code ? " ("+code+")" : ""}`;
+}
+async function withLoading(callback) {
+ setLoading(true);
+ try { return await callback(); }
+ finally { setLoading(false); }
 }
 
-const firebaseConfig={
- apiKey:"AIzaSyB38hscdHXDbQ3Bw6ZGLIgk8ci323KFAg4",
- authDomain:"pratham-accounting-solution.firebaseapp.com",
- projectId:"pratham-accounting-solution"
-};
-if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
-
-const auth=firebase.auth();
-const db=firebase.firestore();
-const $=id=>document.getElementById(id);
-
-const authBox=$("authBox"),profileBox=$("profileBox"),app=$("app");
-const email=$("email"),password=$("password");
-const companyName=$("companyName"),contextLine=$("contextLine"),syncLine=$("syncLine");
-const accName=$("accName"),accType=$("accType");
-const overlay=$("overlay"),rows=$("rows"),narration=$("narration");
-const journalError=$("journalError");
-const dashPage=$("dashPage"),ledgerPage=$("ledgerPage"),plPage=$("plPage"),bsPage=$("bsPage");
-const pageTitle=$("pageTitle"),breadcrumb=$("breadcrumb");
-
-let userId="";
-let profile={businessName:"",proprietorName:"",fyLabel:""};
-let accounts={};
-let entries=[];
-let currentLedgerPage=1;
-let ledgerPageSize=25;
-
-window.addEventListener("error",event=>console.error("Application error:",event.error||event.message));
-window.addEventListener("unhandledrejection",event=>{
- console.error("Unhandled application error:",event.reason);
- toast("An operation failed. Open the browser console for details.");
+$("togglePass").addEventListener("click", () => {
+ passwordInput.type = passwordInput.type === "password" ? "text" : "password";
+ $("togglePass").textContent = passwordInput.type === "password" ? "Show" : "Hide";
 });
 
-function escapeHtml(str){
- return String(str??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
-}
-function formatMoney(value){
- return Number(value||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
-}
-function toast(message){
- const element=document.createElement("div");
- element.className="toast";
- element.textContent=message;
- $("toastContainer").appendChild(element);
- setTimeout(()=>element.remove(),3200);
-}
-function setLoading(show){$("loading").style.display=show?"flex":"none"}
-function showError(message){
- journalError.textContent=message;
- journalError.classList.remove("hidden");
-}
-function clearError(){
- journalError.classList.add("hidden");
- journalError.textContent="";
-}
-function showAuthError(message){
- const box=$("authError");
- if(box){box.textContent=message;box.classList.remove("hidden")}else toast(message);
-}
-function clearAuthError(){
- const box=$("authError");
- if(box){box.textContent="";box.classList.add("hidden")}
-}
-$("togglePass").onclick=()=>{
- password.type=password.type==="password"?"text":"password";
- $("togglePass").textContent=password.type==="password"?"Show":"Hide";
-};
-async function withLoading(callback){
- try{setLoading(true);await callback()}finally{setLoading(false)}
-}
-function applyProfileUI(){
- companyName.textContent=profile.businessName||"Business";
- contextLine.textContent=`Period: ${profile.fyLabel||"FY"} • Proprietor: ${profile.proprietorName||"-"}`;
+$("authBtn").addEventListener("click", login);
+$("signupBtn").addEventListener("click", signup);
+$("resetBtn").addEventListener("click", resetPassword);
+$("saveProfileBtn").addEventListener("click", saveProfile);
+$("logoutBtn").addEventListener("click", logout);
+$("addAccountBtn").addEventListener("click", addAccount);
+$("journalBtn").addEventListener("click", openJournal);
+$("commandBtn").addEventListener("click", openCommandPalette);
+$("quickAddBtn").addEventListener("click", quickAddAccount);
+$("addRowBtn").addEventListener("click", addRow);
+$("saveEntryBtn").addEventListener("click", saveEntry);
+$("cancelJournalBtn").addEventListener("click", closePopup);
+$("closeCommandBtn").addEventListener("click", closeCommandPalette);
+
+document.querySelectorAll("[data-page]").forEach(button => {
+ button.addEventListener("click", () => showPage(button.dataset.page, button));
+});
+overlay.addEventListener("click", event => {
+ if (event.target === overlay) closePopup();
+});
+$("commandPalette").addEventListener("click", event => {
+ if (event.target === $("commandPalette")) closeCommandPalette();
+});
+
+function initializeFirebase() {
+ if (!window.firebase || !window.firebase.initializeApp) {
+  setError("authError","Firebase SDK could not load. Check your internet connection, then reload the page.");
+  return false;
+ }
+ try {
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  db = firebase.firestore();
+  auth.onAuthStateChanged(async user => {
+   if (!user) {
+    userId = "";
+    authBox.classList.remove("hidden");
+    profileBox.classList.add("hidden");
+    appBox.classList.add("hidden");
+    return;
+   }
+   userId = user.uid;
+   authBox.classList.add("hidden");
+   clearError("authError");
+   try {
+    await loadOrSetupProfile();
+   } catch (error) {
+    console.error("Loading account data failed:", error);
+    authBox.classList.remove("hidden");
+    profileBox.classList.add("hidden");
+    appBox.classList.add("hidden");
+    setError("authError",
+     "You signed in, but the accounting data could not load. Check that Cloud Firestore is created and its security rules allow this signed-in user to access only their own records. Details: " + (error.message || "Unknown error"));
+   }
+  });
+  return true;
+ } catch (error) {
+  console.error("Firebase initialization failed:", error);
+  setError("authError","Firebase could not initialize: " + (error.message || "Check your Firebase configuration."));
+  return false;
+ }
 }
 
-auth.onAuthStateChanged(async user=>{
- if(!user){
-  userId="";
-  authBox.classList.remove("hidden");
-  profileBox.classList.add("hidden");
-  app.classList.add("hidden");
+async function login() {
+ clearError("authError");
+ const enteredEmail = emailInput.value.trim();
+ const enteredPassword = passwordInput.value;
+ if (!enteredEmail || !enteredPassword) {
+  setError("authError","Please enter your email and password.");
   return;
  }
- userId=user.uid;
- authBox.classList.add("hidden");
- try{
-  await loadOrSetupProfile();
- }catch(error){
-  console.error("Unable to load accounting app:",error);
-  profileBox.classList.add("hidden");
-  app.classList.add("hidden");
-  authBox.classList.remove("hidden");
-  showAuthError("You signed in, but your profile or accounting data could not load. Check your Firestore rules and Firebase configuration. Details: "+(error?.message||"Unknown error"));
-  try{await auth.signOut()}catch(signOutError){console.error("Sign-out failed:",signOutError)}
+ if (!auth) {
+  setError("authError","Firebase has not initialized. Reload the page and check your internet connection.");
+  return;
  }
-});
+ const button = $("authBtn");
+ button.disabled = true;
+ try {
+  await withLoading(() => auth.signInWithEmailAndPassword(enteredEmail, enteredPassword));
+ } catch (error) {
+  console.error("Login failed:", error);
+  setError("authError", authErrorMessage(error));
+ } finally {
+  button.disabled = false;
+ }
+}
 
-async function login(){
- const enteredEmail=email.value.trim(),enteredPassword=password.value;
- clearAuthError();
- if(!enteredEmail||!enteredPassword){showAuthError("Please enter your email and password.");return}
- await withLoading(async()=>{
-  const button=$("authBtn");button.disabled=true;
-  try{await auth.signInWithEmailAndPassword(enteredEmail,enteredPassword)}
-  catch(error){
-   console.error("Login failed:",error);
-   const messages={
-    "auth/invalid-credential":"Email or password is incorrect. If you are new, click Create Account.",
-    "auth/user-not-found":"No account exists for this email. Click Create Account.",
-    "auth/wrong-password":"Incorrect password. Please try again.",
-    "auth/invalid-email":"Please enter a valid email address.",
-    "auth/too-many-requests":"Too many attempts. Please wait and try again.",
-    "auth/network-request-failed":"Network error. Check your internet connection."
-   };
-   showAuthError(messages[error?.code]||error?.message||"Unable to sign in. Check Firebase settings.");
-  }finally{button.disabled=false}
- });
+async function signup() {
+ clearError("authError");
+ const enteredEmail = emailInput.value.trim();
+ const enteredPassword = passwordInput.value;
+ if (!enteredEmail || !enteredPassword) {
+  setError("authError","Please enter your email and password.");
+  return;
+ }
+ if (enteredPassword.length < 6) {
+  setError("authError","Your password must contain at least 6 characters.");
+  return;
+ }
+ if (!auth) {
+  setError("authError","Firebase has not initialized. Reload the page and check your internet connection.");
+  return;
+ }
+ const button = $("signupBtn");
+ button.disabled = true;
+ try {
+  await withLoading(() => auth.createUserWithEmailAndPassword(enteredEmail, enteredPassword));
+ } catch (error) {
+  console.error("Signup failed:", error);
+  setError("authError", authErrorMessage(error));
+ } finally {
+  button.disabled = false;
+ }
 }
-async function signup(){
- const enteredEmail=email.value.trim(),enteredPassword=password.value;
- clearAuthError();
- if(!enteredEmail||!enteredPassword){showAuthError("Please enter your email and password.");return}
- if(enteredPassword.length<6){showAuthError("Your password must contain at least 6 characters.");return}
- await withLoading(async()=>{
-  const button=$("signupBtn");button.disabled=true;
-  try{await auth.createUserWithEmailAndPassword(enteredEmail,enteredPassword)}
-  catch(error){
-   console.error("Signup failed:",error);
-   showAuthError(error?.code==="auth/email-already-in-use"?"This email already has an account. Click Login.":error?.message||"Unable to create account. Check Firebase Authentication settings.");
-  }finally{button.disabled=false}
- });
+
+async function resetPassword() {
+ clearError("authError");
+ const enteredEmail = emailInput.value.trim();
+ if (!enteredEmail) {
+  setError("authError","Enter your email address first, then click Reset Password.");
+  return;
+ }
+ try {
+  await withLoading(() => auth.sendPasswordResetEmail(enteredEmail));
+  setError("authError","If this email is registered, Firebase has sent a password-reset email. Check your inbox and spam folder.");
+ } catch (error) {
+  console.error("Password reset failed:", error);
+  setError("authError",authErrorMessage(error));
+ }
 }
-async function logout(){
- try{await auth.signOut()}catch(error){toast("Could not sign out: "+error.message)}
+
+async function logout() {
+ if (auth) {
+  try { await auth.signOut(); }
+  catch (error) { toast("Sign out failed: " + error.message); }
+ }
 }
-async function loadOrSetupProfile(){
- const document=await db.collection("profiles").doc(userId).get();
- if(!document.exists){
+
+function applyProfileUI() {
+ $("companyName").textContent = profile.businessName || "Business";
+ $("contextLine").textContent = `Period: ${profile.fyLabel || "FY"} • Proprietor: ${profile.proprietorName || "-"}`;
+}
+
+async function loadOrSetupProfile() {
+ const snapshot = await db.collection("profiles").doc(userId).get();
+ if (!snapshot.exists) {
   profileBox.classList.remove("hidden");
-  app.classList.add("hidden");
+  appBox.classList.add("hidden");
   return;
  }
- profile={...profile,...document.data()};
+ profile = {...profile, ...snapshot.data()};
  profileBox.classList.add("hidden");
- app.classList.remove("hidden");
+ appBox.classList.remove("hidden");
  applyProfileUI();
  await loadData();
- showPage("dash",document.querySelector('.btn[data-page="dash"]'));
+ showPage("dash");
 }
-async function saveProfile(){
- const businessNameValue=$("businessName").value.trim();
- const proprietorNameValue=$("proprietorName").value.trim();
- const financialYear=$("fyLabel").value.trim()||`FY ${new Date().getFullYear()}`;
- if(!businessNameValue||!proprietorNameValue){toast("Please enter the business name and proprietor name.");return}
- const button=$("saveProfileBtn");button.disabled=true;
- try{
-  await withLoading(async()=>{
-   await db.collection("profiles").doc(userId).set({
-    businessName:businessNameValue,
-    proprietorName:proprietorNameValue,
-    fyLabel:financialYear,
-    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-   });
-  });
-  profile={businessName:businessNameValue,proprietorName:proprietorNameValue,fyLabel:financialYear};
+
+async function saveProfile() {
+ clearError("profileError");
+ const businessName = $("businessName").value.trim();
+ const proprietorName = $("proprietorName").value.trim();
+ const fyLabel = $("fyLabel").value.trim() || `FY ${new Date().getFullYear()}-${String(new Date().getFullYear()+1).slice(-2)}`;
+ if (!businessName || !proprietorName) {
+  setError("profileError","Please enter both the business name and proprietor name.");
+  return;
+ }
+ const button = $("saveProfileBtn");
+ button.disabled = true;
+ try {
+  await withLoading(() => db.collection("profiles").doc(userId).set({
+   businessName, proprietorName, fyLabel,
+   updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }));
+  profile = {businessName, proprietorName, fyLabel};
   profileBox.classList.add("hidden");
-  app.classList.remove("hidden");
+  appBox.classList.remove("hidden");
   applyProfileUI();
-  toast("Profile saved.");
   await loadData();
-  showPage("dash",document.querySelector('.btn[data-page="dash"]'));
- }catch(error){
-  console.error("Profile save failed:",error);
-  toast("Could not save profile: "+(error.message||"Unknown error"));
- }finally{button.disabled=false}
+  showPage("dash");
+  toast("Business profile saved.");
+ } catch (error) {
+  console.error("Profile save failed:", error);
+  setError("profileError","Could not save your profile: " + (error.message || "Unknown error") + ". Check your Cloud Firestore database and security rules.");
+ } finally {
+  button.disabled = false;
+ }
 }
-function showPage(page,element){
- [dashPage,ledgerPage,plPage,bsPage].forEach(panel=>panel.classList.add("hidden"));
- if(page==="dash")dashPage.classList.remove("hidden");
- if(page==="ledger")ledgerPage.classList.remove("hidden");
- if(page==="pl")plPage.classList.remove("hidden");
- if(page==="bs")bsPage.classList.remove("hidden");
- document.querySelectorAll(".btn[data-page]").forEach(button=>button.classList.remove("active"));
- if(element)element.classList.add("active");
- else document.querySelector(`.btn[data-page="${page}"]`)?.classList.add("active");
- const names={dash:"Dashboard",ledger:"Ledger",pl:"Profit & Loss A/c",bs:"Balance Sheet"};
- pageTitle.textContent=names[page]||"Dashboard";
- breadcrumb.textContent=`Gateway > ${names[page]||"Dashboard"}`;
+
+function showPage(page, element) {
+ [dashPage,ledgerPage,plPage,bsPage].forEach(panel => panel.classList.add("hidden"));
+ const panels = {dash:dashPage,ledger:ledgerPage,pl:plPage,bs:bsPage};
+ const titles = {dash:"Dashboard",ledger:"Ledger",pl:"Profit & Loss A/c",bs:"Balance Sheet"};
+ if (!panels[page]) page = "dash";
+ panels[page].classList.remove("hidden");
+ document.querySelectorAll(".navbtn[data-page]").forEach(button => button.classList.remove("active"));
+ const active = element || document.querySelector(`.navbtn[data-page="${page}"]`);
+ if (active) active.classList.add("active");
+ $("pageTitle").textContent = titles[page];
+ $("breadcrumb").textContent = "Gateway > " + titles[page];
 }
-async function addAccount(){
- const name=accName.value.trim();
- if(!name){toast("Enter a ledger name.");return}
- if(!userId){toast("Please log in first.");return}
- try{
-  const existing=await db.collection("accounts").where("owner","==",userId).where("name","==",name).limit(1).get();
-  if(!existing.empty){toast("A ledger with this name already exists.");return}
-  await db.collection("accounts").add({name,type:accType.value,owner:userId,businessName:profile.businessName});
-  accName.value="";
+
+async function addAccount() {
+ const name = $("accName").value.trim();
+ if (!name) return toast("Enter a ledger name.");
+ if (!userId) return toast("Please log in first.");
+ try {
+  const existing = await db.collection("accounts").where("owner","==",userId).where("name","==",name).limit(1).get();
+  if (!existing.empty) return toast("A ledger with this name already exists.");
+  await db.collection("accounts").add({
+   name, type:$("accType").value, owner:userId,
+   businessName:profile.businessName,
+   createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  });
+  $("accName").value = "";
   toast("Ledger added.");
   await loadData();
- }catch(error){
-  console.error("Add ledger failed:",error);
-  toast("Could not add ledger. Check Firestore rules/indexes: "+(error.message||"Unknown error"));
+ } catch (error) {
+  console.error("Adding ledger failed:",error);
+  toast("Could not add ledger: " + error.message);
  }
 }
-async function quickAddAccount(){
- const name=$("quickAccName").value.trim();
- if(!name){toast("Enter a ledger name.");return}
- try{
-  const existing=await db.collection("accounts").where("owner","==",userId).where("name","==",name).limit(1).get();
-  if(!existing.empty){showError("A ledger with this name already exists.");return}
-  await db.collection("accounts").add({name,type:$("quickAccType").value,owner:userId,businessName:profile.businessName});
-  $("quickAccName").value="";
+
+async function quickAddAccount() {
+ const name = $("quickAccName").value.trim();
+ if (!name) return showError("Enter a ledger name.");
+ if (!userId) return showError("Please log in first.");
+ try {
+  const existing = await db.collection("accounts").where("owner","==",userId).where("name","==",name).limit(1).get();
+  if (!existing.empty) return showError("A ledger with this name already exists.");
+  await db.collection("accounts").add({
+   name, type:$("quickAccType").value, owner:userId,
+   businessName:profile.businessName,
+   createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  });
+  $("quickAccName").value = "";
   toast("Ledger created.");
   await refreshAccountOptions();
- }catch(error){
+  await loadData();
+ } catch (error) {
   console.error("Quick ledger creation failed:",error);
-  showError("Could not create ledger. Check Firestore rules/indexes: "+(error.message||"Unknown error"));
+  showError("Could not create ledger: " + error.message);
  }
 }
-function renderDashboard(summary){
- dashPage.innerHTML=`
+
+function renderDashboard(summary) {
+ dashPage.innerHTML = `
   <div class="kpi-grid">
    <div class="kpi"><div class="k">Income</div><div class="v">₹${formatMoney(summary.inc)}</div></div>
    <div class="kpi"><div class="k">Expense</div><div class="v">₹${formatMoney(summary.exp)}</div></div>
@@ -444,271 +549,299 @@ function renderDashboard(summary){
   </div>
   <div class="empty">Sole Proprietorship mode active. Use Ctrl+K for quick actions.</div>`;
 }
-function getLedgerFilters(){
- return{
-  search:$("searchInput")?.value.trim().toLowerCase()||"",
-  from:$("fromDate")?.value||"",
-  to:$("toDate")?.value||"",
-  sort:$("sortDir")?.value||"desc"
- };
-}
-function flattenEntries(){
- const output=[];
- entries.forEach(entry=>(entry.lines||[]).forEach(line=>{
-  output.push({date:entry.date||"",narration:entry.narration||"",acc:line.acc||"",type:line.type,amt:Number(line.amt)||0});
+
+function flattenEntries() {
+ const output = [];
+ entries.forEach(entry => (entry.lines || []).forEach(line => {
+  output.push({date:entry.date || "", narration:entry.narration || "", acc:line.acc || "", type:line.type, amt:Number(line.amt) || 0});
  }));
  return output;
 }
-function applyLedgerFilters(inputRows){
- const filters=getLedgerFilters();
- let output=inputRows.filter(row=>{
-  if(filters.search&&!(`${row.acc} ${row.narration}`.toLowerCase().includes(filters.search)))return false;
-  if(filters.from&&row.date<filters.from)return false;
-  if(filters.to&&row.date>filters.to)return false;
-  return true;
- });
- output.sort((a,b)=>filters.sort==="asc"?a.date.localeCompare(b.date):b.date.localeCompare(a.date));
- return output;
+
+function getLedgerFilters() {
+ return {
+  search:$("searchInput")?.value.trim().toLowerCase() || "",
+  from:$("fromDate")?.value || "",
+  to:$("toDate")?.value || "",
+  sort:$("sortDir")?.value || "desc"
+ };
 }
-function renderLedger(){
- const allRows=applyLedgerFilters(flattenEntries());
- const totalPages=Math.max(1,Math.ceil(allRows.length/ledgerPageSize));
- currentLedgerPage=Math.min(currentLedgerPage,totalPages);
- const pageRows=allRows.slice((currentLedgerPage-1)*ledgerPageSize,(currentLedgerPage-1)*ledgerPageSize+ledgerPageSize);
- let html=`
+
+function applyLedgerFilters(inputRows) {
+ const filters = getLedgerFilters();
+ return inputRows.filter(row => {
+  if (filters.search && !(`${row.acc} ${row.narration}`.toLowerCase().includes(filters.search))) return false;
+  if (filters.from && row.date < filters.from) return false;
+  if (filters.to && row.date > filters.to) return false;
+  return true;
+ }).sort((a,b) => filters.sort === "asc" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date));
+}
+
+function renderLedger() {
+ const allRows = applyLedgerFilters(flattenEntries());
+ const totalPages = Math.max(1,Math.ceil(allRows.length/ledgerPageSize));
+ currentLedgerPage = Math.min(currentLedgerPage,totalPages);
+ const pageRows = allRows.slice((currentLedgerPage-1)*ledgerPageSize,currentLedgerPage*ledgerPageSize);
+ let html = `
   <div class="toolbar">
-   <div class="field"><label>Search</label><input id="searchInput" value="${escapeHtml($("searchInput")?.value||"")}"></div>
-   <div class="field"><label>From</label><input id="fromDate" type="date" value="${escapeHtml($("fromDate")?.value||"")}"></div>
-   <div class="field"><label>To</label><input id="toDate" type="date" value="${escapeHtml($("toDate")?.value||"")}"></div>
-   <div class="field"><label>Sort</label><select id="sortDir"><option value="desc">Newest First</option><option value="asc">Oldest First</option></select></div>
-   <div class="field"><label>Page Size</label><select id="pageSize"><option>10</option><option selected>25</option><option>50</option><option>100</option></select></div>
-   <button id="applyFilter">Apply</button>
-   <button id="resetFilter" class="secondary">Reset</button>
-   <button id="exportCsv" class="secondary">Export CSV</button>
+   <div class="field"><label for="searchInput">Search</label><input id="searchInput" value="${escapeHtml($("searchInput")?.value || "")}"></div>
+   <div class="field"><label for="fromDate">From</label><input id="fromDate" type="date" value="${escapeHtml($("fromDate")?.value || "")}"></div>
+   <div class="field"><label for="toDate">To</label><input id="toDate" type="date" value="${escapeHtml($("toDate")?.value || "")}"></div>
+   <div class="field"><label for="sortDir">Sort</label><select id="sortDir"><option value="desc">Newest First</option><option value="asc">Oldest First</option></select></div>
+   <div class="field"><label for="pageSize">Page Size</label><select id="pageSize"><option>10</option><option>25</option><option>50</option><option>100</option></select></div>
+   <button id="applyFilter">Apply</button><button id="resetFilter" class="secondary">Reset</button><button id="exportCsv" class="secondary">Export CSV</button>
   </div>`;
- if(!allRows.length){
-  ledgerPage.innerHTML=html+'<div class="empty">No entries match current filters.</div>';
+ if (!allRows.length) {
+  ledgerPage.innerHTML = html + '<div class="empty">No entries match current filters.</div>';
   wireLedgerControls();
   return;
  }
- html+=`
-  <div class="table-wrap"><table>
-   <tr><th>Date</th><th>Narration</th><th>Account</th><th>Dr</th><th>Cr</th></tr>`;
- pageRows.forEach(row=>{
-  html+=`<tr><td>${escapeHtml(row.date)}</td><td>${escapeHtml(row.narration)}</td><td>${escapeHtml(row.acc)}</td><td>${row.type==="dr"?formatMoney(row.amt):""}</td><td>${row.type==="cr"?formatMoney(row.amt):""}</td></tr>`;
+ html += '<div class="table-wrap"><table><tr><th>Date</th><th>Narration</th><th>Account</th><th>Dr</th><th>Cr</th></tr>';
+ pageRows.forEach(row => {
+  html += `<tr><td>${escapeHtml(row.date)}</td><td>${escapeHtml(row.narration)}</td><td>${escapeHtml(row.acc)}</td><td>${row.type==="dr"?formatMoney(row.amt):""}</td><td>${row.type==="cr"?formatMoney(row.amt):""}</td></tr>`;
  });
- html+=`</table></div>
-  <div class="pagination">
-   <button class="secondary" id="prevPage">Prev</button>
-   <span>Page ${currentLedgerPage}/${totalPages} • Rows ${allRows.length}</span>
-   <button class="secondary" id="nextPage">Next</button>
-  </div>`;
- ledgerPage.innerHTML=html;
+ html += `</table></div><div class="pagination">
+  <button class="secondary" id="prevPage">Prev</button>
+  <span>Page ${currentLedgerPage}/${totalPages} • Rows ${allRows.length}</span>
+  <button class="secondary" id="nextPage">Next</button></div>`;
+ ledgerPage.innerHTML = html;
  wireLedgerControls();
 }
-function wireLedgerControls(){
- if($("sortDir"))$("sortDir").value=getLedgerFilters().sort;
- if($("pageSize"))$("pageSize").value=String(ledgerPageSize);
- $("applyFilter")?.addEventListener("click",()=>{
-  currentLedgerPage=1;
-  ledgerPageSize=Number($("pageSize").value||25);
+
+function wireLedgerControls() {
+ if ($("sortDir")) $("sortDir").value = getLedgerFilters().sort;
+ if ($("pageSize")) $("pageSize").value = String(ledgerPageSize);
+ $("applyFilter")?.addEventListener("click",() => {
+  currentLedgerPage = 1;
+  ledgerPageSize = Number($("pageSize").value || 25);
   renderLedger();
  });
- $("resetFilter")?.addEventListener("click",()=>{
-  currentLedgerPage=1;ledgerPageSize=25;
-  ["searchInput","fromDate","toDate"].forEach(id=>{if($(id))$(id).value=""});
+ $("resetFilter")?.addEventListener("click",() => {
+  currentLedgerPage = 1; ledgerPageSize = 25;
+  ["searchInput","fromDate","toDate"].forEach(id => {if ($(id)) $(id).value = "";});
   renderLedger();
  });
- $("prevPage")?.addEventListener("click",()=>{if(currentLedgerPage>1){currentLedgerPage--;renderLedger()}});
- $("nextPage")?.addEventListener("click",()=>{currentLedgerPage++;renderLedger()});
+ $("prevPage")?.addEventListener("click",() => {
+  if (currentLedgerPage > 1) {currentLedgerPage--;renderLedger();}
+ });
+ $("nextPage")?.addEventListener("click",() => {
+  const count = applyLedgerFilters(flattenEntries()).length;
+  if (currentLedgerPage < Math.ceil(count/ledgerPageSize)) {currentLedgerPage++;renderLedger();}
+ });
  $("exportCsv")?.addEventListener("click",exportLedgerCsv);
 }
-function exportLedgerCsv(){
- const allRows=applyLedgerFilters(flattenEntries());
- const csv=[
-  "Date,Narration,Account,Dr,Cr",
-  ...allRows.map(row=>`${row.date},"${String(row.narration).replaceAll('"','""')}","${String(row.acc).replaceAll('"','""')}",${row.type==="dr"?row.amt:""},${row.type==="cr"?row.amt:""}`)
- ].join("\n");
- const link=document.createElement("a");
- link.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
- link.download="pratham-ledger.csv";
- link.click();
- URL.revokeObjectURL(link.href);
+
+function exportLedgerCsv() {
+ const allRows = applyLedgerFilters(flattenEntries());
+ const quote = value => '"' + String(value ?? "").replaceAll('"','""') + '"';
+ const csv = ["Date,Narration,Account,Dr,Cr",
+  ...allRows.map(row => [row.date,quote(row.narration),quote(row.acc),row.type==="dr"?row.amt:"",row.type==="cr"?row.amt:""].join(","))
+ ].join("\r\n");
+ const blob = new Blob(["\uFEFF",csv],{type:"text/csv;charset=utf-8;"});
+ const url = URL.createObjectURL(blob);
+ const link = document.createElement("a");
+ link.href = url; link.download = "pratham-ledger.csv";
+ document.body.appendChild(link); link.click(); link.remove();
+ setTimeout(() => URL.revokeObjectURL(url),1000);
 }
-function renderPL(summary){
- plPage.innerHTML=`<table>
+
+function renderPL(summary) {
+ plPage.innerHTML = `<div class="table-wrap"><table>
   <tr><th>Particular</th><th>Amount (₹)</th></tr>
   <tr><td>Income</td><td>${formatMoney(summary.inc)}</td></tr>
   <tr><td>Expense</td><td>${formatMoney(summary.exp)}</td></tr>
   <tr><th>Net Profit / Loss</th><th>${formatMoney(summary.inc-summary.exp)}</th></tr>
- </table>`;
+ </table></div>`;
 }
-function renderBS(summary){
- bsPage.innerHTML=`<table>
+
+function renderBS(summary) {
+ bsPage.innerHTML = `<div class="table-wrap"><table>
   <tr><th>Assets</th><th>Amount (₹)</th><th>Liabilities</th><th>Amount (₹)</th></tr>
   <tr><td>Total Assets</td><td>${formatMoney(summary.asset)}</td><td>Total Liabilities</td><td>${formatMoney(summary.liab)}</td></tr>
- </table>
- <p>Note: This is a basic summary. It does not yet include capital, drawings, opening balances or closing adjustments.</p>`;
+ </table></div>
+ <p>Basic summary only. Capital, drawings, opening balances and closing adjustments are not included.</p>`;
 }
-async function loadData(){
- await withLoading(async()=>{
-  accounts={};
-  const accountSnapshot=await db.collection("accounts").where("owner","==",userId).get();
-  accountSnapshot.forEach(document=>{
-   const data=document.data();
-   accounts[data.name]=data.type;
+
+async function loadData() {
+ await withLoading(async () => {
+  accounts = {};
+  const accountSnapshot = await db.collection("accounts").where("owner","==",userId).get();
+  accountSnapshot.forEach(document => {
+   const data = document.data();
+   accounts[data.name] = data.type;
   });
-  const entrySnapshot=await db.collection("entries").where("owner","==",userId).get();
-  entries=entrySnapshot.docs.map(document=>document.data()).sort((a,b)=>{
-   const timeA=a.createdAt?.toMillis?.()||Date.parse(a.date||"")||0;
-   const timeB=b.createdAt?.toMillis?.()||Date.parse(b.date||"")||0;
-   return timeB-timeA;
+  const entrySnapshot = await db.collection("entries").where("owner","==",userId).get();
+  entries = entrySnapshot.docs.map(document => document.data()).sort((a,b) => {
+   const ta = a.createdAt?.toMillis?.() || Date.parse(a.date || "") || 0;
+   const tb = b.createdAt?.toMillis?.() || Date.parse(b.date || "") || 0;
+   return tb-ta;
   });
-  const summary={inc:0,exp:0,asset:0,liab:0};
-  entries.forEach(entry=>(entry.lines||[]).forEach(line=>{
-   const amount=Number(line.amt)||0,type=accounts[line.acc];
-   if(type==="Income")summary.inc+=line.type==="cr"?amount:-amount;
-   if(type==="Expense")summary.exp+=line.type==="dr"?amount:-amount;
-   if(type==="Asset")summary.asset+=line.type==="dr"?amount:-amount;
-   if(type==="Liability")summary.liab+=line.type==="cr"?amount:-amount;
+  const summary = {inc:0,exp:0,asset:0,liab:0};
+  entries.forEach(entry => (entry.lines || []).forEach(line => {
+   const amount = Number(line.amt) || 0, type = accounts[line.acc];
+   if (type === "Income") summary.inc += line.type === "cr" ? amount : -amount;
+   if (type === "Expense") summary.exp += line.type === "dr" ? amount : -amount;
+   if (type === "Asset") summary.asset += line.type === "dr" ? amount : -amount;
+   if (type === "Liability") summary.liab += line.type === "cr" ? amount : -amount;
   }));
   renderDashboard(summary);
   renderLedger();
   renderPL(summary);
   renderBS(summary);
-  syncLine.textContent="Last Sync: "+new Date().toLocaleString();
+  $("syncLine").textContent = "Last Sync: " + new Date().toLocaleString();
  });
 }
-async function refreshAccountOptions(){
- const snapshot=await db.collection("accounts").where("owner","==",userId).get();
- const list=[...new Set(snapshot.docs.map(document=>document.data().name))];
- document.querySelectorAll(".row select").forEach(select=>{
-  const previousValue=select.value;
-  select.innerHTML=list.map(name=>`<option>${escapeHtml(name)}</option>`).join("");
-  if(list.includes(previousValue))select.value=previousValue;
+
+async function refreshAccountOptions() {
+ const snapshot = await db.collection("accounts").where("owner","==",userId).get();
+ const list = [...new Set(snapshot.docs.map(document => document.data().name))];
+ document.querySelectorAll("#rows .row select").forEach(select => {
+  const previous = select.value;
+  select.innerHTML = list.map(name => `<option>${escapeHtml(name)}</option>`).join("");
+  if (list.includes(previous)) select.value = previous;
  });
  return list;
 }
-async function addRow(){
- try{
-  const list=await refreshAccountOptions();
-  if(!list.length)return showError("Create at least one ledger before adding vouchers.");
-  clearError();
-  const row=document.createElement("div");
-  row.className="row";
-  row.innerHTML=`
-   <select>${list.map(name=>`<option>${escapeHtml(name)}</option>`).join("")}</select>
-   <input type="number" min="0" step="0.01" placeholder="Debit">
-   <input type="number" min="0" step="0.01" placeholder="Credit">
-   <button type="button" class="secondary" title="Remove line">✕</button>
+
+async function addRow() {
+ try {
+  const list = await refreshAccountOptions();
+  if (!list.length) {showError("Create at least one ledger before adding vouchers.");return;}
+  clearError("journalError");
+  const row = document.createElement("div");
+  row.className = "row";
+  row.innerHTML = `<select aria-label="Ledger">${list.map(name => `<option>${escapeHtml(name)}</option>`).join("")}</select>
+   <input type="number" min="0" step="0.01" placeholder="Debit" aria-label="Debit amount">
+   <input type="number" min="0" step="0.01" placeholder="Credit" aria-label="Credit amount">
+   <button type="button" class="secondary" title="Remove line" aria-label="Remove line">✕</button>
    <div class="row-msg"></div>`;
-  row.querySelector("button").onclick=()=>{row.remove();recalcTotals()};
-  row.querySelectorAll("input").forEach(input=>input.addEventListener("input",()=>{validateRow(row);recalcTotals()}));
-  row.querySelectorAll("input")[1].addEventListener("keydown",event=>{
-   if(event.key==="Enter"){event.preventDefault();addRow()}
+  row.querySelector("button").addEventListener("click",() => {row.remove();recalcTotals();});
+  row.querySelectorAll("input").forEach(input => input.addEventListener("input",() => {validateRow(row);recalcTotals();}));
+  row.querySelectorAll("input")[1].addEventListener("keydown",event => {
+   if (event.key === "Enter") {event.preventDefault();addRow();}
   });
-  rows.appendChild(row);
+  rowsBox.appendChild(row);
   recalcTotals();
- }catch(error){
-  console.error("Unable to add journal row:",error);
-  showError("Could not load ledgers: "+(error.message||"Unknown error"));
+ } catch (error) {
+  console.error("Adding journal row failed:",error);
+  showError("Could not load ledgers: " + error.message);
  }
 }
-function validateRow(row){
- const debit=Number(row.children[1].value)||0;
- const credit=Number(row.children[2].value)||0;
- const message=row.querySelector(".row-msg");
- message.textContent=debit>0&&credit>0?"A line cannot have both debit and credit.":"";
+
+function validateRow(row) {
+ const debit = Number(row.children[1].value) || 0;
+ const credit = Number(row.children[2].value) || 0;
+ const message = row.querySelector(".row-msg");
+ message.textContent = debit > 0 && credit > 0 ? "A line cannot have both debit and credit." : "";
  return !message.textContent;
 }
-function recalcTotals(){
- let debitTotal=0,creditTotal=0;
- document.querySelectorAll("#rows .row").forEach(row=>{
-  debitTotal+=Number(row.children[1].value)||0;
-  creditTotal+=Number(row.children[2].value)||0;
+function recalcTotals() {
+ let debit = 0, credit = 0;
+ document.querySelectorAll("#rows .row").forEach(row => {
+  debit += Number(row.children[1].value) || 0;
+  credit += Number(row.children[2].value) || 0;
  });
- $("drTotal").textContent=formatMoney(debitTotal);
- $("crTotal").textContent=formatMoney(creditTotal);
- $("diffTotal").textContent=formatMoney(Math.abs(debitTotal-creditTotal));
+ $("drTotal").textContent = formatMoney(debit);
+ $("crTotal").textContent = formatMoney(credit);
+ $("diffTotal").textContent = formatMoney(Math.abs(debit-credit));
 }
-function openJournal(){
- overlay.classList.remove("hide");
+function showError(message) {setError("journalError",message);}
+
+async function openJournal() {
  overlay.classList.add("show");
- rows.innerHTML="";
- narration.value="";
- clearError();
- addRow();
+ rowsBox.innerHTML = "";
+ $("narration").value = "";
+ clearError("journalError");
+ await addRow();
 }
-function closePopup(){
- overlay.classList.remove("show");
- overlay.classList.add("hide");
- setTimeout(()=>overlay.classList.remove("hide"),220);
-}
-async function saveEntry(){
- clearError();
- const lines=[];
- let debitTotal=0,creditTotal=0,invalid=false;
- document.querySelectorAll("#rows .row").forEach(row=>{
-  if(!validateRow(row))invalid=true;
-  const account=row.children[0].value;
-  const debit=Number(row.children[1].value)||0;
-  const credit=Number(row.children[2].value)||0;
-  if(debit>0){lines.push({acc:account,type:"dr",amt:debit});debitTotal+=debit}
-  if(credit>0){lines.push({acc:account,type:"cr",amt:credit});creditTotal+=credit}
+function closePopup() {overlay.classList.remove("show");}
+
+async function saveEntry() {
+ clearError("journalError");
+ if (!userId) return showError("Please log in first.");
+ const lines = [];
+ let debitTotal = 0, creditTotal = 0, invalid = false;
+ document.querySelectorAll("#rows .row").forEach(row => {
+  if (!validateRow(row)) invalid = true;
+  const account = row.children[0].value;
+  const debit = Number(row.children[1].value) || 0;
+  const credit = Number(row.children[2].value) || 0;
+  if (debit < 0 || credit < 0) invalid = true;
+  if (debit > 0) {lines.push({acc:account,type:"dr",amt:debit});debitTotal += debit;}
+  if (credit > 0) {lines.push({acc:account,type:"cr",amt:credit});creditTotal += credit;}
  });
- if(invalid)return showError("Please fix the highlighted row errors.");
- if(!lines.length)return showError("Add at least one amount.");
- if(Math.abs(debitTotal-creditTotal)>0.001)return showError("Voucher is not balanced.");
- try{
-  await db.collection("entries").add({
-   owner:userId,
-   businessName:profile.businessName,
+ if (invalid) return showError("Please fix the invalid journal line.");
+ if (!lines.length) return showError("Add at least one amount.");
+ if (Math.abs(debitTotal-creditTotal) > 0.001) return showError("Voucher is not balanced.");
+ try {
+  await withLoading(() => db.collection("entries").add({
+   owner:userId, businessName:profile.businessName,
    date:new Date().toISOString().slice(0,10),
    createdAt:firebase.firestore.FieldValue.serverTimestamp(),
-   lines,
-   narration:narration.value.trim()
-  });
+   lines, narration:$("narration").value.trim()
+  }));
   toast("Voucher saved.");
   closePopup();
   await loadData();
- }catch(error){
+ } catch (error) {
   console.error("Saving voucher failed:",error);
-  showError("Could not save voucher: "+(error.message||"Unknown error"));
+  showError("Could not save voucher: " + error.message);
  }
 }
-const commandActions=[
- {name:"Go Dashboard",run:()=>showPage("dash")},
- {name:"Go Ledger",run:()=>showPage("ledger")},
- {name:"Go Profit & Loss",run:()=>showPage("pl")},
- {name:"Go Balance Sheet",run:()=>showPage("bs")},
- {name:"Open Journal Voucher",run:()=>openJournal()}
+
+const commandActions = [
+ {name:"Go Dashboard",run:() => showPage("dash")},
+ {name:"Go Ledger",run:() => showPage("ledger")},
+ {name:"Go Profit & Loss",run:() => showPage("pl")},
+ {name:"Go Balance Sheet",run:() => showPage("bs")},
+ {name:"Open Journal Voucher",run:() => openJournal()}
 ];
-function openCommandPalette(){
- $("commandPalette").style.display="flex";
- $("commandInput").value="";
+function openCommandPalette() {
+ $("commandPalette").style.display = "flex";
+ $("commandInput").value = "";
  renderCommands();
  $("commandInput").focus();
 }
-function closeCommandPalette(){$("commandPalette").style.display="none"}
-function renderCommands(){
- const query=$("commandInput").value.toLowerCase();
- const list=commandActions.filter(command=>command.name.toLowerCase().includes(query));
- $("commandList").innerHTML=list.map((command,index)=>`<div class="command-item" data-i="${index}">${escapeHtml(command.name)}</div>`).join("")||'<div class="empty">No command found.</div>';
- $("commandList").querySelectorAll(".command-item").forEach(element=>{
-  element.onclick=()=>{
-   const command=list[Number(element.dataset.i)];
+function closeCommandPalette() {$("commandPalette").style.display = "none";}
+function renderCommands() {
+ const query = $("commandInput").value.toLowerCase();
+ const list = commandActions.filter(command => command.name.toLowerCase().includes(query));
+ $("commandList").innerHTML = list.map((command,index) =>
+  `<div class="command-item" role="button" tabindex="0" data-i="${index}">${escapeHtml(command.name)}</div>`
+ ).join("") || '<div class="empty">No command found.</div>';
+ $("commandList").querySelectorAll(".command-item").forEach(element => {
+  const run = () => {
+   const command = list[Number(element.dataset.i)];
    closeCommandPalette();
    command.run();
   };
+  element.addEventListener("click",run);
+  element.addEventListener("keydown",event => {
+   if (event.key === "Enter" || event.key === " ") {event.preventDefault();run();}
+  });
  });
 }
-document.addEventListener("keydown",event=>{
- if(event.ctrlKey&&event.key.toLowerCase()==="k"){event.preventDefault();openCommandPalette()}
- if(overlay.classList.contains("show")){
-  if(event.key==="Escape"){event.preventDefault();closePopup()}
-  if(event.ctrlKey&&event.key.toLowerCase()==="s"){event.preventDefault();saveEntry()}
+$("commandInput").addEventListener("input",renderCommands);
+
+document.addEventListener("keydown",event => {
+ if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+  event.preventDefault();openCommandPalette();
  }
+ if (overlay.classList.contains("show")) {
+  if (event.key === "Escape") {event.preventDefault();closePopup();}
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+   event.preventDefault();saveEntry();
+  }
+ }
+ if (event.key === "Escape") closeCommandPalette();
 });
+
+window.addEventListener("unhandledrejection",event => {
+ console.error("Unhandled application error:",event.reason);
+ toast("An operation failed. Check the error message in the browser console.");
+});
+
+initializeFirebase();
 </script>
 </body>
 </html>
